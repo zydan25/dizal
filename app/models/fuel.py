@@ -39,7 +39,7 @@ class FuelPurchase(db.Model):
 
 class FuelStockMovement(db.Model):
     __tablename__="fuel_stock_movement"
-    id=db.Column(db.BigInteger,primary_key=True)
+    id=db.Column(db.Integer,primary_key=True)
     tank_id=db.Column(db.Integer,db.ForeignKey("fuel_tank.id",ondelete="CASCADE"),nullable=False,index=True)
     direction=db.Column(db.String(3),nullable=False)
     movement_type=db.Column(db.String(50),nullable=False,index=True)
@@ -56,7 +56,7 @@ class FuelStockMovement(db.Model):
 
 class FuelStockLayer(db.Model):
     __tablename__="fuel_stock_layer"
-    id=db.Column(db.BigInteger,primary_key=True)
+    id=db.Column(db.Integer,primary_key=True)
     tank_id=db.Column(db.Integer,db.ForeignKey("fuel_tank.id",ondelete="CASCADE"),nullable=False,index=True)
     purchase_id=db.Column(db.Integer,db.ForeignKey("fuel_purchase.id",ondelete="CASCADE"),nullable=False,index=True)
     original_liters=db.Column(db.Numeric(18,3),nullable=False)
@@ -68,9 +68,9 @@ class FuelStockLayer(db.Model):
 
 class FuelStockConsumption(db.Model):
     __tablename__="fuel_stock_consumption"
-    id=db.Column(db.BigInteger,primary_key=True)
+    id=db.Column(db.Integer,primary_key=True)
     dispense_id=db.Column(db.Integer,db.ForeignKey("fuel_dispense.id",ondelete="CASCADE"),nullable=False,index=True)
-    layer_id=db.Column(db.BigInteger,db.ForeignKey("fuel_stock_layer.id",ondelete="RESTRICT"),nullable=False,index=True)
+    layer_id=db.Column(db.Integer,db.ForeignKey("fuel_stock_layer.id",ondelete="RESTRICT"),nullable=False,index=True)
     liters=db.Column(db.Numeric(18,3),nullable=False)
     unit_cost=db.Column(db.Numeric(18,6),nullable=False)
     cost_amount=db.Column(db.Numeric(18,3),nullable=False)
