@@ -13,7 +13,7 @@ class Cashbox(db.Model):
 
 class CashboxTransaction(db.Model):
     __tablename__="cashbox_transaction"
-    id=db.Column(db.BigInteger,primary_key=True)
+    id=db.Column(db.Integer,primary_key=True)
     cashbox_id=db.Column(db.Integer,db.ForeignKey("cashbox.id",ondelete="CASCADE"),nullable=False,index=True)
     direction=db.Column(db.String(3),nullable=False)
     transaction_type=db.Column(db.String(50),nullable=False,index=True)
