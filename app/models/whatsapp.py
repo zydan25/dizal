@@ -24,7 +24,7 @@ class WhatsAppTemplate(db.Model):
 
 class WhatsAppMessage(db.Model):
     __tablename__="whatsapp_message"
-    id=db.Column(db.BigInteger,primary_key=True)
+    id=db.Column(db.Integer,primary_key=True)
     recipient=db.Column(db.String(40),nullable=False,index=True)
     template_key=db.Column(db.String(80),nullable=True)
     body=db.Column(db.Text,nullable=False)
