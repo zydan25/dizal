@@ -6,3 +6,4 @@ from .cashbox import Cashbox,CashboxTransaction
 from .documents import ProjectSequence,Document,DocumentAttachment
 from .capital import CapitalContribution,CapitalAllocation
 from .assets import Asset
+from .fuel import FuelTank,FuelPurchase,FuelStockMovement
