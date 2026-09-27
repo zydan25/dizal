@@ -9,8 +9,8 @@ PERMISSIONS={
 "assets.view":("مشاهدة الأصول","assets"),"assets.create":("إضافة أصل","assets"),
 "fuel.supply.create":("رفع توريد ديزل","fuel"),"fuel.supply.approve":("اعتماد توريد ديزل","fuel"),"fuel.stock.view":("مشاهدة مخزون الديزل","fuel"),"fuel.tank.manage":("إدارة خزانات الديزل","fuel"),
 "fuel.dispense":("صرف الديزل","fuel"),"fuel.price.override":("تغيير سعر البيع عند الصرف","fuel"),
-"farmers.view":("مشاهدة المزارعين","farmers"),"farmers.view_all":("مشاهدة جميع المزارعين","farmers"),"farmers.create":("إضافة مزارع","farmers"),"farmers.documents.upload":("رفع مرفقات المزارع","farmers"),"farmers.approve":("اعتماد المزارعين","farmers"),"farmers.quota.change":("تعديل سقف المزارع","farmers"),
-"farmer.payment.create":("تسجيل سداد مزارع","farmers"),
+"farmers.view":("مشاهدة المزارعين","farmers"),"farmers.view_all":("مشاهدة جميع المزارعين","farmers"),"farmers.create":("إضافة مزارع","farmers"),"farmers.documents.upload":("رفع مرفقات المزارع","farmers"),"farmers.approve":("اعتماد المزارعين","farmers"),"farmers.quota.change":("تعديل سقف المزارع","farmers"),"farmer.payment.create":("تسجيل سداد مزارع","farmers"),
+"expenses.manage":("إدارة المصروفات","expenses"),"settlement.manage":("إدارة التسويات","settlements"),"settlement.approve":("اعتماد التسويات","settlements"),
 }
 ROLE_PERMISSIONS={
 "manager":set(PERMISSIONS.keys()),
