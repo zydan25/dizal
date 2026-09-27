@@ -2,7 +2,7 @@ from .permissions import user_has_permission
 
 SECTIONS=[
 {"key":"home","title":"الرئيسية","icon":"bi-grid-1x2","items":[("dashboard.index","لوحة المتابعة","bi-speedometer2","dashboard.view")]},
-{"key":"operations","title":"التشغيل","icon":"bi-fuel-pump","items":[("fuel.supply","التوريدات","bi-truck","fuel.supply.create"),("fuel.stock","المخزون","bi-boxes","fuel.stock.view")]},
+{"key":"operations","title":"التشغيل","icon":"bi-fuel-pump","items":[("fuel.supply","التوريدات","bi-truck","fuel.supply.create"),("fuel.stock","المخزون","bi-boxes","fuel.stock.view"),("fuel.tanks","الخزانات","bi-fuel-pump-fill","fuel.tank.manage")]},
 {"key":"farmers","title":"المزارعون","icon":"bi-people","items":[("dashboard.index","المزارعون","bi-person-lines-fill","dashboard.view")]},
 {"key":"money","title":"المال والصندوق","icon":"bi-wallet2","items":[("cashbox.index","الصناديق","bi-cash-stack","cashbox.view"),("capital.index","رأس المال","bi-bank","capital.view"),("assets.index","الأصول","bi-building","assets.view")]},
 {"key":"reports","title":"التقارير","icon":"bi-bar-chart","items":[("dashboard.index","التقارير","bi-file-earmark-bar-graph","dashboard.view")]},
