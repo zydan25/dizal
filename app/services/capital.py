@@ -22,6 +22,8 @@ def add_capital(amount,source,created_by_id,notes=None):
     db.session.add(row)
     db.session.flush()
     document.source_id=str(row.id)
+    from .accounting import post_capital
+    post_capital(row,created_by_id)
     return row
 
 def allocate_to_employee(employee,amount,created_by_id,notes=None):
@@ -37,4 +39,6 @@ def allocate_to_employee(employee,amount,created_by_id,notes=None):
     db.session.add(row)
     db.session.flush()
     document.source_id=str(row.id)
+    from .accounting import post_employee_transfer
+    post_employee_transfer(row,created_by_id)
     return row
