@@ -1,0 +1,21 @@
+# Phase 5 Checklist
+
+- [x] Fuel dispense
+- [x] Drum to liter conversion
+- [x] Cash sale
+- [x] Credit sale
+- [x] Mixed sale
+- [x] Farmer quota validation
+- [x] Debt ceiling validation
+- [x] Stock validation
+- [x] Cashbox receipt
+- [x] Farmer payment
+- [x] Payment allocation
+- [x] Farmer statement
+- [x] FIFO stock layers
+- [x] Cost of goods per dispense
+- [x] Gross profit per dispense
+- [x] Price override permission
+- [x] Tests
+- [ ] CI green verification
+- [ ] Merge to main
