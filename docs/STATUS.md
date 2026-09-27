@@ -4,7 +4,7 @@
 مكتملة.
 
 ## Phase 1 — Foundation
-منفذة:
+مكتملة على feature/phase1-foundation:
 - Flask Factory
 - SQLAlchemy
 - Flask-Migrate
@@ -18,45 +18,57 @@
 - Settings
 
 ## Phase 2 — Finance Core
-منفذة:
+مكتملة:
 - Employees
 - Employee Profile
-- Cashboxes
+- Central and employee cashboxes
 - Cashbox transactions
-- Central capital
+- Capital contribution
 - Employee capital allocation
-- Documents/sequences
+- Documents and sequences
 - Assets
-- Finance UI
 - Tests
 
 ## Phase 3 — Fuel Operations
-منفذة:
-- Fuel Tanks
-- Fuel Purchases
+مكتملة:
+- Fuel tanks
+- Fuel purchases
 - Supply attachments
-- Purchase approval
+- Manager approval
 - Fuel stock movements
 - Stock calculation
 - Landed cost per liter
-- Fuel UI
+- Tests
+
+## Phase 4 — Farmers
+مكتملة:
+- Farmer profiles
+- Employee assignment
+- Farmer limits
+- Debt ceiling
+- Identity and contract attachments
+- Pending review
+- Approve / changes requested / reject
+- Quota history and manager changes
 - Tests
 
 ## المرحلة التالية
-Phase 4:
-- المزارعون.
-- المستندات الشخصية.
-- العقود.
-- الاعتماد.
-- سقف الدباب والمديونية.
-- تعيين المزارع للموظف.
+Phase 5:
+- صرف الديزل.
+- التسعير.
+- الدين.
+- التحصيل.
+- سند الصرف.
+- سند القبض.
 - كشف حساب المزارع.
+- حساب المتبقي من السقف.
+- منع الصرف للمزارع غير المعتمد.
 
 ## الجودة
-الـCI يحقق:
+GitHub Actions workflow موجود ويشغل:
 - compileall
 - migration generation
 - migration upgrade
 - pytest
 
-يجب التحقق من حالة Actions قبل الدمج إلى main.
+لم يتم الإعلان عن CI أخضر حتى يتم الحصول على نتيجة تشغيل موثقة من Actions.
