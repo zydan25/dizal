@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>ديون المزارعين</h1><p>المبالغ المستحقة للتحصيل.</p></div>
+<div class="entity-list">
+{% for row in rows %}
+<a class="entity-row" href="{{url_for('sales.farmer_account_view',farmer_id=row.farmer.id)}}"><div class="avatar"><i class="bi bi-person-exclamation"></i></div><div class="entity-main"><strong>{{row.farmer.name}}</strong><span>{{row.farmer.phone}} · {{row.farmer.assigned_employee.display_name}}</span><small>المبيعات {{row.sales}} · مستحق {{row.outstanding}}</small></div><div class="money-value negative">{{row.outstanding}}</div></a>
+{% else %}<div class="empty-state"><i class="bi bi-check2-circle"></i><strong>لا توجد ديون حالية</strong></div>{% endfor %}
+</div>
+{% endblock %}
