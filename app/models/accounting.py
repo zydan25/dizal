@@ -14,7 +14,7 @@ class Account(db.Model):
 
 class JournalEntry(db.Model):
     __tablename__="journal_entry"
-    id=db.Column(db.BigInteger,primary_key=True)
+    id=db.Column(db.Integer,primary_key=True)
     entry_date=db.Column(db.Date,nullable=False,index=True)
     source_type=db.Column(db.String(60),nullable=False,index=True)
     source_id=db.Column(db.String(80),nullable=False,index=True)
@@ -27,8 +27,8 @@ class JournalEntry(db.Model):
     
 class JournalLine(db.Model):
     __tablename__="journal_line"
-    id=db.Column(db.BigInteger,primary_key=True)
-    journal_entry_id=db.Column(db.BigInteger,db.ForeignKey("journal_entry.id",ondelete="CASCADE"),nullable=False,index=True)
+    id=db.Column(db.Integer,primary_key=True)
+    journal_entry_id=db.Column(db.Integer,db.ForeignKey("journal_entry.id",ondelete="CASCADE"),nullable=False,index=True)
     account_id=db.Column(db.Integer,db.ForeignKey("account.id"),nullable=False,index=True)
     debit=db.Column(db.Numeric(18,3),nullable=False,default=0)
     credit=db.Column(db.Numeric(18,3),nullable=False,default=0)
