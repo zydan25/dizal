@@ -4,7 +4,7 @@
 مكتملة.
 
 ## Phase 1 — Foundation
-منفذة على feature/phase1-foundation:
+منفذة:
 - Flask Factory
 - SQLAlchemy
 - Flask-Migrate
@@ -18,7 +18,7 @@
 - Settings
 
 ## Phase 2 — Finance Core
-منفذة على نفس الفرع:
+منفذة:
 - Employees
 - Employee Profile
 - Cashboxes
@@ -28,22 +28,35 @@
 - Documents/sequences
 - Assets
 - Finance UI
-- Phase 2 tests
+- Tests
+
+## Phase 3 — Fuel Operations
+منفذة:
+- Fuel Tanks
+- Fuel Purchases
+- Supply attachments
+- Purchase approval
+- Fuel stock movements
+- Stock calculation
+- Landed cost per liter
+- Fuel UI
+- Tests
 
 ## المرحلة التالية
-Phase 3:
-- التوريد.
-- الخزانات.
-- مخزون اللترات.
-- تكلفة اللتر.
-- اعتماد المدير.
-- مرفقات التوريد.
+Phase 4:
+- المزارعون.
+- المستندات الشخصية.
+- العقود.
+- الاعتماد.
+- سقف الدباب والمديونية.
+- تعيين المزارع للموظف.
+- كشف حساب المزارع.
 
 ## الجودة
-الـCI موجود ويشغل:
+الـCI يحقق:
 - compileall
 - migration generation
 - migration upgrade
 - pytest
 
-حالة تشغيل CI يجب التحقق منها عبر GitHub Actions قبل الدمج النهائي إلى main.
+يجب التحقق من حالة Actions قبل الدمج إلى main.
