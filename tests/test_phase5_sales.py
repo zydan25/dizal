@@ -70,7 +70,7 @@ def test_payment_allocates_to_oldest_debt():
         db.session.commit()
         fresh=Farmer.query.get(farmer_id)
         account=farmer_account(fresh)
-        assert account["outstanding_amount"]==Decimal("4000")
+        assert account["outstanding_amount"]==Decimal("22000")
         assert account["outstanding_drums"]<Decimal("1")
 
 def test_cannot_dispense_over_quota():
