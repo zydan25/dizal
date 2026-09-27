@@ -51,5 +51,7 @@ with app.app_context():
     if not FuelTank.query.filter_by(code="TANK-01").first():
         db.session.add(FuelTank(name="الخزان الرئيسي",code="TANK-01",location="المستودع",is_active=True))
 
+    from app.services.accounting import ensure_accounts
+    ensure_accounts()
     db.session.commit()
     print("Dizal seed completed.")
