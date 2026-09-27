@@ -30,6 +30,8 @@ def validate_farmer_limits(employee,quota_drums,credit_limit_drums):
         raise ValueError(f"الحد الأعلى للسقف هو {limits['max_credit_drums']} دبة.")
 
 def create_farmer(name,phone,address,notes,quota_drums,credit_limit_drums,assigned_employee_id,created_by_id,attachments=None):
+    if not name or not phone:
+        raise ValueError("اسم المزارع ورقم الهاتف مطلوبان.")
     employee=User.query.filter_by(id=assigned_employee_id,is_employee=True,active=True).first()
     if not employee:
         raise ValueError("الموظف المحدد غير صالح.")
