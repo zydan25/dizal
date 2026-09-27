@@ -36,6 +36,7 @@ def seed_stock(app,manager_id,employee_id):
         allocate_to_employee(User.query.get(employee_id),Decimal("1500000"),manager_id)
         purchase=create_purchase(employee_id,1,date.today(),"محطة",Decimal("2000"),Decimal("1150000"),Decimal("5000"),0,employee_id,"شراء افتتاحي")
         approve_purchase(purchase,manager_id)
+        db.session.commit()
 
 def test_dispense_updates_stock_debt_cashbox_and_cost():
     app=make_app()
