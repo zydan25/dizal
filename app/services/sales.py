@@ -1,7 +1,7 @@
 from decimal import Decimal
 from sqlalchemy import func
 from ..extensions import db
-from ..models import Farmer,FuelDispense,FuelPayment if False else FarmerPayment,FuelStockMovement,FuelTank,ProjectSettings
+from ..models import Farmer,FarmerPayment,FuelDispense,FuelStockMovement,FuelTank,ProjectSettings
 from ..models import Cashbox
 from .cashbox import post_transaction
 from .documents import create_document
