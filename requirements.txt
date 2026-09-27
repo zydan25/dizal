@@ -8,6 +8,7 @@ python-dotenv>=1.1,<2
 gunicorn>=23,<24
 argon2-cffi>=25,<26
 email-validator>=2.2,<3
+nh3>=0.3,<0.4
 Pillow>=11,<12
 pytest>=8,<9
 pytest-cov>=6,<7
