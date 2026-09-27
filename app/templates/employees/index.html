@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row"><div class="page-heading"><h1>الموظفون</h1><p>حسابات الموظفين وصناديقهم.</p></div><a class="primary-btn" href="{{url_for('employees.new')}}"><i class="bi bi-plus-lg"></i> موظف جديد</a></div>
+<div class="entity-list">
+{% for employee in employees %}
+<div class="entity-row"><div class="avatar"><i class="bi bi-person-badge"></i></div><div class="entity-main"><strong>{{employee.display_name}}</strong><span>{{employee.phone or employee.username}}</span><small>{{employee.employee_profile.employee_code if employee.employee_profile else "بدون كود"}}</small></div><div class="status-chip">فعال</div></div>
+{% else %}<div class="empty-state"><i class="bi bi-people"></i><strong>لا يوجد موظفون</strong><span>أنشئ أول موظف لبدء التشغيل.</span></div>{% endfor %}
+</div>
+{% endblock %}
