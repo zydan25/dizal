@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row"><div class="page-heading"><h1>{{document.title}}</h1><p>{{document.number}} · {{document.issue_date}} · {{document.status}}</p></div><a class="primary-btn" href="{{url_for('documents.print_document',document_id=document.id)}}" target="_blank"><i class="bi bi-printer"></i> طباعة</a></div>
+<div class="document-card">
+<div class="document-header"><strong>{{project_settings.project_name}}</strong><span>{{project_settings.manager_name or ""}}</span></div>
+<div class="document-meta"><span>رقم السند <b>{{document.number}}</b></span><span>التاريخ <b>{{document.issue_date}}</b></span></div>
+{% if source %}
+<div class="entity-list">
+{% if source.amount is defined %}<div class="entity-row"><div class="entity-main"><strong>المبلغ</strong><span>{{source.amount}} {{project_settings.currency}}</span></div></div>{% endif %}
+{% if source.total_amount is defined %}<div class="entity-row"><div class="entity-main"><strong>الإجمالي</strong><span>{{source.total_amount}} {{project_settings.currency}}</span></div></div>{% endif %}
+{% if source.liters is defined %}<div class="entity-row"><div class="entity-main"><strong>الكمية</strong><span>{{source.liters}} لتر{% if source.drums is defined %} · {{source.drums}} دبة{% endif %}</span></div></div>{% endif %}
+{% if source.employee is defined %}<div class="entity-row"><div class="entity-main"><strong>الموظف</strong><span>{{source.employee.display_name}}</span></div></div>{% endif %}
+{% if source.farmer is defined %}<div class="entity-row"><div class="entity-main"><strong>المزارع</strong><span>{{source.farmer.name}}</span></div></div>{% endif %}
+</div>
+{% endif %}
+{% if document.notes %}<div class="info-card"><strong>البيان</strong><p>{{document.notes}}</p></div>{% endif %}
+<div class="sign-row"><span>المستلم / المسؤول</span><span>المدير<br>{{project_settings.manager_name or ""}}</span></div>
+</div>
+{% endblock %}
