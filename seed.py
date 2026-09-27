@@ -52,6 +52,8 @@ with app.app_context():
         db.session.add(FuelTank(name="الخزان الرئيسي",code="TANK-01",location="المستودع",is_active=True))
 
     from app.services.accounting import ensure_accounts
+    from app.services.whatsapp_templates import seed_templates
     ensure_accounts()
+    seed_templates(db.session)
     db.session.commit()
     print("Dizal seed completed.")
