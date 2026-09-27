@@ -78,7 +78,11 @@ def post_payment(payment,created_by_id):
     return post_journal("farmer_payment",payment.id,"تحصيل من مزارع",created_by_id,[{"account_code":"1110","debit":payment.amount,"employee_id":payment.employee_id},{"account_code":"1400","credit":payment.amount,"farmer_id":payment.farmer_id}],payment.document_id)
 
 def post_expense(expense,created_by_id):
-    return post_journal("operating_expense",expense.id,expense.description or expense.category,created_by_id,[{"account_code":"6000","debit":expense.amount},{"account_code":"1110","credit":expense.amount,"employee_id":expense.employee_id}],expense.document_id)
+    payer=expense.cashbox
+    credit_account="1110" if payer and payer.box_type=="employee" else "1100"
+    line={"account_code":credit_account,"credit":expense.amount}
+    if credit_account=="1110": line["employee_id"]=payer.owner_user_id
+    return post_journal("operating_expense",expense.id,expense.description or expense.category,created_by_id,[{"account_code":"6000","debit":expense.amount},line],expense.document_id)
 
 def post_salary(employee_id,amount,document_id,created_by_id):
     return post_journal("employee_salary",employee_id,"راتب/عمولة الموظف",created_by_id,[{"account_code":"6100","debit":amount,"employee_id":employee_id},{"account_code":"1110","credit":amount,"employee_id":employee_id}],document_id)
