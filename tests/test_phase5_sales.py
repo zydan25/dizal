@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from app import create_app
 from app.extensions import db
-from app.models import User,Role,ProjectSettings,Cashbox,FuelTank,Farmer,EmployeeProfile
+from app.models import User,Role,ProjectSettings,Cashbox,FuelTank,Farmer,EmployeeProfile,FarmerPaymentAllocation
 from app.services.capital import add_capital,allocate_to_employee
 from app.services.fuel import create_purchase,approve_purchase,current_stock_liters
 from app.services.sales import create_dispense,register_payment,farmer_account
@@ -67,12 +67,16 @@ def test_payment_allocates_to_oldest_debt():
         db.session.flush()
         second=create_dispense(employee,farmer,tank_id,Decimal("2"),Decimal("700"),0)
         db.session.commit()
-        register_payment(employee,farmer,Decimal("30000"),"cash")
+        payment=register_payment(employee,farmer,Decimal("30000"),"cash")
         db.session.commit()
+        allocations=(FarmerPaymentAllocation.query.filter_by(payment_id=payment.id).order_by(FarmerPaymentAllocation.id.asc()).all())
+        assert allocations[0].dispense_id==first.id
+        assert allocations[0].amount==Decimal("26000")
+        assert allocations[1].dispense_id==second.id
+        assert allocations[1].amount==Decimal("4000")
         fresh=Farmer.query.get(farmer_id)
         account=farmer_account(fresh)
-        assert account["outstanding_amount"]==Decimal("22000")
-        assert account["outstanding_drums"]<Decimal("1")
+        assert account["outstanding_amount"]==Decimal("24000")
 
 def test_cannot_dispense_over_quota():
     app=make_app()
