@@ -6,6 +6,5 @@ __pycache__/
 htmlcov/
 .env
 instance/uploads/
-migrations/versions/
 *.sqlite
 *.db
