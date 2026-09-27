@@ -23,7 +23,9 @@ def create_app(config_object=None):
     from .blueprints.sales import sales_bp
     from .blueprints.expenses import expenses_bp
     from .blueprints.settlements import settlements_bp
-    app.register_blueprint(auth_bp);app.register_blueprint(dashboard_bp);app.register_blueprint(settings_bp);app.register_blueprint(employees_bp);app.register_blueprint(cashbox_bp);app.register_blueprint(capital_bp);app.register_blueprint(assets_bp);app.register_blueprint(fuel_bp);app.register_blueprint(farmers_bp);app.register_blueprint(sales_bp);app.register_blueprint(expenses_bp);app.register_blueprint(settlements_bp)
+    from .blueprints.reports import reports_bp
+    from .blueprints.documents import documents_bp
+    app.register_blueprint(auth_bp);app.register_blueprint(dashboard_bp);app.register_blueprint(settings_bp);app.register_blueprint(employees_bp);app.register_blueprint(cashbox_bp);app.register_blueprint(capital_bp);app.register_blueprint(assets_bp);app.register_blueprint(fuel_bp);app.register_blueprint(farmers_bp);app.register_blueprint(sales_bp);app.register_blueprint(expenses_bp);app.register_blueprint(settlements_bp);app.register_blueprint(reports_bp);app.register_blueprint(documents_bp)
     from flask import render_template
     @app.errorhandler(403)
     def forbidden(_error):return render_template("errors/403.html"),403
@@ -36,5 +38,5 @@ def create_app(config_object=None):
         from sqlalchemy import text
         try:db.session.execute(text("SELECT 1"));status="ok"
         except Exception:status="error"
-        return {"status":status,"database":status,"version":"phase6"}
+        return {"status":status,"database":status,"version":"phase7"}
     return app
