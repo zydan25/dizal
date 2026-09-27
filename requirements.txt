@@ -1,0 +1,13 @@
+Flask>=3.1,<4
+Flask-SQLAlchemy>=3.1,<4
+Flask-Migrate>=4.1,<5
+Flask-Security-Too>=5.9,<6
+Flask-WTF>=1.2,<2
+psycopg[binary]>=3.2,<4
+python-dotenv>=1.1,<2
+gunicorn>=23,<24
+argon2-cffi>=25,<26
+email-validator>=2.2,<3
+Pillow>=11,<12
+pytest>=8,<9
+pytest-cov>=6,<7
