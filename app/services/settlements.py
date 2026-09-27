@@ -30,7 +30,7 @@ def settlement_preview(employee,start_date,end_date):
         FuelDispense.employee_id==employee.id,FuelDispense.status=="approved",FuelDispense.created_at>=datetime.combine(start_date,__import__("datetime").time.min).replace(tzinfo=timezone.utc),FuelDispense.created_at<=datetime.combine(end_date,__import__("datetime").time.max).replace(tzinfo=timezone.utc)
     ).scalar() or 0
     expenses=db.session.query(func.coalesce(func.sum(OperatingExpense.amount),0)).filter(
-        OperatingExpense.employee_id==employee.id,OperatingExpense.status=="approved",OperatingExpense.created_at>=datetime.combine(start_date,__import__("datetime").time.min).replace(tzinfo=timezone.utc),OperatingExpense.created_at<=datetime.combine(end_date,__import__("datetime").time.max).replace(tzinfo=timezone.utc)
+        OperatingExpense.employee_id==employee.id,OperatingExpense.status=="approved",OperatingExpense.expense_date>=start_date,OperatingExpense.expense_date<=end_date
     ).scalar() or 0
     profile=EmployeeProfile.query.filter_by(user_id=employee.id).first()
     salary=Decimal(str(profile.salary_value if profile else 0))
