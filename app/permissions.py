@@ -19,12 +19,10 @@ PERMISSIONS={
 "fuel.supply.create":("رفع توريد ديزل","fuel"),
 "fuel.supply.approve":("اعتماد توريد ديزل","fuel"),
 "fuel.stock.view":("مشاهدة مخزون الديزل","fuel"),
+"fuel.tank.manage":("إدارة خزانات الديزل","fuel"),
 }
 
-ROLE_PERMISSIONS={
-"manager":set(PERMISSIONS.keys()),
-"employee":{"dashboard.view","cashbox.view","fuel.supply.create","fuel.stock.view"},
-}
+ROLE_PERMISSIONS={"manager":set(PERMISSIONS.keys()),"employee":{"dashboard.view","cashbox.view","fuel.supply.create","fuel.stock.view"}}
 
 def user_has_permission(user,permission_key):
     if not user or not user.is_authenticated:return False
