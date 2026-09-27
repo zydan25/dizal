@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>صلاحيات {{role.label or role.name}}</h1><p>الصلاحيات التي سيحصل عليها كل مستخدم في هذا الدور.</p></div>
+<form method="post" class="mobile-form card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+{% for module in permissions.values()|map(attribute=1)|unique %}
+<div class="permission-group"><h2>{{module}}</h2>
+{% for key,meta in permissions.items() if meta[1]==module %}
+<label class="permission-row"><input type="checkbox" name="permission" value="{{key}}" {% if key in current %}checked{% endif %}><span><strong>{{meta[0]}}</strong><small>{{key}}</small></span></label>
+{% endfor %}
+</div>
+{% endfor %}
+<button class="primary-btn"><i class="bi bi-shield-check"></i> حفظ الدور</button>
+</form>
+{% endblock %}
