@@ -1,0 +1,1 @@
+module.exports={apps:[{name:"dizal-whatsapp-worker",cwd:"/home/root/projects/dizal",script:"./.venv/bin/python",args:"scripts/whatsapp_worker.py",interpreter:"none",autorestart:true,watch:false,max_memory_restart:"300M",env:{PYTHONUNBUFFERED:"1",WHATSAPP_WORKER_INTERVAL:"5"}}]};
