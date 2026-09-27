@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>سجل التدقيق</h1><p>لاستخدام الإدارة والتتبع وليس للتعديل على السجلات.</p></div>
+<div class="entity-list">
+{% for row in rows %}
+<div class="entity-row"><div class="avatar"><i class="bi bi-shield-check"></i></div><div class="entity-main"><strong>{{row.action}}</strong><span>{{row.object_type or "system"}} #{{row.object_id or "—"}}</span><small>{{row.actor.display_name if row.actor else "system"}} · {{row.created_at.strftime("%Y-%m-%d %H:%M:%S")}} · {{row.ip_address or "—"}}</small></div></div>
+{% else %}<div class="empty-state">لا يوجد نشاط مسجل.</div>{% endfor %}
+</div>
+{% endblock %}
