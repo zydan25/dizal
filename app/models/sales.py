@@ -38,3 +38,13 @@ class FarmerPayment(db.Model):
     document=db.relationship("Document")
     farmer=db.relationship("Farmer",backref="payments")
     employee=db.relationship("User")
+
+class FarmerPaymentAllocation(db.Model):
+    __tablename__="farmer_payment_allocation"
+    id=db.Column(db.Integer,primary_key=True)
+    payment_id=db.Column(db.Integer,db.ForeignKey("farmer_payment.id",ondelete="CASCADE"),nullable=False,index=True)
+    dispense_id=db.Column(db.Integer,db.ForeignKey("fuel_dispense.id",ondelete="CASCADE"),nullable=False,index=True)
+    amount=db.Column(db.Numeric(18,3),nullable=False)
+    drums=db.Column(db.Numeric(12,6),nullable=False)
+    payment=db.relationship("FarmerPayment",backref=db.backref("allocations",cascade="all, delete-orphan"))
+    dispense=db.relationship("FuelDispense")
