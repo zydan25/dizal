@@ -63,3 +63,25 @@ def stock():
     tanks=FuelTank.query.filter_by(is_active=True).all()
     rows=[{"tank":tank,"stock":current_stock_liters(tank.id)} for tank in tanks]
     return render_template("fuel/stock.html",rows=rows,total=current_stock_liters())
+
+@fuel_bp.route("/tanks",methods=["GET","POST"])
+@permission_required("fuel.tank.manage")
+def tanks():
+    if request.method=="POST":
+        try:
+            tank=FuelTank(name=request.form.get("name","").strip(),code=request.form.get("code","").strip().upper(),capacity_liters=request.form.get("capacity_liters") or None,location=request.form.get("location"),notes=request.form.get("notes"),is_active=True)
+            if not tank.name or not tank.code:
+                raise ValueError("اسم الخزان والكود مطلوبان.")
+            if FuelTank.query.filter_by(code=tank.code).first():
+                raise ValueError("كود الخزان مستخدم بالفعل.")
+            db.session.add(tank)
+            db.session.flush()
+            audit("fuel.tank.created","fuel_tank",tank.id,after={"name":tank.name,"code":tank.code})
+            db.session.commit()
+            flash("تم إنشاء الخزان.","success")
+            return redirect(url_for("fuel.tanks"))
+        except ValueError as exc:
+            db.session.rollback()
+            flash(str(exc),"danger")
+    rows=FuelTank.query.order_by(FuelTank.id.desc()).all()
+    return render_template("fuel/tanks.html",rows=rows)
