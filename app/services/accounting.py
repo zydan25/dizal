@@ -51,7 +51,11 @@ def post_employee_transfer(allocation,created_by_id):
     return post_journal("capital_allocation",allocation.id,"تحويل رأس مال لعهدة الموظف",created_by_id,[{"account_code":"1110","debit":allocation.amount,"employee_id":allocation.employee_id},{"account_code":"1100","credit":allocation.amount}],allocation.document_id)
 
 def post_asset(asset,created_by_id):
-    return post_journal("asset",asset.id,f"شراء أصل {asset.name}",created_by_id,[{"account_code":"1300","debit":asset.acquisition_cost},{"account_code":"1110","credit":asset.acquisition_cost,"employee_id":asset.custodian_user_id}],asset.document_id)
+    payer = asset.payer_cashbox
+    credit_account = "1110" if payer and payer.box_type=="employee" else "1100"
+    line={"account_code":credit_account,"credit":asset.acquisition_cost}
+    if credit_account=="1110": line["employee_id"]=payer.owner_user_id
+    return post_journal("asset",asset.id,f"شراء أصل {asset.name}",created_by_id,[{"account_code":"1300","debit":asset.acquisition_cost},line],asset.document_id)
 
 def post_fuel_purchase(purchase,created_by_id):
     return post_journal("fuel_purchase",purchase.id,"شراء ديزل",created_by_id,[{"account_code":"1200","debit":purchase.landed_cost},{"account_code":"1110","credit":purchase.landed_cost,"employee_id":purchase.employee_id}],purchase.document_id)
