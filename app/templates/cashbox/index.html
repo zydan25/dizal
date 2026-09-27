@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>الصناديق</h1><p>الأرصدة تُحسب من الحركات ولا تُدخل يدويًا.</p></div>
+<div class="entity-list">{% for row in rows %}<a class="entity-row" href="{{url_for('cashbox.detail',cashbox_id=row.box.id)}}"><div class="avatar"><i class="bi bi-wallet2"></i></div><div class="entity-main"><strong>{{row.box.name}}</strong><span>{{row.box.box_type}}</span></div><div class="money-value">{{row.balance}} <small>{{project_settings.currency}}</small></div></a>{% else %}<div class="empty-state">لا توجد صناديق متاحة.</div>{% endfor %}</div>
+{% endblock %}
