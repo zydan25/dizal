@@ -1,10 +1,14 @@
-from flask import request
 from flask_login import current_user
-from .models import ProjectSettings
+from .models import ProjectSettings,Notification
 from .navigation import build_navigation
 
 def register_context(app):
     @app.context_processor
-    def inject_context():
+    def inject():
         settings=ProjectSettings.get()
-        return {"project_settings":settings,"navigation":build_navigation(current_user),"request_path":request.path}
+        unread=0
+        navigation=[]
+        if current_user.is_authenticated:
+            unread=Notification.query.filter_by(user_id=current_user.id,read_at=None).count()
+            navigation=build_navigation(current_user)
+        return {"project_settings":settings,"navigation":navigation,"unread_notifications":unread}
