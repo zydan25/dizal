@@ -13,3 +13,6 @@ from .sales import FuelDispense,FarmerPayment
 from .accounting import Account,JournalEntry,JournalLine
 from .expenses import OperatingExpense
 from .settlements import EmployeeSettlement
+
+from .notifications import Notification,NotificationPreference
+from .whatsapp import WhatsAppConfig,WhatsAppTemplate,WhatsAppMessage
