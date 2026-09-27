@@ -2,7 +2,7 @@ from decimal import Decimal
 from datetime import datetime,timezone
 from sqlalchemy import func
 from ..extensions import db
-from ..models import Cashbox,FuelPurchase,FuelStockMovement,FuelTank
+from ..models import Cashbox,FuelPurchase,FuelStockMovement,FuelTank,FuelStockLayer,FuelStockConsumption
 from .cashbox import post_transaction
 from .documents import create_document
 
@@ -51,9 +51,29 @@ def approve_purchase(purchase,approved_by_id):
         raise ValueError("لا يوجد صندوق فعال للموظف.")
     post_transaction(cashbox.id,"OUT",purchase.landed_cost,"fuel_purchase",approved_by_id,f"شراء {purchase.liters} لتر ديزل",purchase.document_id,"fuel_purchase",purchase.id)
     db.session.add(FuelStockMovement(tank_id=purchase.tank_id,direction="IN",movement_type="purchase",liters=purchase.liters,unit_cost=purchase.unit_cost,source_type="fuel_purchase",source_id=str(purchase.id),document_id=purchase.document_id,created_by_id=approved_by_id))
+    db.session.add(FuelStockLayer(tank_id=purchase.tank_id,purchase_id=purchase.id,original_liters=purchase.liters,remaining_liters=purchase.liters,unit_cost=purchase.unit_cost))
     purchase.status="approved"
     purchase.approved_at=datetime.now(timezone.utc)
     purchase.approved_by_id=approved_by_id
     purchase.document.status="approved"
     purchase.document.approved_by_id=approved_by_id
     db.session.flush()
+
+def consume_fifo(tank_id,liters,dispense_id,created_by_id):
+    remaining=Decimal(str(liters))
+    if remaining<=0: raise ValueError("الكمية المطلوب استهلاكها يجب أن تكون أكبر من صفر.")
+    layers=(FuelStockLayer.query.filter(FuelStockLayer.tank_id==tank_id,FuelStockLayer.remaining_liters>0)
+            .order_by(FuelStockLayer.created_at.asc(),FuelStockLayer.id.asc()).with_for_update().all())
+    available=sum((Decimal(str(layer.remaining_liters)) for layer in layers),Decimal("0"))
+    if available<remaining:
+        raise ValueError("المخزون بالتكلفة المتاحة لا يكفي لهذه العملية.")
+    total_cost=Decimal("0")
+    for layer in layers:
+        if remaining<=0: break
+        take=min(remaining,Decimal(str(layer.remaining_liters)))
+        cost=take*Decimal(str(layer.unit_cost))
+        layer.remaining_liters=Decimal(str(layer.remaining_liters))-take
+        db.session.add(FuelStockConsumption(dispense_id=dispense_id,layer_id=layer.id,liters=take,unit_cost=layer.unit_cost,cost_amount=cost))
+        total_cost+=cost
+        remaining-=take
+    return total_cost
