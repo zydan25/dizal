@@ -14,7 +14,7 @@ PERMISSIONS={
 "expenses.manage":("إدارة المصروفات","expenses"),"settlement.manage":("إدارة التسويات","settlements"),"settlement.approve":("اعتماد التسويات","settlements"),
 "reports.view":("مشاهدة التقارير","reports"),"documents.view":("مشاهدة السندات","documents"),
 }
-ROLE_PERMISSIONS={"manager":set(PERMISSIONS.keys()),"employee":{"dashboard.view","cashbox.view","fuel.supply.create","fuel.stock.view","fuel.dispense","farmers.view","farmers.create","farmers.documents.upload","farmer.payment.create"}}
+ROLE_PERMISSIONS={"manager":set(PERMISSIONS.keys()),"employee":{"dashboard.view","cashbox.view","notifications.view","fuel.supply.create","fuel.stock.view","fuel.dispense","farmers.view","farmers.create","farmers.documents.upload","farmer.payment.create"}}
 def user_has_permission(user,permission_key):
     if not user or not user.is_authenticated:return False
     if user.has_role("manager"):return True
