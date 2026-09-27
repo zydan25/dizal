@@ -1,7 +1,7 @@
 import os
 from app import create_app
 from app.extensions import db
-from app.models import Permission,ProjectSettings,Role,RolePermission,User,Cashbox
+from app.models import Permission,ProjectSettings,Role,RolePermission,User,Cashbox,FuelTank
 from app.permissions import PERMISSIONS,ROLE_PERMISSIONS
 from flask_security.utils import hash_password
 
@@ -47,6 +47,9 @@ with app.app_context():
 
     if not Cashbox.query.filter_by(box_type="central",is_active=True).first():
         db.session.add(Cashbox(name="الصندوق الرئيسي",box_type="central",is_active=True))
+
+    if not FuelTank.query.filter_by(code="TANK-01").first():
+        db.session.add(FuelTank(name="الخزان الرئيسي",code="TANK-01",location="المستودع",is_active=True))
 
     db.session.commit()
     print("Dizal seed completed.")
