@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>صلاحيات {{employee.display_name}}</h1><p>تتجاوز الصلاحيات المختارة صلاحيات الدور للموظف.</p></div>
+<form method="post" class="mobile-form card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+{% for module in permissions.values()|map(attribute=1)|unique %}
+<div class="permission-group"><h2>{{module}}</h2>
+{% for key,meta in permissions.items() if meta[1]==module %}
+<label class="permission-row"><input type="checkbox" name="permission" value="{{key}}" {% if key in effective %}checked{% endif %}><span><strong>{{meta[0]}}</strong><small>{{key}}</small></span></label>
+{% endfor %}
+</div>
+{% endfor %}
+<button class="primary-btn"><i class="bi bi-shield-check"></i> حفظ الصلاحيات</button>
+</form>
+{% endblock %}
