@@ -3,7 +3,7 @@ from flask import current_app,flash,redirect,render_template,request,url_for
 from flask_login import current_user
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import FuelPurchase,FuelTank
+from ...models import FuelPurchase,FuelTank,User
 from ...services.audit import audit
 from ...services.files import save_attachment
 from ...services.fuel import approve_purchase,attach_proof,create_purchase,current_stock_liters
@@ -14,8 +14,14 @@ from . import fuel_bp
 def supply():
     if request.method=="POST":
         try:
+            employee_id=current_user.id
+            if current_user.has_role("manager") and request.form.get("employee_id"):
+                employee_id=int(request.form["employee_id"])
+                employee=User.query.filter_by(id=employee_id,is_employee=True,active=True).first()
+                if not employee:
+                    raise ValueError("الموظف المحدد غير صالح.")
             row=create_purchase(
-                employee_id=current_user.id,
+                employee_id=employee_id,
                 tank_id=int(request.form["tank_id"]),
                 purchase_date=date.fromisoformat(request.form.get("purchase_date") or date.today().isoformat()),
                 supplier_name=request.form.get("supplier_name"),
@@ -32,7 +38,7 @@ def supply():
                 attach_proof(row,save_attachment(proof,current_app.config["UPLOAD_FOLDER"],"fuel"))
             if current_user.has_role("manager"):
                 approve_purchase(row,current_user.id)
-            audit("fuel.purchase.created","fuel_purchase",row.id,after={"status":row.status,"liters":str(row.liters),"amount":str(row.landed_cost)})
+            audit("fuel.purchase.created","fuel_purchase",row.id,after={"status":row.status,"employee_id":row.employee_id,"liters":str(row.liters),"amount":str(row.landed_cost)})
             db.session.commit()
             flash("تم تسجيل التوريد." if row.status=="submitted" else "تم تسجيل التوريد واعتماده مباشرة.","success")
             return redirect(url_for("fuel.supply"))
@@ -41,7 +47,8 @@ def supply():
             flash(str(exc),"danger")
     purchases=FuelPurchase.query.order_by(FuelPurchase.id.desc()).limit(50).all() if current_user.has_role("manager") else FuelPurchase.query.filter_by(employee_id=current_user.id).order_by(FuelPurchase.id.desc()).limit(50).all()
     tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).all()
-    return render_template("fuel/supply.html",purchases=purchases,tanks=tanks,today=date.today().isoformat())
+    employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
+    return render_template("fuel/supply.html",purchases=purchases,tanks=tanks,employees=employees,today=date.today().isoformat())
 
 @fuel_bp.post("/supply/<int:purchase_id>/approve")
 @permission_required("fuel.supply.approve")
@@ -70,10 +77,8 @@ def tanks():
     if request.method=="POST":
         try:
             tank=FuelTank(name=request.form.get("name","").strip(),code=request.form.get("code","").strip().upper(),capacity_liters=request.form.get("capacity_liters") or None,location=request.form.get("location"),notes=request.form.get("notes"),is_active=True)
-            if not tank.name or not tank.code:
-                raise ValueError("اسم الخزان والكود مطلوبان.")
-            if FuelTank.query.filter_by(code=tank.code).first():
-                raise ValueError("كود الخزان مستخدم بالفعل.")
+            if not tank.name or not tank.code: raise ValueError("اسم الخزان والكود مطلوبان.")
+            if FuelTank.query.filter_by(code=tank.code).first(): raise ValueError("كود الخزان مستخدم بالفعل.")
             db.session.add(tank)
             db.session.flush()
             audit("fuel.tank.created","fuel_tank",tank.id,after={"name":tank.name,"code":tank.code})
