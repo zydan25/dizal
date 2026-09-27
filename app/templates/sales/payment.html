@@ -15,7 +15,7 @@
 <button class="primary-btn"><i class="bi bi-cash-coin"></i> تسجيل السداد وإصدار السند</button>
 </form>
 <script>
-const accounts={{ accounts|tojson }};
+const accounts={{ accounts_json|tojson }};
 const select=document.getElementById("payment_farmer"),card=document.querySelector("#farmer-balance strong");
 function refreshPayment(){const a=accounts[select.value];card.textContent=a?Number(a.outstanding_amount).toFixed(2):"0";}
 select.addEventListener("change",refreshPayment);refreshPayment();
