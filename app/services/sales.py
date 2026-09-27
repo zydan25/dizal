@@ -1,11 +1,10 @@
 from decimal import Decimal
 from sqlalchemy import func
 from ..extensions import db
-from ..models import Farmer,FarmerPayment,FuelDispense,FuelStockMovement,FuelTank,ProjectSettings
-from ..models import Cashbox
+from ..models import Cashbox,Farmer,FarmerPayment,FarmerPaymentAllocation,FuelDispense,FuelStockMovement,FuelTank,ProjectSettings
 from .cashbox import post_transaction
 from .documents import create_document
-from .fuel import current_stock_liters
+from .fuel import consume_fifo,current_stock_liters
 
 def farmer_consumed_drums(farmer_id):
     value=db.session.query(func.coalesce(func.sum(FuelDispense.drums),0)).filter(FuelDispense.farmer_id==farmer_id,FuelDispense.status=="approved").scalar() or 0
@@ -16,27 +15,19 @@ def farmer_outstanding_amount(farmer_id):
     paid=db.session.query(func.coalesce(func.sum(FarmerPayment.amount),0)).filter(FarmerPayment.farmer_id==farmer_id).scalar() or 0
     return max(Decimal(str(dispensed))-Decimal(str(paid)),Decimal("0"))
 
-def farmer_outstanding_credit_drums(farmer):
+def farmer_outstanding_credit_drums(farmer_id):
+    dispenses=(FuelDispense.query.filter_by(farmer_id=farmer_id,status="approved")
+               .order_by(FuelDispense.created_at.asc(),FuelDispense.id.asc()).all())
     total=Decimal("0")
-    for sale in FuelDispense.query.filter_by(farmer_id=farmer.id,status="approved").all():
-        if sale.credit_amount and sale.total_amount:
-            total += Decimal(str(sale.credit_drums)) * (Decimal(str(max(sale.credit_amount-farmer_payment_allocated(sale.id),0))) / Decimal(str(sale.credit_amount)))
-    # Phase 5 uses value-based debt conversion for the simple account; allocations become explicit in a later phase.
-    settings=ProjectSettings.get()
-    per_drum=Decimal(str(settings.default_sale_price_per_liter))*Decimal(str(settings.drum_liters))
-    if per_drum<=0:return Decimal("0")
-    outstanding=farmer_outstanding_amount(farmer.id)
-    return outstanding/per_drum
-
-def farmer_payment_allocated(_dispense_id):
-    return Decimal("0")
+    for sale in dispenses:
+        allocated=db.session.query(func.coalesce(func.sum(FarmerPaymentAllocation.drums),0)).filter(FarmerPaymentAllocation.dispense_id==sale.id).scalar() or 0
+        total += max(Decimal(str(sale.credit_drums))-Decimal(str(allocated)),Decimal("0"))
+    return total
 
 def farmer_account(farmer):
-    settings=ProjectSettings.get()
     consumed=farmer_consumed_drums(farmer.id)
     outstanding=farmer_outstanding_amount(farmer.id)
-    per_drum=Decimal(str(settings.default_sale_price_per_liter))*Decimal(str(settings.drum_liters))
-    outstanding_drums=(outstanding/per_drum) if per_drum>0 else Decimal("0")
+    outstanding_drums=farmer_outstanding_credit_drums(farmer.id)
     return {
         "consumed_drums":consumed,
         "remaining_quota_drums":max(Decimal(str(farmer.quota_drums))-consumed,Decimal("0")),
@@ -48,6 +39,8 @@ def farmer_account(farmer):
 def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amount=0,notes=None):
     if farmer.status!="approved":
         raise ValueError("لا يمكن صرف الديزل لمزارع غير معتمد.")
+    if farmer.assigned_employee_id!=employee.id:
+        raise ValueError("المزارع غير تابع لهذا الموظف.")
     drums=Decimal(str(drums))
     price=Decimal(str(sale_price_per_liter))
     paid=Decimal(str(paid_amount or 0))
@@ -71,7 +64,10 @@ def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amou
     db.session.add(row)
     db.session.flush()
     document.source_id=str(row.id)
-    db.session.add(FuelStockMovement(tank_id=tank_id,direction="OUT",movement_type="dispense",liters=liters,unit_cost=None,source_type="fuel_dispense",source_id=str(row.id),document_id=document.id,created_by_id=employee.id))
+    cost_amount=consume_fifo(tank_id,liters,row.id,employee.id)
+    row.cost_amount=cost_amount
+    row.gross_profit=total-cost_amount
+    db.session.add(FuelStockMovement(tank_id=tank_id,direction="OUT",movement_type="dispense",liters=liters,unit_cost=(cost_amount/liters if liters else 0),source_type="fuel_dispense",source_id=str(row.id),document_id=document.id,created_by_id=employee.id))
     if paid>0:
         cashbox=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
         if not cashbox: raise ValueError("لا يوجد صندوق فعال للموظف.")
@@ -81,6 +77,9 @@ def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amou
 def register_payment(employee,farmer,amount,payment_method="cash",reference=None,notes=None):
     amount=Decimal(str(amount))
     if amount<=0: raise ValueError("مبلغ السداد يجب أن يكون أكبر من صفر.")
+    if farmer.status not in {"approved","suspended"}: raise ValueError("حساب المزارع غير متاح للتحصيل.")
+    if farmer.assigned_employee_id!=employee.id:
+        raise ValueError("المزارع غير تابع لهذا الموظف.")
     outstanding=farmer_outstanding_amount(farmer.id)
     if amount>outstanding: raise ValueError("مبلغ السداد أكبر من مديونية المزارع.")
     document=create_document("RCV","سند قبض من مزارع",employee.id,source_type="farmer_payment")
@@ -88,6 +87,22 @@ def register_payment(employee,farmer,amount,payment_method="cash",reference=None
     db.session.add(row)
     db.session.flush()
     document.source_id=str(row.id)
+
+    remaining=amount
+    dispenses=(FuelDispense.query.filter_by(farmer_id=farmer.id,status="approved")
+               .order_by(FuelDispense.created_at.asc(),FuelDispense.id.asc()).with_for_update().all())
+    settings=ProjectSettings.get()
+    for sale in dispenses:
+        if remaining<=0: break
+        allocated=db.session.query(func.coalesce(func.sum(FarmerPaymentAllocation.amount),0)).filter(FarmerPaymentAllocation.dispense_id==sale.id).scalar() or 0
+        remaining_credit=max(Decimal(str(sale.credit_amount))-Decimal(str(allocated)),Decimal("0"))
+        if remaining_credit<=0: continue
+        allocation=min(remaining,remaining_credit)
+        drums=(allocation/(Decimal(str(sale.sale_price_per_liter))*Decimal(str(settings.drum_liters)))) if sale.sale_price_per_liter else Decimal("0")
+        db.session.add(FarmerPaymentAllocation(payment_id=row.id,dispense_id=sale.id,amount=allocation,drums=drums))
+        remaining-=allocation
+    if remaining>Decimal("0.0005"):
+        raise ValueError("تعذر توزيع كامل مبلغ السداد على المديونية.")
     cashbox=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
     if not cashbox: raise ValueError("لا يوجد صندوق فعال للموظف.")
     post_transaction(cashbox.id,"IN",amount,"farmer_payment",employee.id,f"سداد من {farmer.name}",document.id,"farmer",farmer.id)
