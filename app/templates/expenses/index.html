@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>المصروفات التشغيلية</h1><p>سجل المصروف من الصندوق مع سند واضح وتأثير محاسبي.</p></div>
+<form method="post" class="mobile-form card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<div class="two-col"><label>التاريخ<input name="expense_date" type="date" value="{{today}}"></label><label>الفئة<input name="category" placeholder="نقل / اتصال / صيانة" required></label></div>
+<label>الصندوق<select name="cashbox_id" required>{% for box in cashboxes %}<option value="{{box.id}}">{{box.name}}</option>{% endfor %}</select></label>
+<label>الموظف المسؤول<select name="employee_id"><option value="">بدون موظف</option>{% for employee in employees %}<option value="{{employee.id}}">{{employee.display_name}}</option>{% endfor %}</select></label>
+<label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required></label>
+<label>البيان<textarea name="description" rows="3"></textarea></label>
+<button class="primary-btn"><i class="bi bi-receipt"></i> تسجيل المصروف</button>
+</form>
+<div class="section-title"><h2>آخر المصروفات</h2><span>آخر 100</span></div>
+<div class="entity-list">{% for row in expenses %}<div class="entity-row"><div class="avatar"><i class="bi bi-receipt"></i></div><div class="entity-main"><strong>{{row.document.number}} · {{row.category}}</strong><span>{{row.description or "—"}}</span><small>{{row.expense_date}} · {{row.cashbox.name}}</small></div><div class="money-value negative">{{row.amount}}</div></div>{% else %}<div class="empty-state">لا توجد مصروفات.</div>{% endfor %}</div>
+{% endblock %}
