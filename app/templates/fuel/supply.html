@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>توريدات الديزل</h1><p>الموظف يرفع التوريد، ويظل معلقًا حتى يعتمد المدير.</p></div>
+<form method="post" enctype="multipart/form-data" class="mobile-form card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<label>الخزان<select name="tank_id" required><option value="">اختر الخزان</option>{% for tank in tanks %}<option value="{{tank.id}}">{{tank.name}} · {{tank.code}}</option>{% endfor %}</select></label>
+<div class="two-col"><label>التاريخ<input name="purchase_date" type="date" value="{{today}}" required></label><label>المورد<input name="supplier_name"></label></div>
+<div class="two-col"><label>اللترات<input name="liters" type="number" step="0.001" min="0.001" required></label><label>قيمة الديزل<input name="diesel_amount" type="number" step="0.001" min="0" required></label></div>
+<div class="two-col"><label>التوصيل<input name="delivery_fee" type="number" step="0.001" min="0" value="0"></label><label>رسوم أخرى<input name="other_fee" type="number" step="0.001" min="0" value="0"></label></div>
+<label>السند أو الفاتورة<input type="file" name="proof" accept=".pdf,.png,.jpg,.jpeg,.webp"></label>
+<label>البيان<textarea name="notes" rows="3"></textarea></label>
+<button class="primary-btn"><i class="bi bi-upload"></i> رفع التوريد</button>
+</form>
+
+<div class="section-title"><h2>آخر التوريدات</h2><span>آخر 50 عملية</span></div>
+<div class="entity-list">
+{% for purchase in purchases %}
+<div class="entity-row">
+<div class="avatar"><i class="bi bi-truck"></i></div>
+<div class="entity-main"><strong>{{purchase.document.number}} · {{purchase.liters}} لتر</strong><span>{{purchase.supplier_name or "بدون مورد"}} · {{purchase.landed_cost}}</span><small>{{purchase.status}} · {{purchase.employee.display_name}}</small></div>
+{% if current_user.has_role("manager") and purchase.status=="submitted" %}<form method="post" action="{{url_for('fuel.approve',purchase_id=purchase.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="success-btn">اعتماد</button></form>{% endif %}
+</div>
+{% else %}<div class="empty-state"><i class="bi bi-truck"></i><strong>لا توجد توريدات</strong><span>سيظهر أول توريد هنا.</span></div>{% endfor %}
+</div>
+{% endblock %}
