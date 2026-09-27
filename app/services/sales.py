@@ -68,6 +68,8 @@ def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amou
     row.cost_amount=cost_amount
     row.gross_profit=total-cost_amount
     db.session.add(FuelStockMovement(tank_id=tank_id,direction="OUT",movement_type="dispense",liters=liters,unit_cost=(cost_amount/liters if liters else 0),source_type="fuel_dispense",source_id=str(row.id),document_id=document.id,created_by_id=employee.id))
+    from .accounting import post_sale
+    post_sale(row,employee.id)
     if paid>0:
         cashbox=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
         if not cashbox: raise ValueError("لا يوجد صندوق فعال للموظف.")
@@ -106,4 +108,6 @@ def register_payment(employee,farmer,amount,payment_method="cash",reference=None
     cashbox=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
     if not cashbox: raise ValueError("لا يوجد صندوق فعال للموظف.")
     post_transaction(cashbox.id,"IN",amount,"farmer_payment",employee.id,f"سداد من {farmer.name}",document.id,"farmer",farmer.id)
+    from .accounting import post_payment
+    post_payment(row,employee.id)
     return row
