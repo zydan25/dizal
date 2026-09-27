@@ -25,6 +25,7 @@ def create_app(config_object=None):
     from .blueprints.settlements import settlements_bp
     from .blueprints.reports import reports_bp
     from .blueprints.documents import documents_bp
+    from .blueprints.notifications import notifications_bp
     app.register_blueprint(auth_bp);app.register_blueprint(dashboard_bp);app.register_blueprint(settings_bp);app.register_blueprint(employees_bp);app.register_blueprint(cashbox_bp);app.register_blueprint(capital_bp);app.register_blueprint(assets_bp);app.register_blueprint(fuel_bp);app.register_blueprint(farmers_bp);app.register_blueprint(sales_bp);app.register_blueprint(expenses_bp);app.register_blueprint(settlements_bp);app.register_blueprint(reports_bp);app.register_blueprint(documents_bp)
     from flask import render_template
     @app.errorhandler(403)
