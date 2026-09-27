@@ -38,6 +38,7 @@ def test_journal_accounts_and_settlement_preview():
         allocate_to_employee(User.query.get(employee_id),Decimal("1000000"),manager_id)
         employee_box=Cashbox.query.filter_by(owner_user_id=employee_id,box_type="employee").first()
         create_expense(employee_box.id,employee_id,"نقل",Decimal("5000"),date.today(),manager_id,"نقل افتتاحي")
+        db.session.commit()
         preview=settlement_preview(User.query.get(employee_id),date.today(),date.today())
         assert preview["operating_expenses"]==Decimal("5000")
         assert preview["employee_salary"]==Decimal("50000")
