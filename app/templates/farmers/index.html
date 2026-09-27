@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row"><div class="page-heading"><h1>المزارعون</h1><p>المزارع المعتمد فقط يدخل دورة الصرف.</p></div><a class="primary-btn" href="{{url_for('farmers.new')}}"><i class="bi bi-plus-lg"></i> إضافة مزارع</a></div>
+<div class="filter-row">
+<a class="filter-chip {% if not status %}active{% endif %}" href="{{url_for('farmers.index')}}">الكل</a>
+<a class="filter-chip {% if status=='approved' %}active{% endif %}" href="{{url_for('farmers.index',status='approved')}}">معتمد</a>
+<a class="filter-chip {% if status=='submitted' %}active{% endif %}" href="{{url_for('farmers.index',status='submitted')}}">معلق</a>
+<a class="filter-chip {% if status=='suspended' %}active{% endif %}" href="{{url_for('farmers.index',status='suspended')}}">موقوف</a>
+</div>
+<div class="entity-list">
+{% for farmer in farmers %}
+<a class="entity-row" href="{{url_for('farmers.detail',farmer_id=farmer.id)}}">
+<div class="avatar"><i class="bi bi-person"></i></div>
+<div class="entity-main"><strong>{{farmer.name}}</strong><span>{{farmer.phone}} · {{farmer.code}}</span><small>{{farmer.assigned_employee.display_name}} · سقف {{farmer.quota_drums}} دبة</small></div>
+<div class="status-chip status-{{farmer.status}}">{{{"approved":"معتمد","submitted":"معلق","changes_requested":"استكمال","rejected":"مرفوض","suspended":"موقوف"}.get(farmer.status,farmer.status)}}</div>
+</a>
+{% else %}<div class="empty-state"><i class="bi bi-people"></i><strong>لا توجد نتائج</strong><span>أضف أول مزارع أو غيّر الفلتر.</span></div>{% endfor %}
+</div>
+{% endblock %}
