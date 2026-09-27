@@ -21,7 +21,7 @@ def seed(app):
         db.session.add_all([manager,employee_role])
         user=User(username="manager",email="m@test.local",password=hash_password("secret"),display_name="مدير",active=True,fs_uniquifier="m1")
         employee=User(username="employee",email="e@test.local",password=hash_password("secret"),display_name="موظف",active=True,is_employee=True,fs_uniquifier="e1")
-        manager.roles.append(manager);employee.roles.append(employee_role)
+        user.roles.append(manager);employee.roles.append(employee_role)
         db.session.add_all([user,employee])
         db.session.flush()
         central=Cashbox(name="الصندوق الرئيسي",box_type="central",is_active=True)
