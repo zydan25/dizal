@@ -6,6 +6,6 @@ from .cashbox import Cashbox,CashboxTransaction
 from .documents import ProjectSequence,Document,DocumentAttachment
 from .capital import CapitalContribution,CapitalAllocation
 from .assets import Asset
-from .fuel import FuelTank,FuelPurchase,FuelStockMovement
+from .fuel import FuelTank,FuelPurchase,FuelStockMovement,FuelStockLayer,FuelStockConsumption
 from .farmers import Farmer,FarmerDocument,FarmerQuotaMovement
 from .sales import FuelDispense,FarmerPayment
