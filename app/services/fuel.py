@@ -57,6 +57,8 @@ def approve_purchase(purchase,approved_by_id):
     purchase.approved_by_id=approved_by_id
     purchase.document.status="approved"
     purchase.document.approved_by_id=approved_by_id
+    from .accounting import post_fuel_purchase
+    post_fuel_purchase(purchase,approved_by_id)
     db.session.flush()
 
 def consume_fifo(tank_id,liters,dispense_id,created_by_id):
