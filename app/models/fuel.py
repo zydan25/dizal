@@ -53,3 +53,27 @@ class FuelStockMovement(db.Model):
     tank=db.relationship("FuelTank",backref=db.backref("stock_movements",cascade="all, delete-orphan"))
     document=db.relationship("Document")
     created_by=db.relationship("User")
+
+class FuelStockLayer(db.Model):
+    __tablename__="fuel_stock_layer"
+    id=db.Column(db.BigInteger,primary_key=True)
+    tank_id=db.Column(db.Integer,db.ForeignKey("fuel_tank.id",ondelete="CASCADE"),nullable=False,index=True)
+    purchase_id=db.Column(db.Integer,db.ForeignKey("fuel_purchase.id",ondelete="CASCADE"),nullable=False,index=True)
+    original_liters=db.Column(db.Numeric(18,3),nullable=False)
+    remaining_liters=db.Column(db.Numeric(18,3),nullable=False)
+    unit_cost=db.Column(db.Numeric(18,6),nullable=False)
+    created_at=db.Column(db.DateTime(timezone=True),nullable=False,default=lambda:datetime.now(timezone.utc))
+    tank=db.relationship("FuelTank")
+    purchase=db.relationship("FuelPurchase")
+
+class FuelStockConsumption(db.Model):
+    __tablename__="fuel_stock_consumption"
+    id=db.Column(db.BigInteger,primary_key=True)
+    dispense_id=db.Column(db.Integer,db.ForeignKey("fuel_dispense.id",ondelete="CASCADE"),nullable=False,index=True)
+    layer_id=db.Column(db.BigInteger,db.ForeignKey("fuel_stock_layer.id",ondelete="RESTRICT"),nullable=False,index=True)
+    liters=db.Column(db.Numeric(18,3),nullable=False)
+    unit_cost=db.Column(db.Numeric(18,6),nullable=False)
+    cost_amount=db.Column(db.Numeric(18,3),nullable=False)
+    created_at=db.Column(db.DateTime(timezone=True),nullable=False,default=lambda:datetime.now(timezone.utc))
+    layer=db.relationship("FuelStockLayer")
+    dispense=db.relationship("FuelDispense")
