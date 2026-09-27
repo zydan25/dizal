@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>صرف الديزل</h1><p>اختر المزارع وعدد الدباب، والنظام يحسب اللترات والمبلغ والدين والتكلفة.</p></div>
+
+<form method="post" class="mobile-form card-form" id="dispense-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+{% if current_user.has_role("manager") %}
+<label>الموظف المسؤول<select name="employee_id" id="employee_id" required><option value="">اختر الموظف</option>{% for employee in employees %}<option value="{{employee.id}}">{{employee.display_name}}</option>{% endfor %}</select></label>
+{% endif %}
+<label>المزارع
+<select name="farmer_id" id="farmer_id" required>
+<option value="">اختر المزارع</option>
+{% for farmer in farmers %}
+{% set acc = farmer.__dict__.get('id') and none %}
+<option value="{{farmer.id}}">{{farmer.name}} · سقفه {{farmer.quota_drums}} دبة</option>
+{% endfor %}
+</select>
+</label>
+<label>الخزان<select name="tank_id" required><option value="">اختر الخزان</option>{% for tank in tanks %}<option value="{{tank.id}}">{{tank.name}}</option>{% endfor %}</select></label>
+<div class="two-col">
+<label>عدد الدباب<input name="drums" id="drums" type="number" step="0.1" min="0.1" inputmode="decimal" required></label>
+<label>المدفوع الآن<input name="paid_amount" id="paid_amount" type="number" step="0.001" min="0" value="0" inputmode="decimal"></label>
+</div>
+<label>سعر اللتر
+<input name="sale_price_per_liter" id="sale_price" type="number" step="0.001" value="{{settings.default_sale_price_per_liter}}" {% if not current_user.has_role("manager") %}readonly{% endif %}>
+</label>
+<div class="calculation-card">
+<div><small>اللترات</small><strong id="liters_preview">0</strong><span>لتر</span></div>
+<div><small>الإجمالي</small><strong id="total_preview">0</strong><span>{{project_settings.currency}}</span></div>
+<div><small>الدين</small><strong id="credit_preview">0</strong><span>{{project_settings.currency}}</span></div>
+</div>
+<label>ملاحظات<textarea name="notes" rows="2"></textarea></label>
+<button class="primary-btn"><i class="bi bi-droplet-fill"></i> تأكيد الصرف وإصدار السند</button>
+</form>
+<script>
+(function(){
+const drumLiters={{project_settings.drum_liters|float}};
+const drums=document.getElementById("drums"),price=document.getElementById("sale_price"),paid=document.getElementById("paid_amount");
+const liters=document.getElementById("liters_preview"),total=document.getElementById("total_preview"),credit=document.getElementById("credit_preview");
+function recalc(){const d=parseFloat(drums?.value||0),p=parseFloat(price?.value||0),a=parseFloat(paid?.value||0),l=d*drumLiters,t=l*p,c=Math.max(t-a,0);liters.textContent=l.toFixed(1);total.textContent=t.toFixed(2);credit.textContent=c.toFixed(2);}
+["input","change"].forEach(evt=>[drums,price,paid].forEach(x=>x?.addEventListener(evt,recalc)));recalc();
+})();
+</script>
+{% endblock %}
