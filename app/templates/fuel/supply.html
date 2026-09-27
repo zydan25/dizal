@@ -3,6 +3,7 @@
 <div class="page-heading"><h1>توريدات الديزل</h1><p>الموظف يرفع التوريد، ويظل معلقًا حتى يعتمد المدير.</p></div>
 <form method="post" enctype="multipart/form-data" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+{% if current_user.has_role("manager") %}<label>الموظف المسؤول<select name="employee_id"><option value="">اختر الموظف</option>{% for e in employees %}<option value="{{e.id}}">{{e.display_name}}</option>{% endfor %}</select></label>{% endif %}
 <label>الخزان<select name="tank_id" required><option value="">اختر الخزان</option>{% for tank in tanks %}<option value="{{tank.id}}">{{tank.name}} · {{tank.code}}</option>{% endfor %}</select></label>
 <div class="two-col"><label>التاريخ<input name="purchase_date" type="date" value="{{today}}" required></label><label>المورد<input name="supplier_name"></label></div>
 <div class="two-col"><label>اللترات<input name="liters" type="number" step="0.001" min="0.001" required></label><label>قيمة الديزل<input name="diesel_amount" type="number" step="0.001" min="0" required></label></div>
