@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{document.number}}</title><style>
+body{font-family:Arial,sans-serif;color:#111;margin:0;padding:24px;background:#fff}main{max-width:800px;margin:auto}.head{border-bottom:2px solid #222;padding-bottom:12px;display:flex;justify-content:space-between;gap:20px}.head h1{margin:0;font-size:22px}.meta{margin:20px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px}.box{border:1px solid #ccc;padding:12px;margin-bottom:10px}.sign{margin-top:50px;display:flex;justify-content:space-between}.print{position:fixed;left:20px;top:20px}@media print{.print{display:none}body{padding:0}@page{size:A4;margin:14mm}}
+</style></head><body><button class="print" onclick="window.print()">طباعة</button><main>
+<div class="head"><div><h1>{{project_settings.project_name}}</h1><div>{{project_settings.document_header or ""}}</div></div><div><strong>{{document.title}}</strong><br>{{document.number}}<br>{{document.issue_date}}</div></div>
+<div class="meta"><div class="box">نوع السند: {{document.document_type}}</div><div class="box">الحالة: {{document.status}}</div></div>
+{% if source %}<div class="box">
+{% if source.amount is defined %}<p><strong>المبلغ:</strong> {{source.amount}} {{project_settings.currency}}</p>{% endif %}
+{% if source.total_amount is defined %}<p><strong>الإجمالي:</strong> {{source.total_amount}} {{project_settings.currency}}</p>{% endif %}
+{% if source.liters is defined %}<p><strong>الكمية:</strong> {{source.liters}} لتر{% if source.drums is defined %} / {{source.drums}} دبة{% endif %}</p>{% endif %}
+{% if source.employee is defined %}<p><strong>الموظف:</strong> {{source.employee.display_name}}</p>{% endif %}
+{% if source.farmer is defined %}<p><strong>المزارع:</strong> {{source.farmer.name}}</p>{% endif %}
+</div>{% endif %}
+{% if document.notes %}<div class="box"><strong>البيان:</strong><br>{{document.notes}}</div>{% endif %}
+<div class="sign"><span>المستلم / المسؤول<br><br>________________</span><span>المدير<br><br>________________</span></div>
+<footer style="margin-top:30px;border-top:1px solid #ccc;padding-top:8px;font-size:12px">{{project_settings.document_footer or ""}}</footer>
+</main></body></html>
