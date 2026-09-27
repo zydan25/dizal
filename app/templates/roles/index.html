@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>الأدوار والصلاحيات</h1><p>تكوين الصلاحيات حسب الدور، ثم إعطاء استثناءات للموظف عند الحاجة.</p></div>
+<div class="entity-list">{% for role in roles %}<a class="entity-row" href="{{url_for('roles.edit',role_id=role.id)}}"><div class="avatar"><i class="bi bi-shield-check"></i></div><div class="entity-main"><strong>{{role.label or role.name}}</strong><span>{{role.name}}</span><small>{{role.permission_links|length}} صلاحية</small></div></a>{% endfor %}</div>
+{% endblock %}
