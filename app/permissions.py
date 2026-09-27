@@ -11,11 +11,9 @@ PERMISSIONS={
 "fuel.dispense":("صرف الديزل","fuel"),"fuel.price.override":("تغيير سعر البيع عند الصرف","fuel"),
 "farmers.view":("مشاهدة المزارعين","farmers"),"farmers.view_all":("مشاهدة جميع المزارعين","farmers"),"farmers.create":("إضافة مزارع","farmers"),"farmers.documents.upload":("رفع مرفقات المزارع","farmers"),"farmers.approve":("اعتماد المزارعين","farmers"),"farmers.quota.change":("تعديل سقف المزارع","farmers"),"farmer.payment.create":("تسجيل سداد مزارع","farmers"),
 "expenses.manage":("إدارة المصروفات","expenses"),"settlement.manage":("إدارة التسويات","settlements"),"settlement.approve":("اعتماد التسويات","settlements"),
+"reports.view":("مشاهدة التقارير","reports"),"documents.view":("مشاهدة السندات","documents"),
 }
-ROLE_PERMISSIONS={
-"manager":set(PERMISSIONS.keys()),
-"employee":{"dashboard.view","cashbox.view","fuel.supply.create","fuel.stock.view","fuel.dispense","farmers.view","farmers.create","farmers.documents.upload","farmer.payment.create"},
-}
+ROLE_PERMISSIONS={"manager":set(PERMISSIONS.keys()),"employee":{"dashboard.view","cashbox.view","fuel.supply.create","fuel.stock.view","fuel.dispense","farmers.view","farmers.create","farmers.documents.upload","farmer.payment.create"}}
 def user_has_permission(user,permission_key):
     if not user or not user.is_authenticated:return False
     if user.has_role("manager"):return True
