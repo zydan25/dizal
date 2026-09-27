@@ -12,4 +12,6 @@ def create_asset(name,category,cost,acquisition_date,payer_cashbox_id,created_by
     db.session.add(row)
     db.session.flush()
     document.source_id=str(row.id)
+    from .accounting import post_asset
+    post_asset(row,created_by_id)
     return row
