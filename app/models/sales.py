@@ -15,6 +15,8 @@ class FuelDispense(db.Model):
     paid_amount=db.Column(db.Numeric(18,3),nullable=False,default=0)
     credit_amount=db.Column(db.Numeric(18,3),nullable=False,default=0)
     credit_drums=db.Column(db.Numeric(12,6),nullable=False,default=0)
+    cost_amount=db.Column(db.Numeric(18,3),nullable=False,default=0)
+    gross_profit=db.Column(db.Numeric(18,3),nullable=False,default=0)
     payment_mode=db.Column(db.String(20),nullable=False,default="credit")
     status=db.Column(db.String(25),nullable=False,default="approved")
     notes=db.Column(db.Text,nullable=True)
