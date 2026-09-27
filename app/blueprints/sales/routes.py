@@ -73,8 +73,9 @@ def payment():
             flash(str(exc),"danger")
     farmers=visible_farmers()
     accounts={farmer.id:farmer_account(farmer) for farmer in farmers}
+    accounts_json={str(key):{name:(float(value) if hasattr(value,"as_integer_ratio") else str(value)) for name,value in item.items()} for key,item in accounts.items()}
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
-    return render_template("sales/payment.html",farmers=farmers,accounts=accounts,employees=employees)
+    return render_template("sales/payment.html",farmers=farmers,accounts=accounts,accounts_json=accounts_json,employees=employees)
 
 @sales_bp.get("/farmer/<int:farmer_id>")
 @permission_required("farmers.view")
