@@ -280,3 +280,15 @@ body.install-sheet-open{overflow:hidden}
 @media(max-width:600px){.install-sheet{padding:0}.install-sheet-dialog{border-radius:23px 23px 0 0;padding:19px 15px 13px}.install-sheet-copy h2{font-size:1.08rem}.install-sheet-actions{grid-template-columns:1.5fr 1fr}.farmer-tools{grid-template-columns:1fr;gap:6px}.farmer-search{min-height:48px}.farmer-search input{height:36px}.farmer-search-meta{min-width:47px}.sort-select{height:44px;min-width:0;padding:0 8px}.sort-select select{flex:1;height:38px}.payment-amount-wrap input{min-height:50px}.amount-words-box{font-size:.64rem}}
 @media(max-width:420px){.sidebar-install-btn{min-height:49px}.sidebar-install-btn span{font-size:.68rem}.install-app-icon{width:60px;height:60px}.install-sheet-dialog{padding-inline:13px}.install-sheet-actions .secondary-btn{font-size:.69rem}.farmer-search{grid-template-columns:29px 1fr auto;gap:5px;padding-inline:6px}.farmer-search-icon{width:29px;height:29px}.farmer-search-meta{font-size:.54rem;min-width:42px}.sort-select-label{font-size:.58rem}.sort-select select{font-size:.66rem}}
 @media print{.install-sheet{display:none!important}}
+
+/* 2026-09-28 mobile sidebar reliability */
+@media(max-width:991.98px){
+ .topbar{position:relative;z-index:90}
+ .topbar .icon-btn{position:relative;z-index:91;touch-action:manipulation}
+ .sidebar{z-index:120}
+ .sidebar.open{transform:translateX(0);visibility:visible}
+ .scrim{z-index:110;pointer-events:auto}
+ .scrim.d-none{pointer-events:none}
+ body.sidebar-open{overflow:hidden}
+ .bottom-nav{z-index:130}
+}
