@@ -2,10 +2,10 @@
 {% block content %}
 <div class="page-heading-row"><div class="page-heading"><h1>{{tank.name}}</h1><p>{{tank.code}} · {{tank.location or "بدون موقع"}}</p></div><div class="header-actions"><a class="secondary-btn" href="{{url_for('fuel.tanks')}}"><i class="bi bi-arrow-right"></i><span>الخزانات</span></a>{% if current_user.has_role("manager") %}<a class="primary-btn" href="{{url_for('fuel.edit_tank',tank_id=tank.id)}}"><i class="bi bi-pencil"></i><span>تعديل</span></a>{% endif %}</div></div>
 <div class="stats-grid page-stats-compact">
-<div class="stat-card"><i class="bi bi-box-arrow-in-down"></i><div><small>إجمالي الداخل</small><strong>{{stats.inbound}}</strong><span>لتر</span></div></div>
-<div class="stat-card"><i class="bi bi-droplet"></i><div><small>إجمالي المصروف</small><strong>{{stats.outbound}}</strong><span>لتر</span></div></div>
-<div class="stat-card"><i class="bi bi-fuel-pump"></i><div><small>المتبقي</small><strong>{{stats.stock}}</strong><span>لتر</span></div></div>
-<div class="stat-card"><i class="bi bi-speedometer2"></i><div><small>السعة</small><strong>{{tank.capacity_liters or "—"}}</strong><span>لتر</span></div></div>
+<div class="stat-card"><i class="bi bi-box-arrow-in-down"></i><div><small>إجمالي الداخل</small><strong>{{stats.inbound|clean_number}}</strong><span>لتر</span></div></div>
+<div class="stat-card"><i class="bi bi-droplet"></i><div><small>إجمالي المصروف</small><strong>{{stats.outbound|clean_number}}</strong><span>لتر</span></div></div>
+<div class="stat-card"><i class="bi bi-fuel-pump"></i><div><small>المتبقي</small><strong>{{stats.stock|clean_number}}</strong><span>لتر</span></div></div>
+<div class="stat-card"><i class="bi bi-speedometer2"></i><div><small>السعة</small><strong>{{(tank.capacity_liters or "—")|clean_number}}</strong><span>لتر</span></div></div>
 </div>
 <div class="info-card mt-3"><div class="detail-line"><strong>الملاحظات</strong><span>{{tank.notes or "لا توجد ملاحظات"}}</span></div></div>
 <div class="section-title"><h2>آخر التوريدات</h2><span>{{purchases|length}} عملية</span></div>
