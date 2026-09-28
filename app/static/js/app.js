@@ -19,5 +19,5 @@ localStorage.setItem(key,closed?"closed":"open");
 });
 });
 
-if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js?v=20260928-4",{updateViaCache:"none"}));}
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js?v=20260928-5",{updateViaCache:"none"}));}
 })();
