@@ -35,6 +35,11 @@
 {% endfor %}
 </div>
 <form class="sidebar-logout" method="post" action="{{url_for('auth.logout')}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button><i class="bi bi-box-arrow-right"></i> تسجيل الخروج</button></form>
+<div class="sidebar-credit">
+  <strong>برمجة وتصميم <bdi>م.زيدان العطاب</bdi></strong>
+  <bdi>774952666</bdi>
+  <span>يمن كود للتقنيات الذكية</span>
+</div>
 </aside>
 <main class="main-area">
 <header class="topbar">
@@ -74,6 +79,7 @@
 </main>
 {% endif %}
 
+{% if not current_user.is_authenticated %}
 <footer class="app-footer">
   <div class="footer-wave"></div>
   <div class="footer-content">
@@ -81,6 +87,7 @@
     <span>يمن كود للتقنيات الذكية</span>
   </div>
 </footer>
+{% endif %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{url_for('static',filename='js/app.js',v='20260928-7')}}" defer></script>
 </body>
