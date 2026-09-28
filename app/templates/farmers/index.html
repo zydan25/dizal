@@ -22,18 +22,18 @@
   <div class="stat-card"><div><small>موقوف</small><strong>{{stats.suspended|clean_number}}</strong><span>حساب</span></div></div>
 </div>
 
-<form class="farmer-tools" method="get">
-  {% if status %}<input type="hidden" name="status" value="{{status}}">{% endif %}
-  <div class="farmer-search"><i class="bi bi-search"></i><input name="search" value="{{search or ''}}" placeholder="بحث بالاسم أو الهاتف أو الكود"><button class="small-icon-btn" aria-label="بحث"><i class="bi bi-arrow-return-left"></i></button></div>
+<div class="farmer-tools" id="farmer-tools">
+  
+  <div class="farmer-search"><i class="bi bi-search"></i><input id="farmer-live-search" type="search" value="{{search or ''}}" placeholder="بحث فوري بالاسم أو الهاتف أو الكود" autocomplete="off"></div>
   <label class="sort-select"><i class="bi bi-sort-down"></i><select name="sort" onchange="this.form.submit()">
     <option value="name" {% if sort=="name" %}selected{% endif %}>الاسم</option>
     <option value="consumed" {% if sort=="consumed" %}selected{% endif %}>الأكثر سحبًا</option>
     <option value="remaining" {% if sort=="remaining" %}selected{% endif %}>الأعلى متبقيًا</option>
     <option value="debt" {% if sort=="debt" %}selected{% endif %}>الأعلى مديونية</option>
   </select></label>
-</form>
+</div>
 
-<div class="filter-row">
+<div class="filter-row farmer-status-filters">
   <a class="filter-chip {% if not status %}active{% endif %}" href="{{url_for('farmers.index')}}">الكل</a>
   <a class="filter-chip {% if status=='approved' %}active{% endif %}" href="{{url_for('farmers.index',status='approved')}}">معتمد</a>
   <a class="filter-chip {% if status=='submitted' %}active{% endif %}" href="{{url_for('farmers.index',status='submitted')}}">معلق</a>
@@ -46,7 +46,7 @@
 {% for item in cards %}
 {% set farmer=item.farmer %}
 {% set account=item.account %}
-<article class="farmer-card">
+<article class="farmer-card farmer-live-item" data-search="{{(farmer.name ~ ' ' ~ farmer.code ~ ' ' ~ farmer.phone)|lower}}" data-status="{{farmer.status}}">
   <a class="farmer-card-main" href="{{url_for('sales.farmer_account_view',farmer_id=farmer.id)}}">
     <div class="farmer-card-head">
       <div class="farmer-avatar"><i class="bi bi-person-fill"></i></div>
@@ -102,4 +102,14 @@
 <div class="empty-state"><i class="bi bi-people"></i><strong>لا توجد نتائج</strong><span>أضف أول مزارع أو غيّر الفلتر.</span></div>
 {% endfor %}
 </div>
+<script>
+(function(){
+  const input=document.getElementById("farmer-live-search");
+  const items=[...document.querySelectorAll(".farmer-live-item")];
+  const chips=[...document.querySelectorAll(".farmer-status-filters .filter-chip")];
+  function apply(){const q=(input?.value||"").trim().toLocaleLowerCase();let n=0;items.forEach(x=>{const show=!q||(x.dataset.search||"").includes(q);x.classList.toggle("d-none",!show);if(show)n++;});}
+  input?.addEventListener("input",apply);apply();
+  chips.forEach(c=>c.addEventListener("click",()=>{chips.forEach(x=>x.classList.toggle("active",x===c));}));
+})();
+</script>
 {% endblock %}
