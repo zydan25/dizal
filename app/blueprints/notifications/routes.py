@@ -12,6 +12,13 @@ def index():
     rows=Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(100).all()
     return render_template("notifications/index.html",notifications=rows)
 
+@notifications_bp.post("/read-all")
+@permission_required("notifications.view")
+def read_all():
+    Notification.query.filter_by(user_id=current_user.id,read_at=None).update({"read_at":datetime.now(timezone.utc)},synchronize_session=False)
+    db.session.commit()
+    return redirect(url_for("notifications.index"))
+
 @notifications_bp.post("/<int:notification_id>/read")
 @permission_required("notifications.view")
 def read(notification_id):

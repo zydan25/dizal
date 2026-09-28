@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row"><div class="page-heading"><h1>تعديل المزارع</h1><p>{% if farmer.status=="changes_requested" %}أكمل المطلوب ثم أعد الإرسال للمراجعة.{% else %}تحديث بيانات الملف مع الحفاظ على سجل المراجعة.{% endif %}</p></div><span class="status-chip status-{{farmer.status}}">{{farmer.status}}</span></div>
+<form method="post" enctype="multipart/form-data" class="mobile-form card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<label>اسم المزارع<input name="name" value="{{farmer.name}}" required></label>
+<div class="two-col"><label>رقم الهاتف<input name="phone" value="{{farmer.phone}}" inputmode="tel" required></label><label>العنوان<input name="address" value="{{farmer.address or ''}}"></label></div>
+<label>ملاحظات<textarea name="notes" rows="3">{{farmer.notes or ''}}</textarea></label>
+<div class="section-title"><h2>إضافة مرفقات</h2><span>يمكن رفع الملف الناقص</span></div>
+<div class="two-col"><label>البطاقة الأمامية<input type="file" name="id_front" accept=".pdf,.png,.jpg,.jpeg,.webp"></label><label>البطاقة الخلفية<input type="file" name="id_back" accept=".pdf,.png,.jpg,.jpeg,.webp"></label></div>
+<div class="two-col"><label>العقد/الالتزام<input type="file" name="contract" accept=".pdf,.png,.jpg,.jpeg,.webp"></label><label>ملف إضافي<input type="file" name="other_document" accept=".pdf,.png,.jpg,.jpeg,.webp"></label></div>
+<button class="primary-btn"><i class="bi bi-send-check"></i>{% if farmer.status=="changes_requested" %}حفظ وإعادة الإرسال{% else %}حفظ التعديلات{% endif %}</button>
+</form>
+{% endblock %}

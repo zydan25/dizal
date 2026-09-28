@@ -1,22 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-heading-row"><div class="page-heading"><h1>{{farmer.name}}</h1><p>{{farmer.code}} · {{farmer.phone}}</p></div><div class="status-chip status-{{farmer.status}}">{{{"approved":"معتمد","submitted":"معلق","changes_requested":"استكمال","rejected":"مرفوض","suspended":"موقوف"}.get(farmer.status,farmer.status)}}</div></div>
-
 <div class="stats-grid">
 <div class="stat-card"><i class="bi bi-droplet"></i><div><small>السقف</small><strong>{{farmer.quota_drums}}</strong><span>دبة</span></div></div>
 <div class="stat-card"><i class="bi bi-wallet2"></i><div><small>حد الدين</small><strong>{{farmer.credit_limit_drums}}</strong><span>دبة</span></div></div>
 <div class="stat-card"><i class="bi bi-person-badge"></i><div><small>الموظف</small><strong>{{farmer.assigned_employee.display_name}}</strong><span>المسؤول</span></div></div>
 <div class="stat-card"><i class="bi bi-calendar"></i><div><small>الحالة</small><strong>{{farmer.status}}</strong><span>الحالة الحالية</span></div></div>
 </div>
-
+{% if current_user.has_role("manager") or (farmer.status in ["changes_requested","submitted"] and farmer.assigned_employee_id==current_user.id) %}
+<div class="quick-grid"><a class="quick-card" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil-square"></i><strong>تعديل الملف</strong><small>{% if farmer.status=="changes_requested" %}استكمال وإعادة إرسال{% else %}تحديث البيانات{% endif %}</small></a></div>
+{% endif %}
 <div class="section-title"><h2>البيانات</h2><span>العنوان والملاحظات</span></div>
 <div class="info-card"><div><strong>العنوان</strong><p>{{farmer.address or "غير محدد"}}</p><strong>ملاحظات</strong><p>{{farmer.notes or "لا توجد ملاحظات"}}</p>{% if farmer.review_note %}<strong>ملاحظة المدير</strong><p>{{farmer.review_note}}</p>{% endif %}</div></div>
-
 <div class="section-title"><h2>المرفقات</h2><span>{{farmer.documents|length}} ملف</span></div>
 <div class="entity-list">
-{% for doc in farmer.documents %}<div class="entity-row"><div class="avatar"><i class="bi bi-paperclip"></i></div><div class="entity-main"><strong>{{doc.document_type}}</strong><span>{{doc.original_name}}</span><small>{{doc.mime_type or "file"}} · {{doc.size_bytes or 0}} bytes</small></div></div>{% else %}<div class="empty-state">لا توجد مرفقات.</div>{% endfor %}
+{% for doc in farmer.documents %}
+<div class="entity-row"><div class="avatar"><i class="bi bi-paperclip"></i></div><div class="entity-main"><strong>{{doc.document_type}}</strong><span>{{doc.original_name}}</span><small>{{doc.mime_type or "file"}} · {{doc.size_bytes or 0}} bytes</small></div><div class="d-flex gap-1"><a class="icon-btn" href="{{url_for('farmers.farmer_document',farmer_id=farmer.id,document_id=doc.id)}}" target="_blank" aria-label="فتح"><i class="bi bi-eye"></i></a><a class="icon-btn" href="{{url_for('farmers.farmer_document',farmer_id=farmer.id,document_id=doc.id,download=1)}}" aria-label="تنزيل"><i class="bi bi-download"></i></a></div></div>
+{% else %}<div class="empty-state">لا توجد مرفقات.</div>{% endfor %}
 </div>
-
 {% if current_user.has_role("manager") and farmer.status in ["submitted","changes_requested"] %}
 <div class="section-title"><h2>مراجعة المدير</h2><span>اعتماد أو استكمال أو رفض</span></div>
 <form method="post" action="{{url_for('farmers.review',farmer_id=farmer.id)}}" class="mobile-form card-form">
@@ -25,7 +26,6 @@
 <button class="secondary-danger" name="action" value="reject">رفض الطلب</button>
 </form>
 {% endif %}
-
 {% if current_user.has_role("manager") %}
 <div class="section-title"><h2>تعديل السقف</h2><span>يسجل في التاريخ</span></div>
 <form method="post" action="{{url_for('farmers.quota',farmer_id=farmer.id)}}" class="mobile-form card-form">

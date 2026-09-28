@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>مشاركة السند</h1><p>{{document.title}} · {{document.number}}</p></div>
+<div class="card-form">
+<div class="info-card"><strong>رابط السند</strong><p style="word-break:break-all">{{document_url}}</p></div>
+<div class="quick-grid">
+<a class="quick-card" href="{{whatsapp_url}}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i><strong>إرسال عبر واتساب</strong><small>يفتح محادثة WhatsApp مع رابط السند</small></a>
+<a class="quick-card" href="sms:?body={{document_url|urlencode}}"><i class="bi bi-chat-dots"></i><strong>رسالة SMS</strong><small>مشاركة الرابط برسالة نصية</small></a>
+<a class="quick-card" href="mailto:?subject={{document.title|urlencode}}&body={{document_url|urlencode}}"><i class="bi bi-envelope"></i><strong>البريد</strong><small>إرسال رابط السند بالبريد</small></a>
+<a class="quick-card" href="{{url_for('documents.pdf',document_id=document.id,download=1)}}"><i class="bi bi-file-earmark-pdf"></i><strong>تنزيل PDF</strong><small>مناسب للإرسال كمرفق</small></a>
+</div>
+</div>
+{% endblock %}

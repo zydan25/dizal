@@ -1,8 +1,9 @@
-from flask import current_app,flash,redirect,render_template,request,url_for,abort
+from pathlib import Path
+from flask import current_app,flash,redirect,render_template,request,url_for,abort,send_file
 from flask_login import current_user
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import EmployeeProfile,Farmer,User
+from ...models import EmployeeProfile,Farmer,FarmerDocument,User
 from ...permissions import user_has_permission
 from ...services.audit import audit
 from ...services.files import save_attachment
@@ -12,6 +13,16 @@ from . import farmers_bp
 def visible_farmer(farmer):
     if user_has_permission(current_user,"farmers.view_all"): return True
     return farmer.assigned_employee_id==current_user.id
+
+def editable_farmer(farmer):
+    if current_user.has_role("manager"): return True
+    return farmer.assigned_employee_id==current_user.id and farmer.status in {"draft","changes_requested","submitted"}
+
+def _farmer_file(row):
+    root=Path(current_app.config["UPLOAD_FOLDER"]).resolve()
+    target=(root/row.storage_key).resolve()
+    if root not in target.parents or not target.is_file(): abort(404)
+    return target
 
 @farmers_bp.get("/")
 @permission_required("farmers.view")
@@ -30,8 +41,7 @@ def new():
     if request.method=="POST":
         try:
             assigned=int(request.form.get("employee_id") or current_user.id)
-            if not user_has_role_manager() and assigned!=current_user.id:
-                abort(403)
+            if not user_has_role_manager() and assigned!=current_user.id: abort(403)
             attachments=[]
             for field,doc_type in (("id_front","id_front"),("id_back","id_back"),("contract","contract"),("other_document","other")):
                 file=request.files.get(field)
@@ -41,11 +51,39 @@ def new():
             audit("farmer.created","farmer",farmer.id,after={"code":farmer.code,"assigned_employee_id":assigned,"status":"submitted"})
             db.session.commit()
             flash("تم إرسال المزارع للمراجعة والاعتماد.","success")
-            return redirect(url_for("farmers.index"))
+            return redirect(url_for("farmers.detail",farmer_id=farmer.id))
         except (ValueError,TypeError) as exc:
             db.session.rollback()
             flash(str(exc),"danger")
     return render_template("farmers/form.html",employees=employees)
+
+@farmers_bp.route("/<int:farmer_id>/edit",methods=["GET","POST"])
+@permission_required("farmers.create")
+def edit(farmer_id):
+    farmer=Farmer.query.get_or_404(farmer_id)
+    if not editable_farmer(farmer): abort(403)
+    if request.method=="POST":
+        before={"name":farmer.name,"phone":farmer.phone,"address":farmer.address,"status":farmer.status}
+        try:
+            farmer.name=(request.form.get("name") or farmer.name).strip()
+            farmer.phone=(request.form.get("phone") or farmer.phone).strip()
+            farmer.address=(request.form.get("address") or "").strip() or None
+            farmer.notes=request.form.get("notes")
+            uploaded=0
+            for field,doc_type in (("id_front","id_front"),("id_back","id_back"),("contract","contract"),("other_document","other")):
+                file=request.files.get(field)
+                if file and file.filename:
+                    db.session.add(FarmerDocument(farmer_id=farmer.id,document_type=doc_type,created_by_id=current_user.id,**save_attachment(file,current_app.config["UPLOAD_FOLDER"],"farmers")))
+                    uploaded+=1
+            if not current_user.has_role("manager") and farmer.status=="changes_requested":
+                farmer.status="submitted";farmer.review_note=None
+            audit("farmer.updated","farmer",farmer.id,before=before,after={"name":farmer.name,"phone":farmer.phone,"status":farmer.status,"uploaded_documents":uploaded})
+            db.session.commit()
+            flash("تم حفظ بيانات المزارع وإعادة إرساله للمراجعة." if before["status"]=="changes_requested" and farmer.status=="submitted" else "تم تحديث بيانات المزارع.","success")
+            return redirect(url_for("farmers.detail",farmer_id=farmer.id))
+        except (ValueError,TypeError) as exc:
+            db.session.rollback();flash(str(exc),"danger")
+    return render_template("farmers/edit.html",farmer=farmer)
 
 @farmers_bp.get("/pending")
 @permission_required("farmers.approve")
@@ -60,6 +98,14 @@ def detail(farmer_id):
     if not visible_farmer(farmer): abort(403)
     return render_template("farmers/detail.html",farmer=farmer)
 
+@farmers_bp.get("/<int:farmer_id>/documents/<int:document_id>")
+@permission_required("farmers.view")
+def farmer_document(farmer_id,document_id):
+    farmer=Farmer.query.get_or_404(farmer_id)
+    if not visible_farmer(farmer): abort(403)
+    row=FarmerDocument.query.filter_by(id=document_id,farmer_id=farmer.id).first_or_404()
+    return send_file(_farmer_file(row),as_attachment=request.args.get("download")=="1",download_name=row.original_name)
+
 @farmers_bp.post("/<int:farmer_id>/review")
 @permission_required("farmers.approve")
 def review(farmer_id):
@@ -68,11 +114,9 @@ def review(farmer_id):
         action=request.form.get("action")
         review_farmer(farmer,action,current_user.id,request.form.get("note"))
         audit(f"farmer.{action}","farmer",farmer.id,after={"status":farmer.status,"note":farmer.review_note})
-        db.session.commit()
-        flash("تم تحديث حالة المزارع.","success")
+        db.session.commit();flash("تم تحديث حالة المزارع.","success")
     except ValueError as exc:
-        db.session.rollback()
-        flash(str(exc),"danger")
+        db.session.rollback();flash(str(exc),"danger")
     return redirect(url_for("farmers.pending"))
 
 @farmers_bp.post("/<int:farmer_id>/quota")
@@ -82,11 +126,9 @@ def quota(farmer_id):
     try:
         movement=change_quota(farmer,request.form.get("quota_drums"),request.form.get("credit_limit_drums"),current_user.id,request.form.get("reason"))
         audit("farmer.quota.changed","farmer",farmer.id,after={"quota_drums":str(movement.new_quota_drums),"credit_limit_drums":str(movement.new_credit_limit_drums)})
-        db.session.commit()
-        flash("تم تعديل سقف المزارع وتسجيل سبب التغيير.","success")
+        db.session.commit();flash("تم تعديل سقف المزارع وتسجيل سبب التغيير.","success")
     except ValueError as exc:
-        db.session.rollback()
-        flash(str(exc),"danger")
+        db.session.rollback();flash(str(exc),"danger")
     return redirect(url_for("farmers.detail",farmer_id=farmer.id))
 
 def user_has_role_manager():
