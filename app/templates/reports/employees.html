@@ -3,7 +3,7 @@
 <div class="page-heading"><h1>أداء الموظفين</h1><p>المبيعات والربحية وصندوق كل موظف.</p></div>
 <div class="entity-list">
 {% for row in rows %}
-<div class="entity-row"><div class="avatar"><i class="bi bi-person-badge"></i></div><div class="entity-main"><strong>{{row.employee.display_name}}</strong><span>{{row.farmer_count}} مزارعين · مبيعات {{row.sales}}</span><small>التكلفة {{row.cogs}} · الربح {{row.profit}}</small></div><div class="money-value">{{row.cashbox_balance}}</div></div>
+<div class="entity-row"><div class="avatar"><i class="bi bi-person-badge"></i></div><div class="entity-main"><strong>{{row.employee.display_name}}</strong><span>{{row.farmer_count}} مزارعين · مبيعات {{row.sales}}</span><small>التكلفة {{row.cogs}} · الربح {{row.profit}}</small></div><div class="entity-actions"><div class="money-value">{{row.cashbox_balance}}</div><a class="icon-btn" href="{{url_for('reports.employee_statement',employee_id=row.employee.id)}}" aria-label="كشف الحساب"><i class="bi bi-file-earmark-text"></i></a></div></div>
 {% else %}<div class="empty-state">لا يوجد موظفون.</div>{% endfor %}
 </div>
 {% endblock %}
