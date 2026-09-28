@@ -7,14 +7,27 @@ const sectionKey="dizal.nav.openSection";
 const scrollKey="dizal.nav.scrollTop";
 
 function setSidebar(open){
-  sidebar?.classList.toggle("open",open);
-  scrim?.classList.toggle("d-none",!open);
+  if(!sidebar)return;
+  sidebar.classList.toggle("open",open);
+  sidebar.setAttribute("aria-hidden",open?"false":"true");
+  document.body.classList.toggle("sidebar-open",open);
+  document.querySelectorAll("[data-sidebar-open]").forEach(btn=>btn.setAttribute("aria-expanded",open?"true":"false"));
+  if(scrim){
+    scrim.classList.toggle("d-none",!open);
+    scrim.setAttribute("aria-hidden",open?"false":"true");
+  }
   if(open && navScroll){
     requestAnimationFrame(()=>{navScroll.scrollTop=Number(localStorage.getItem(scrollKey)||0);});
   }
 }
-document.querySelectorAll("[data-sidebar-open]").forEach(x=>x.addEventListener("click",()=>setSidebar(true)));
-document.querySelectorAll("[data-sidebar-close]").forEach(x=>x.addEventListener("click",()=>setSidebar(false)));
+document.addEventListener("click",event=>{
+  const opener=event.target.closest?.("[data-sidebar-open]");
+  if(opener){event.preventDefault();setSidebar(true);return;}
+  const closer=event.target.closest?.("[data-sidebar-close]");
+  if(closer){event.preventDefault();setSidebar(false);}
+});
+document.addEventListener("keydown",event=>{if(event.key==="Escape" && sidebar?.classList.contains("open"))setSidebar(false);});
+setSidebar(false);
 
 const storedSection=localStorage.getItem(sectionKey) || "";
 function applySection(section,open,persist){
@@ -145,37 +158,101 @@ updateNetworkState();
 
 let deferredInstallPrompt=null;
 const installButtons=[...document.querySelectorAll("[data-install-app]")];
+const installSheet=document.getElementById("install-sheet");
+const installHelp=document.getElementById("install-help");
+const installReadyCard=document.getElementById("install-ready-card");
+const installReadyTitle=document.getElementById("install-ready-title");
+const installReadyText=document.getElementById("install-ready-text");
+const installConfirmText=document.getElementById("install-confirm-text");
 const isStandalone=()=>window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone===true;
 const isIos=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
+const isAndroid=()=>/android/i.test(navigator.userAgent);
+const isChromium=()=>/chrome|crios|edg|opr|samsungbrowser/i.test(navigator.userAgent);
+
 function refreshInstallButtons(){
   const installed=isStandalone();
-  installButtons.forEach(btn=>{btn.hidden=installed && !isIos();});
+  installButtons.forEach(btn=>{
+    btn.hidden=installed && !isIos();
+    btn.classList.toggle("is-ready",!!deferredInstallPrompt);
+    btn.setAttribute("aria-label",deferredInstallPrompt?"تثبيت Dizal الآن":"تثبيت Dizal على الشاشة");
+  });
+  if(installReadyCard){
+    installReadyCard.hidden=!deferredInstallPrompt;
+    if(deferredInstallPrompt){
+      installReadyTitle.textContent="التثبيت جاهز";
+      installReadyText.textContent="اضغط «تثبيت الآن» لفتح نافذة التثبيت الرسمية.";
+      if(installConfirmText)installConfirmText.textContent="تثبيت الآن";
+    }
+  }
 }
-window.addEventListener("beforeinstallprompt",event=>{
-  event.preventDefault();
-  deferredInstallPrompt=event;
-  refreshInstallButtons();
-});
-window.addEventListener("appinstalled",()=>{
-  deferredInstallPrompt=null;
-  installButtons.forEach(btn=>btn.hidden=true);
-  dizalToast("تم تثبيت Dizal كتطبيق على الشاشة.","success");
-});
-installButtons.forEach(btn=>btn.addEventListener("click",async()=>{
-  if(isStandalone()){dizalToast("Dizal مثبت كتطبيق بالفعل.");return;}
+function renderInstallHelp(){
+  if(installConfirmText)installConfirmText.textContent=deferredInstallPrompt?"تثبيت الآن":"عرض التعليمات";
+  if(!installHelp)return;
+  if(deferredInstallPrompt){
+    installHelp.innerHTML='<div class="install-help-ready"><i class="bi bi-check-circle-fill"></i><span>المتصفح جهّز التثبيت لهذا الجهاز. يمكنك تثبيت Dizal مباشرة.</span></div>';
+    return;
+  }
+  if(isIos()){
+    installHelp.innerHTML='<div class="install-steps"><div><b>1</b><span>اضغط زر المشاركة في Safari.</span></div><div><b>2</b><span>اختر «إضافة إلى الشاشة الرئيسية».</span></div><div><b>3</b><span>اضغط «إضافة» ليظهر Dizal كتطبيق.</span></div></div>';
+    return;
+  }
+  if(isAndroid()){
+    installHelp.innerHTML='<div class="install-steps"><div><b>1</b><span>افتح قائمة المتصفح ⋮.</span></div><div><b>2</b><span>اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».</span></div><div><b>3</b><span>أكد الإضافة من نافذة المتصفح.</span></div></div>';
+    return;
+  }
+  installHelp.innerHTML='<div class="install-steps"><div><b>1</b><span>افتح قائمة المتصفح بجانب شريط العنوان.</span></div><div><b>2</b><span>اختر «تثبيت Dizal» أو «تثبيت التطبيق».</span></div><div><b>3</b><span>أكد التثبيت ليظهر التطبيق في جهازك.</span></div></div>';
+}
+function openInstallSheet(){
+  if(!installSheet)return;
+  renderInstallHelp();
+  installSheet.hidden=false;
+  installSheet.setAttribute("aria-hidden","false");
+  document.body.classList.add("install-sheet-open");
+  installSheet.querySelector(".install-sheet-primary")?.focus();
+}
+function closeInstallSheet(){
+  if(!installSheet)return;
+  installSheet.hidden=true;
+  installSheet.setAttribute("aria-hidden","true");
+  document.body.classList.remove("install-sheet-open");
+}
+async function triggerInstall(){
+  if(isStandalone()){
+    dizalToast("Dizal مثبت كتطبيق بالفعل.","success");
+    return;
+  }
   if(deferredInstallPrompt){
     deferredInstallPrompt.prompt();
     try{await deferredInstallPrompt.userChoice;}catch(_){}
     deferredInstallPrompt=null;
     refreshInstallButtons();
+    closeInstallSheet();
     return;
   }
   if(isIos()){
-    dizalToast("في iPhone/iPad: افتح مشاركة Safari ثم اختر إضافة إلى الشاشة الرئيسية.");
+    openInstallSheet();
     return;
   }
-  dizalToast("التثبيت غير متاح من المتصفح الحالي الآن. افتح قائمة المتصفح وابحث عن «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».");
+  openInstallSheet();
+}
+window.addEventListener("beforeinstallprompt",event=>{
+  event.preventDefault();
+  deferredInstallPrompt=event;
+  refreshInstallButtons();
+  if(installSheet && !installSheet.hidden)renderInstallHelp();
 });
+window.addEventListener("appinstalled",()=>{
+  deferredInstallPrompt=null;
+  installButtons.forEach(btn=>btn.hidden=true);
+  refreshInstallButtons();
+  closeInstallSheet();
+  dizalToast("تم تثبيت Dizal كتطبيق على الشاشة.","success");
+});
+installButtons.forEach(btn=>btn.addEventListener("click",()=>triggerInstall()));
+document.querySelectorAll("[data-install-confirm]").forEach(btn=>btn.addEventListener("click",()=>triggerInstall()));
+document.querySelectorAll("[data-install-close]").forEach(btn=>btn.addEventListener("click",closeInstallSheet));
+installSheet?.addEventListener("click",event=>{if(event.target===installSheet)closeInstallSheet();});
+document.addEventListener("keydown",event=>{if(event.key==="Escape" && installSheet && !installSheet.hidden)closeInstallSheet();});
 refreshInstallButtons();
 
 document.addEventListener("submit",event=>{
@@ -187,6 +264,6 @@ document.addEventListener("submit",event=>{
 });
 
 if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js?v=20260928-11",{updateViaCache:"none"}));
+  window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js?v=20260928-12",{updateViaCache:"none"}));
 }
 })();
