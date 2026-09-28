@@ -27,6 +27,13 @@
 <article class="stat-card"><i class="bi bi-truck"></i><div><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies}}</strong><span>للمتابعة</span></div></article>
 </div>
 {% if not manager %}
+<div class="section-title"><h2>اختصارات التشغيل</h2><span>وصول مباشر</span></div>
+<div class="quick-grid compact-quick-grid dashboard-shortcuts">
+<a class="quick-card quick-action-blue" href="{{url_for('farmers.index')}}"><i class="bi bi-people-fill"></i><strong>المزارعون</strong><small>بطاقاتك وحساباتهم وسحبياتهم</small></a>
+<a class="quick-card quick-action-green" href="{{url_for('sales.payment')}}"><i class="bi bi-cash-coin"></i><strong>دفع</strong><small>سجل تحصيل مزارع</small></a>
+<a class="quick-card" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet-fill"></i><strong>صرف ديزل</strong><small>تسجيل سحب جديد</small></a>
+<a class="quick-card" href="{{url_for('employees.my_password')}}"><i class="bi bi-key"></i><strong>كلمة المرور</strong><small>تحديث كلمة مرور حسابك</small></a>
+</div>
 <div class="section-title"><h2>مزارعيني</h2><span>{{employee_farmers|length}} من {{employee_farmers_total}} حساب</span></div>
 <div class="entity-list">
 {% for item in employee_farmers %}
