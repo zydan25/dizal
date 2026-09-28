@@ -1,4 +1,4 @@
-from flask import Flask,render_template
+from flask import Flask,render_template,redirect,request,url_for
 from .config import Config
 from .extensions import db,migrate,csrf,security
 
@@ -46,6 +46,9 @@ def create_app(config_object=None):
         reports_bp,documents_bp,notifications_bp,audit_bp,roles_bp,whatsapp_bp,media_bp
     ):
         app.register_blueprint(blueprint)
+
+    @app.errorhandler(401)
+    def unauthorized(_error): return redirect(url_for("auth.login", next=request.full_path))
 
     @app.errorhandler(403)
     def forbidden(_error): return render_template("errors/403.html"),403
