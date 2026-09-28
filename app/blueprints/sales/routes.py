@@ -2,10 +2,10 @@ from flask import flash,redirect,render_template,request,url_for,abort
 from flask_login import current_user
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import Farmer,FuelTank,User,ProjectSettings
+from ...models import Document,Farmer,FarmerPayment,FuelDispense,FuelTank,User,ProjectSettings
 from ...permissions import user_has_permission
 from ...services.audit import audit
-from ...services.sales import create_dispense,farmer_account,register_payment
+from ...services.sales import create_dispense,farmer_account,farmer_account_metrics,register_payment
 from . import sales_bp
 
 def selected_employee():
@@ -80,7 +80,31 @@ def payment():
 @sales_bp.get("/farmer/<int:farmer_id>")
 @permission_required("farmers.view")
 def farmer_account_view(farmer_id):
+    from datetime import date,datetime,time,timezone
     farmer=Farmer.query.get_or_404(farmer_id)
-    if not user_has_permission(current_user,"farmers.view_all") and farmer.assigned_employee_id!=current_user.id: abort(403)
-    account=farmer_account(farmer)
-    return render_template("sales/farmer_account.html",farmer=farmer,account=account,dispenses=farmer.dispenses,payments=farmer.payments)
+    if not user_has_permission(current_user,"farmers.view_all") and farmer.assigned_employee_id!=current_user.id:
+        abort(403)
+    try:
+        start_date=date.fromisoformat(request.args.get("start") or date.today().replace(day=1).isoformat())
+        end_date=date.fromisoformat(request.args.get("end") or date.today().isoformat())
+    except ValueError:
+        abort(400,description="صيغة التاريخ غير صحيحة.")
+    if end_date<start_date:
+        abort(400,description="نهاية الفترة لا يمكن أن تسبق بدايتها.")
+    start_dt=datetime.combine(start_date,time.min).replace(tzinfo=timezone.utc)
+    end_dt=datetime.combine(end_date,time.max).replace(tzinfo=timezone.utc)
+
+    dispenses=(FuelDispense.query
+               .filter_by(farmer_id=farmer.id,status="approved")
+               .filter(FuelDispense.created_at>=start_dt,FuelDispense.created_at<=end_dt)
+               .order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc()).all())
+    payments=(FarmerPayment.query
+              .join(Document,FarmerPayment.document_id==Document.id)
+              .filter(FarmerPayment.farmer_id==farmer.id,Document.status!="reversed",
+                      FarmerPayment.created_at>=start_dt,FarmerPayment.created_at<=end_dt)
+              .order_by(FarmerPayment.created_at.desc(),FarmerPayment.id.desc()).all())
+    ledger=[{"kind":"dispense","date":row.created_at,"row":row} for row in dispenses]
+    ledger += [{"kind":"payment","date":row.created_at,"row":row} for row in payments]
+    ledger.sort(key=lambda item:item["date"],reverse=True)
+    account=farmer_account_metrics(farmer,start=start_date)
+    return render_template("sales/farmer_account.html",farmer=farmer,account=account,dispenses=dispenses,payments=payments,ledger=ledger,start=start_date,end=end_date)
