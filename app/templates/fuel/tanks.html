@@ -8,19 +8,24 @@
 <form method="post" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>اسم الخزان<input name="name" required autofocus></label>
-<div class="two-col"><label>السعة باللتر<input name="capacity_liters" type="number" step="0.001" min="0"></label><label>الموقع<input name="location"></label></div>
+<div class="two-col"><label>السعة باللتر<input name="capacity_liters" type="number" step="0.001" min="0" data-unit="liter"></label><label>الموقع<input name="location"></label></div>
 <label>ملاحظات<textarea name="notes" rows="2"></textarea></label>
 <div class="info-card"><small>سيتم إنشاء كود الخزان تلقائيًا مثل TANK-0001.</small></div>
 <button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ الخزان</span></button>
 </form></div>
 <div class="section-title"><h2>الخزانات</h2><span>{{rows|length|clean_number}} خزان</span></div>
-{% set tank_total_stock=0 %}{% set tank_total_outbound=0 %}{% set tank_total_capacity=0 %}
-{% for item in rows %}{% set tank_total_stock=tank_total_stock+item.stats.stock %}{% set tank_total_outbound=tank_total_outbound+item.stats.outbound %}{% if item.tank.capacity_liters %}{% set tank_total_capacity=tank_total_capacity+item.tank.capacity_liters %}{% endif %}{% endfor %}
+{% set ns=namespace(stock=0,outbound=0,capacity=0) %}
+{% for item in rows %}
+  {% set ns.stock=ns.stock+item.stats.stock %}
+  {% set ns.outbound=ns.outbound+item.stats.outbound %}
+  {% if item.tank.capacity_liters %}{% set ns.capacity=ns.capacity+item.tank.capacity_liters %}{% endif %}
+{% endfor %}
+{% set tank_total_stock=ns.stock %}{% set tank_total_outbound=ns.outbound %}{% set tank_total_capacity=ns.capacity %}
 <div class="stats-grid page-stats-compact">
   <div class="stat-card"><div><small>عدد الخزانات</small><strong>{{rows|length|clean_number}}</strong><span>خزان</span></div></div>
-  <div class="stat-card"><div><small>المخزون الحالي</small><strong>{{tank_total_stock|clean_number}}</strong><span>لتر</span></div></div>
-  <div class="stat-card"><div><small>المصروف</small><strong>{{tank_total_outbound|clean_number}}</strong><span>لتر</span></div></div>
-  <div class="stat-card"><div><small>السعة</small><strong>{{tank_total_capacity|clean_number}}</strong><span>لتر</span></div></div>
+  <div class="stat-card"><div><small>المخزون الحالي</small><strong>{{((tank_total_stock|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{tank_total_stock|clean_number}} لتر</span></div></div>
+  <div class="stat-card"><div><small>المصروف</small><strong>{{((tank_total_outbound|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{tank_total_outbound|clean_number}} لتر</span></div></div>
+  <div class="stat-card"><div><small>السعة</small><strong>{{((tank_total_capacity|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{tank_total_capacity|clean_number}} لتر</span></div></div>
 </div>
 <div class="tank-card-grid">
 {% for row in rows %}{% set tank=row.tank %}{% set s=row.stats %}
@@ -28,9 +33,9 @@
 <a class="entity-card-main" href="{{url_for('fuel.tank_detail',tank_id=tank.id)}}">
   <div class="entity-card-head"><div class="avatar"><i class="bi bi-fuel-pump-fill"></i></div><div class="entity-main"><strong>{{tank.name}}</strong><span>{{tank.location or "بدون موقع"}} · {{tank.code}}</span></div><span class="status-chip {% if tank.is_active %}status-approved{% else %}status-suspended{% endif %}">{{"فعال" if tank.is_active else "متوقف"}}</span></div>
   <div class="entity-card-metrics">
-    <div><small>السعة</small><strong>{{(tank.capacity_liters or "—")|clean_number}}</strong><span>لتر</span></div>
-    <div><small>المتبقي</small><strong>{{s.stock|clean_number}}</strong><span>لتر</span></div>
-    <div><small>المصروف</small><strong>{{s.outbound|clean_number}}</strong><span>لتر</span></div>
+    <div><small>السعة</small><strong>{{((tank.capacity_liters / (project_settings.drum_liters|float))|round(1)) if tank.capacity_liters else "—"}}</strong><span>دبة · {{(tank.capacity_liters or 0)|clean_number}} لتر</span></div>
+    <div><small>المتبقي</small><strong>{{((s.stock|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{s.stock|clean_number}} لتر</span></div>
+    <div><small>المصروف</small><strong>{{((s.outbound|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{s.outbound|clean_number}} لتر</span></div>
   </div>
   {% if tank.capacity_liters %}<div class="mini-progress"><span style="width:{{s.capacity_percent or 0}}%"></span></div>{% endif %}
 </a>

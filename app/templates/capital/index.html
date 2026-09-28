@@ -8,18 +8,18 @@
   </div>
 </div>
 
-<div class="balance-card"><div><span>الصندوق الرئيسي</span><strong>{{central_balance}}</strong><small>{{project_settings.currency}}</small></div><i class="bi bi-bank"></i></div>
+<div class="balance-card"><div><span>الصندوق الرئيسي</span><strong>{{central_balance|clean_number}}</strong><small>{{project_settings.currency}}</small></div><i class="bi bi-bank"></i></div>
 <div class="stats-grid page-stats-compact">
-<div class="stat-card"><i class="bi bi-piggy-bank"></i><div><small>إجمالي رأس المال</small><strong>{{totals.contributed}}</strong><span>{{project_settings.currency}}</span></div></div>
-<div class="stat-card"><i class="bi bi-send"></i><div><small>المسلم للموظفين</small><strong>{{totals.allocated}}</strong><span>{{project_settings.currency}}</span></div></div>
-<div class="stat-card"><i class="bi bi-wallet2"></i><div><small>في صناديق الموظفين</small><strong>{{totals.employee_cash}}</strong><span>{{project_settings.currency}}</span></div></div>
-<div class="stat-card"><i class="bi bi-bank"></i><div><small>غير مخصص</small><strong>{{totals.unallocated}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-piggy-bank"></i><div><small>إجمالي رأس المال</small><strong>{{totals.contributed|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-send"></i><div><small>المسلم للموظفين</small><strong>{{totals.allocated|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-wallet2"></i><div><small>في صناديق الموظفين</small><strong>{{totals.employee_cash|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-bank"></i><div><small>غير مخصص</small><strong>{{totals.unallocated|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
 </div>
 
 <div class="section-title"><h2>عمليات رأس المال</h2><span>فتح السند للتفاصيل أو العكس</span></div>
 <div class="entity-list">
 {% for row in contributions %}
-<div class="entity-row"><div class="avatar"><i class="bi bi-bank"></i></div><div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number if row.document else "CAP"}}</a></strong><span>{{row.source or "رأس مال"}}</span><small>{{row.contribution_date}} · {{row.status}}</small></div><div class="money-value">{{row.amount}}</div></div>
+<div class="entity-row"><div class="avatar"><i class="bi bi-bank"></i></div><div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number if row.document else "CAP"}}</a></strong><span>{{row.source or "رأس مال"}}</span><small>{{row.contribution_date}} · {{row.status}}</small></div><div class="money-value">{{row.amount|clean_number}}</div></div>
 {% endfor %}
 {% for row in allocations %}
 <div class="entity-row"><div class="avatar"><i class="bi bi-arrow-left-right"></i></div><div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number if row.document else "TRF"}}</a></strong><span>{{row.employee.display_name}} · تسليم رأس مال</span><small>{{row.allocation_date}} · افتح السند للمراجعة أو العكس</small></div><div class="money-value">{{row.amount}}</div></div>

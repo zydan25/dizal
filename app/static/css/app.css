@@ -163,3 +163,7 @@ body{font-size:1rem}
 .nav-item i{font-size:.88rem}
 .sidebar-logout button{font-size:.82rem}
 @media(max-width:991.98px){.sidebar-credit{padding-bottom:12px}}
+
+/* User-facing units: drums first, liters secondary */
+.metric-secondary-unit{display:block!important;font-size:.6rem!important;color:#8290a4!important;font-weight:500}
+.number-words-hint{font-size:.72rem!important;color:#c62828!important;font-weight:800!important;margin-top:4px!important;direction:rtl}
