@@ -19,7 +19,7 @@
 {% if employee_cashbox %}<div class="employee-balance"><div><small>{{employee_cashbox.name}}</small><strong>{{employee_cashbox.balance}}</strong><span>{{project_settings.currency}}</span></div><i class="bi bi-wallet2"></i></div>{% endif %}
 <div class="stats-grid">
 <article class="stat-card"><i class="bi bi-people"></i><div><small>مزارعي المعتمدين</small><strong>{{employee_stats.farmers}}</strong><span>مزارع</span></div></article>
-<article class="stat-card"><i class="bi bi-person-exclamation"></i><div><small>ديون تحتاج تحصيل</small><strong>{{employee_stats.debt_count}}</strong><span>{{employee_stats.debt_amount}} {{project_settings.currency}}</span></div></article>
+<article class="stat-card"><i class="bi bi-person-exclamation"></i><div><small>ديون تحتاج تحصيل</small><strong>{{employee_stats.debts_count}}</strong><span>{{employee_stats.debt_amount}} {{project_settings.currency}}</span></div></article>
 <article class="stat-card"><i class="bi bi-cash-coin"></i><div><small>صرف اليوم</small><strong>{{employee_stats.today_sales}}</strong><span>{{project_settings.currency}}</span></div></article>
 <article class="stat-card"><i class="bi bi-truck"></i><div><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies}}</strong><span>للمراجعة</span></div></article>
 </div>
@@ -29,7 +29,16 @@
 <a class="quick-card" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet-fill"></i><strong>صرف ديزل</strong><small>بدء عملية صرف</small></a>
 <a class="quick-card" href="{{url_for('sales.payment')}}"><i class="bi bi-cash-coin"></i><strong>تحصيل</strong><small>تسجيل سداد</small></a>
 <a class="quick-card" href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><strong>المزارعون</strong><small>القائمة والحسابات</small></a>
-{% if manager %}<a class="quick-card" href="{{url_for('documents.index')}}"><i class="bi bi-receipt-cutoff"></i><strong>السندات</strong><small>طباعة PDF ومشاركة</small></a>{% endif %}
+{% if manager %}
+<a class="quick-card" href="{{url_for('documents.index')}}"><i class="bi bi-receipt-cutoff"></i><strong>السندات</strong><small>طباعة PDF ومشاركة</small></a>
+<a class="quick-card" href="{{url_for('settlements.index')}}"><i class="bi bi-arrow-left-right"></i><strong>التسويات</strong><small>مراجعة حسابات الموظفين</small></a>
+<a class="quick-card" href="{{url_for('employees.index')}}"><i class="bi bi-person-gear"></i><strong>الموظفون</strong><small>الحسابات والصلاحيات</small></a>
+<a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong><small>مراجعة واستكمال</small></a>
+{% else %}
+<a class="quick-card" href="{{url_for('cashbox.index')}}"><i class="bi bi-wallet2"></i><strong>صندوقي</strong><small>الرصيد والحركات</small></a>
+<a class="quick-card" href="{{url_for('reports.employee_statement',employee_id=current_user.id)}}"><i class="bi bi-file-earmark-text"></i><strong>كشف حسابي</strong><small>الحركات والتسويات</small></a>
+<a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong><small>إضافة ومتابعة التوريد</small></a>
+{% endif %}
 </div>
 
 <div class="section-title"><h2>آخر سجل نشاط</h2><span>Audit Log</span></div>
