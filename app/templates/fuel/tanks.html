@@ -14,8 +14,13 @@
 <button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ الخزان</span></button>
 </form></div>
 <div class="section-title"><h2>الخزانات</h2><span>{{rows|length|clean_number}} خزان</span></div>
-{% set tank_total_stock=0 %}{% set tank_total_outbound=0 %}{% set tank_total_capacity=0 %}
-{% for item in rows %}{% set tank_total_stock=tank_total_stock+item.stats.stock %}{% set tank_total_outbound=tank_total_outbound+item.stats.outbound %}{% if item.tank.capacity_liters %}{% set tank_total_capacity=tank_total_capacity+item.tank.capacity_liters %}{% endif %}{% endfor %}
+{% set ns=namespace(stock=0,outbound=0,capacity=0) %}
+{% for item in rows %}
+  {% set ns.stock=ns.stock+item.stats.stock %}
+  {% set ns.outbound=ns.outbound+item.stats.outbound %}
+  {% if item.tank.capacity_liters %}{% set ns.capacity=ns.capacity+item.tank.capacity_liters %}{% endif %}
+{% endfor %}
+{% set tank_total_stock=ns.stock %}{% set tank_total_outbound=ns.outbound %}{% set tank_total_capacity=ns.capacity %}
 <div class="stats-grid page-stats-compact">
   <div class="stat-card"><div><small>عدد الخزانات</small><strong>{{rows|length|clean_number}}</strong><span>خزان</span></div></div>
   <div class="stat-card"><div><small>المخزون الحالي</small><strong>{{(tank_total_stock / project_settings.drum_liters)|round(1)|clean_number}}</strong><span>دبة · {{tank_total_stock|clean_number}} لتر</span></div></div>
