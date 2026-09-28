@@ -12,7 +12,7 @@
 <option value="">اختر المزارع</option>
 {% for farmer in farmers %}
 {% set acc = farmer.__dict__.get('id') and none %}
-<option value="{{farmer.id}}" {% if selected_farmer_id|string==farmer.id|string %}selected{% endif %}>{{farmer.name}} · سقفه {{farmer.quota_drums}} دبة</option>
+<option value="{{farmer.id}}" {% if selected_farmer_id|string==farmer.id|string %}selected{% endif %}>{{farmer.name}} · سقفه {{farmer.quota_drums|clean_number}} دبة</option>
 {% endfor %}
 </select>
 </label>
@@ -32,7 +32,7 @@
 <label>المدفوع الآن<input name="paid_amount" id="paid_amount" type="number" step="0.001" min="0" value="0" inputmode="decimal"></label>
 </div>
 <label>سعر اللتر
-<input name="sale_price_per_liter" id="sale_price" type="number" step="0.001" value="{{settings.default_sale_price_per_liter}}" {% if not current_user.has_role("manager") %}readonly{% endif %}>
+<input name="sale_price_per_liter" id="sale_price" type="number" step="0.001" value="{{settings.default_sale_price_per_liter|clean_number}}" {% if not current_user.has_role("manager") %}readonly{% endif %}>
 </label>
 <div class="calculation-card">
 <div><small>اللترات</small><strong id="liters_preview">0</strong><span>لتر</span></div>
