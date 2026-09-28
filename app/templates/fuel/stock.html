@@ -1,9 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>مخزون الديزل</h1><p>وحدة الحساب الداخلية هي اللتر، والدبة تعرض حسب إعداد المشروع.</p></div>
-<div class="balance-card"><div><span>إجمالي المخزون</span><strong>{{total}}</strong><small>{{project_settings.currency}} لا علاقة له بالكمية</small></div><i class="bi bi-fuel-pump"></i></div>
-<div class="section-title"><h2>حسب الخزان</h2><span>{{project_settings.drum_liters}} لتر / دبة</span></div>
+<div class="page-heading-row">
+  <div class="page-heading"><h1>مخزون الديزل</h1><p>المخزون باللتر مع تقدير سريع بالدبة، وكل خزان في بطاقة خفيفة.</p></div>
+  <a class="secondary-btn" href="{{url_for('fuel.tanks')}}"><i class="bi bi-fuel-pump"></i><span>الخزانات</span></a>
+</div>
+<div class="stats-grid page-stats-compact">
+  <div class="stat-card"><div><small>إجمالي المخزون</small><strong>{{total}}</strong><span>لتر</span></div></div>
+  <div class="stat-card"><div><small>بالدبة</small><strong>{{(total / project_settings.drum_liters)|round(1)}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>عدد الخزانات</small><strong>{{rows|length}}</strong><span>خزان</span></div></div>
+</div>
+<div class="section-title"><h2>المخزون حسب الخزان</h2><span>{{project_settings.drum_liters}} لتر / دبة</span></div>
 <div class="entity-list">
-{% for row in rows %}<div class="entity-row"><div class="avatar"><i class="bi bi-fuel-pump-fill"></i></div><div class="entity-main"><strong>{{row.tank.name}}</strong><span>{{row.tank.code}} · {{row.tank.location or "بدون موقع"}}</span></div><div class="money-value">{{row.stock}} لتر<br><small>≈ {{(row.stock / project_settings.drum_liters)|round(1)}} دبة</small></div></div>{% else %}<div class="empty-state">لا توجد خزانات.</div>{% endfor %}
+{% for row in rows %}
+<a class="entity-row" href="{{url_for('fuel.tank_detail',tank_id=row.tank.id)}}">
+  <div class="avatar"><i class="bi bi-fuel-pump-fill"></i></div>
+  <div class="entity-main">
+    <strong>{{row.tank.name}}</strong>
+    <span>{{row.tank.code}} · {{row.tank.location or "بدون موقع"}}</span>
+    <small>المتبقي {{row.stock}} لتر · ≈ {{(row.stock / project_settings.drum_liters)|round(1)}} دبة</small>
+  </div>
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% else %}<div class="empty-state">لا توجد خزانات.</div>{% endfor %}
 </div>
 {% endblock %}
