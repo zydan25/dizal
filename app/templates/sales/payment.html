@@ -8,7 +8,13 @@
 {% endif %}
 <label>المزارع<select name="farmer_id" id="payment_farmer" required><option value="">اختر المزارع</option>{% for farmer in farmers %}<option value="{{farmer.id}}" {% if selected_farmer_id|string==farmer.id|string %}selected{% endif %}>{{farmer.name}} · عليه {{accounts[farmer.id].outstanding_amount|clean_number}}</option>{% endfor %}</select></label>
 <div class="balance-card compact-balance" id="farmer-balance"><div><span>الدين الحالي</span><strong>0</strong><small>{{project_settings.currency}}</small></div><i class="bi bi-wallet2"></i></div>
-<label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required inputmode="decimal"></label>
+<label class="payment-amount-field">المبلغ
+  <div class="payment-amount-wrap">
+    <input id="payment-amount" name="amount" type="number" step="0.001" min="0.001" required inputmode="decimal" enterkeyhint="done" data-number-words-ignore>
+    <span class="payment-currency">{{project_settings.currency}}</span>
+  </div>
+  <div class="amount-words-box" id="payment-amount-words" aria-live="polite"><i class="bi bi-type"></i><span>يظهر المبلغ كتابةً هنا عند إدخاله</span></div>
+</label>
 <label>طريقة الدفع<select name="payment_method"><option value="cash">نقد</option><option value="transfer">تحويل</option><option value="bank">بنك</option></select></label>
 <label>رقم المرجع<input name="reference"></label>
 <label>ملاحظات<textarea name="notes" rows="2"></textarea></label>
@@ -19,5 +25,28 @@ const accounts={{ accounts_json|tojson }};
 const select=document.getElementById("payment_farmer"),card=document.querySelector("#farmer-balance strong");
 function refreshPayment(){const a=accounts[select.value];const n=a?Number(a.outstanding_amount):0;card.textContent=n.toFixed(3).replace(/\.?0+$/,"");}
 select.addEventListener("change",refreshPayment);refreshPayment();
+
+document.addEventListener("DOMContentLoaded",function(){
+  const amount=document.getElementById("payment-amount");
+  const words=document.getElementById("payment-amount-words");
+  if(!amount||!words)return;
+  const textNode=words.querySelector("span");
+  const currency="{{project_settings.currency}}";
+  function refreshAmountWords(){
+    const raw=amount.value.trim();
+    if(!raw){
+      textNode.textContent="يظهر المبلغ كتابةً هنا عند إدخاله";
+      words.classList.remove("has-value");
+      return;
+    }
+    const converter=window.DizalNumberWords?.arNumberWords;
+    const written=converter?converter(raw):raw;
+    textNode.textContent=written+" "+currency;
+    words.classList.add("has-value");
+  }
+  amount.addEventListener("input",refreshAmountWords);
+  amount.addEventListener("change",refreshAmountWords);
+  refreshAmountWords();
+});
 </script>
 {% endblock %}
