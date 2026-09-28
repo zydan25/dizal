@@ -14,9 +14,9 @@
   <div class="dashboard-kpi"><small>المبيعات</small><strong>{{summary.sales|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
   <div class="dashboard-kpi"><small>الربح الإجمالي</small><strong>{{summary.gross_profit|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
   <div class="dashboard-kpi is-danger"><small>ديون المزارعين</small><strong>{{summary.receivables|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>مخزون الديزل</small><strong>{{(summary.stock_liters / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{summary.stock_liters|clean_number}} لتر</span></div>
-  <div class="dashboard-kpi"><small>المخزون الحر</small><strong>{{(inventory.free_liters / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{inventory.free_liters|clean_number}} لتر</span></div>
-  <div class="dashboard-kpi"><small>الملتزم للمزارعين</small><strong>{{(inventory.committed_liters / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{inventory.committed_liters|clean_number}} لتر</span></div>
+  <div class="dashboard-kpi"><small>مخزون الديزل</small><strong>{{((summary.stock_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{summary.stock_liters|clean_number}} لتر</span></div>
+  <div class="dashboard-kpi"><small>المخزون الحر</small><strong>{{((inventory.free_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{inventory.free_liters|clean_number}} لتر</span></div>
+  <div class="dashboard-kpi"><small>الملتزم للمزارعين</small><strong>{{((inventory.committed_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{inventory.committed_liters|clean_number}} لتر</span></div>
   <div class="dashboard-kpi {% if pending_supplies %}is-warning{% endif %}"><small>توريدات معلقة</small><strong>{{pending_supplies}}</strong><span>مراجعة</span></div>
   <div class="dashboard-kpi"><small>مزارعون بانتظارك</small><strong>{{pending_farmers}}</strong><span>مراجعة</span></div>
 </div>
@@ -26,9 +26,9 @@
   <div class="dashboard-kpi"><small>المزارعون</small><strong>{{employee_stats.farmers|clean_number}}</strong><span>معتمد</span></div>
   <div class="dashboard-kpi is-danger"><small>ديون للتحصيل</small><strong>{{employee_stats.debt_amount|clean_number}}</strong><span>{{employee_stats.debts_count|clean_number}} حساب</span></div>
   <div class="dashboard-kpi"><small>صرف اليوم</small><strong>{{employee_stats.today_drums|clean_number}}</strong><span>دبة</span></div>
-  <div class="dashboard-kpi"><small>لترات اليوم</small><strong>{{(employee_stats.today_liters / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{employee_stats.today_liters|clean_number}} لتر</span></div>
+  <div class="dashboard-kpi"><small>لترات اليوم</small><strong>{{((employee_stats.today_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{employee_stats.today_liters|clean_number}} لتر</span></div>
   <div class="dashboard-kpi"><small>تحصيل اليوم</small><strong>{{employee_stats.today_collected|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>الديزل المتاح</small><strong>{{(employee_stats.available_liters / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{employee_stats.available_liters|clean_number}} لتر</span></div>
+  <div class="dashboard-kpi"><small>الديزل المتاح</small><strong>{{((employee_stats.available_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{employee_stats.available_liters|clean_number}} لتر</span></div>
   <div class="dashboard-kpi {% if employee_stats.pending_supplies %}is-warning{% endif %}"><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies|clean_number}}</strong><span>متابعة</span></div>
 </div>
 {% endif %}
@@ -41,10 +41,10 @@
       <div class="trend-row">
         <span class="trend-day">{{row.label}}</span>
         <div class="trend-bars" aria-label="حركة {{row.label}}">
-          <div class="trend-bar" title="صرف {{(row.liters / (project_settings.drum_liters|float))|round(1)|clean_number}} دبة"><span style="width:{{row.liters_pct}}%"></span></div>
+          <div class="trend-bar" title="صرف {{((row.liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}} دبة"><span style="width:{{row.liters_pct}}%"></span></div>
           <div class="trend-bar collect" title="تحصيل {{row.collected}}"><span style="width:{{row.collected_pct}}%"></span></div>
         </div>
-        <span class="trend-values">{{(row.liters / (project_settings.drum_liters|float))|round(1)|clean_number}} دبة · {{row.liters|round(0)|clean_number}} لتر · {{row.collected|round(0)|clean_number}}</span>
+        <span class="trend-values">{{((row.liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}} دبة · {{row.liters|round(0)|clean_number}} لتر · {{row.collected|round(0)|clean_number}}</span>
       </div>
     {% endfor %}
     </div>
@@ -57,13 +57,13 @@
     {% for item in tank_overview %}
       <a class="dashboard-tank" href="{{url_for('fuel.tank_detail',tank_id=item.tank.id)}}">
         <div><strong>{{item.tank.name}}</strong><small>{{item.tank.code}} · {{item.tank.location or "بدون موقع"}}</small></div>
-        <div class="dashboard-tank-value">{{(item.stock / (project_settings.drum_liters|float))|round(1)|clean_number}}<small> دبة · {{item.stock|clean_number}} لتر</small></div>
+        <div class="dashboard-tank-value">{{((item.stock|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}<small> دبة · {{item.stock|clean_number}} لتر</small></div>
       </a>
     {% else %}
       <div class="empty-state"><strong>لا توجد خزانات فعالة</strong><span>أضف خزانًا من شاشة الخزانات.</span></div>
     {% endfor %}
     </div>
-    {% if manager and inventory.shortage_liters>0 %}<div class="kpi-note">تنبيه: الالتزام الحالي أعلى من المخزون بمقدار {{(inventory.shortage_liters / (project_settings.drum_liters|float))|round(1)|clean_number}} دبة ({{inventory.shortage_liters|clean_number}} لتر).</div>{% endif %}
+    {% if manager and inventory.shortage_liters>0 %}<div class="kpi-note">تنبيه: الالتزام الحالي أعلى من المخزون بمقدار {{((inventory.shortage_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}} دبة ({{inventory.shortage_liters|clean_number}} لتر).</div>{% endif %}
   </section>
 </div>
 
