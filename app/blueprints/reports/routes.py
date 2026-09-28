@@ -42,7 +42,7 @@ def my_operations():
     return render_template("reports/employee_operations.html",data=data,start=start,end=end)
 
 @reports_bp.get("/employee/<int:employee_id>")
-@permission_required("reports.view")
+@permission_required("employee.statement.view")
 def employee_statement(employee_id):
     employee=User.query.filter_by(id=employee_id,is_employee=True).first_or_404()
     if not current_user.has_role("manager") and employee.id!=current_user.id:
