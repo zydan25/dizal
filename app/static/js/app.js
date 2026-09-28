@@ -187,6 +187,6 @@ document.addEventListener("submit",event=>{
 });
 
 if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js?v=20260928-10",{updateViaCache:"none"}));
+  window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js?v=20260928-11",{updateViaCache:"none"}));
 }
 })();

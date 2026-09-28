@@ -1,6 +1,6 @@
-const VERSION="20260928-10";
+const VERSION="20260928-11";
 const CACHE="dizal-shell-"+VERSION;
-const SHELL=["/static/css/app.css?v=20260928-10","/static/js/app.js?v=20260928-10","/static/manifest.webmanifest?v=20260928-10","/static/icons/dizal.svg?v=20260928-10","/static/offline.html"];
+const SHELL=["/static/css/app.css?v=20260928-11","/static/js/app.js?v=20260928-11","/static/manifest.webmanifest?v=20260928-11","/static/icons/dizal.svg?v=20260928-11","/static/offline.html"];
 self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith("dizal-shell-")&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener("fetch",event=>{
