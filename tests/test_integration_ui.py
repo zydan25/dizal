@@ -1,7 +1,7 @@
 from decimal import Decimal
 from app import create_app
 from app.extensions import db
-from app.models import Cashbox,Permission,ProjectSettings,Role,RolePermission,User,Document,JournalEntry,CapitalContribution
+from app.models import Cashbox,Permission,ProjectSettings,Role,RolePermission,User,Document,JournalEntry,CapitalContribution,Farmer
 from app.permissions import PERMISSIONS
 from app.services.capital import add_capital
 from app.services.cashbox import balance
@@ -48,3 +48,39 @@ def test_capital_reversal_creates_reversal_and_restores_cash():
         assert JournalEntry.query.filter_by(document_id=original.id).count()==1
         assert JournalEntry.query.filter_by(document_id=reversal.id).count()==1
         assert CapitalContribution.query.filter_by(id=row.id).first().status=="reversed"
+
+
+def test_employee_sees_own_farmer_account_and_operations_only():
+    app=make_app()
+    seed(app)
+    with app.app_context():
+        employee_role=Role(name="employee",description="employee",label="موظف")
+        db.session.add(employee_role)
+        db.session.flush()
+        for key in ["dashboard.view","farmers.view","employee.statement.view","documents.view","cashbox.view","notifications.view"]:
+            permission=Permission.query.filter_by(key=key).first()
+            db.session.add(RolePermission(role_id=employee_role.id,permission_id=permission.id))
+        employee=User(
+            username="employee",
+            email="employee@test.local",
+            password=hash_password("secret"),
+            display_name="موظف",
+            active=True,
+            is_employee=True,
+            fs_uniquifier="integration-employee",
+        )
+        employee.roles.append(employee_role)
+        db.session.add(employee)
+        db.session.flush()
+        own=Farmer(code="F-EMP-1",name="مزارع الموظف",phone="700000001",quota_drums=20,credit_limit_drums=10,assigned_employee_id=employee.id,created_by_id=employee.id,status="approved")
+        other=Farmer(code="F-OTHER-1",name="مزارع آخر",phone="700000002",quota_drums=20,credit_limit_drums=10,assigned_employee_id=seed(app),created_by_id=employee.id,status="approved")
+        db.session.add_all([own,other])
+        db.session.commit()
+        own_id,other_id=own.id,other.id
+    client=app.test_client()
+    response=client.post("/auth/login",data={"identifier":"employee","password":"secret"},follow_redirects=True)
+    assert response.status_code==200
+    assert "مزارع الموظف" in response.get_data(as_text=True)
+    assert client.get(f"/sales/farmer/{own_id}").status_code==200
+    assert client.get(f"/reports/my-operations").status_code==200
+    assert client.get(f"/sales/farmer/{other_id}").status_code==403
