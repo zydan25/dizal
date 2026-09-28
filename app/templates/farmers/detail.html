@@ -25,12 +25,12 @@
 </div>
 
 <div class="stats-grid farmer-overview page-stats-compact">
-  <div class="stat-card"><i class="bi bi-droplet"></i><div><small>السقف</small><strong>{{farmer.quota_drums}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><i class="bi bi-arrow-down-circle"></i><div><small>المسحوب</small><strong>{{account.consumed_drums}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><i class="bi bi-hourglass-split"></i><div><small>المتبقي</small><strong>{{account.remaining_quota_drums}}</strong><span>دبة</span></div></div>
-  <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><i class="bi bi-wallet2"></i><div><small>الدين الحالي</small><strong>{{account.outstanding_amount}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><i class="bi bi-shield-check"></i><div><small>حد الدين المتبقي</small><strong>{{account.remaining_credit_drums}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><i class="bi bi-clock-history"></i><div><small>عمر الدين</small><strong>{{account.debt_age_days}}</strong><span>يوم</span></div></div>
+  <div class="stat-card"><div><small>السقف</small><strong>{{farmer.quota_drums}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>صرف الديزل</small><strong>{{account.consumed_drums}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>المتبقي للسحب</small><strong>{{account.remaining_quota_drums}}</strong><span>دبة</span></div></div>
+  <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الدين</small><strong>{{account.outstanding_amount}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>حد الدين المتبقي</small><strong>{{account.remaining_credit_drums}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>عمر الدين</small><strong>{{account.debt_age_days}}</strong><span>يوم</span></div></div>
 </div>
 
 <div class="action-row">
