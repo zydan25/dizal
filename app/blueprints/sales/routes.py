@@ -2,7 +2,7 @@ from flask import flash,redirect,render_template,request,url_for,abort
 from flask_login import current_user
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import Document,Farmer,FarmerPayment,FuelDispense,FuelTank,User,ProjectSettings
+from ...models import Document,Farmer,FarmerPayment,FarmerQuotaMovement,FuelDispense,FuelTank,User,ProjectSettings
 from ...permissions import user_has_permission
 from ...services.audit import audit
 from ...services.sales import create_dispense,farmer_account,farmer_account_metrics,register_payment
@@ -107,8 +107,9 @@ def farmer_account_view(farmer_id):
         payments_q=payments_q.filter(FarmerPayment.created_at<=end_dt)
     dispenses=dispenses_q.order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc()).all()
     payments=payments_q.order_by(FarmerPayment.created_at.desc(),FarmerPayment.id.desc()).all()
+    quota_movements=FarmerQuotaMovement.query.filter_by(farmer_id=farmer.id).order_by(FarmerQuotaMovement.created_at.desc(),FarmerQuotaMovement.id.desc()).limit(100).all()
     ledger=[{"kind":"dispense","date":row.created_at,"row":row} for row in dispenses]
     ledger += [{"kind":"payment","date":row.created_at,"row":row} for row in payments]
     ledger.sort(key=lambda item:item["date"],reverse=True)
     account=farmer_account_metrics(farmer,start=start_date)
-    return render_template("sales/farmer_account.html",farmer=farmer,account=account,dispenses=dispenses,payments=payments,ledger=ledger,start=start_date,end=end_date)
+    return render_template("sales/farmer_account.html",farmer=farmer,account=account,dispenses=dispenses,payments=payments,quota_movements=quota_movements,ledger=ledger,start=start_date,end=end_date)
