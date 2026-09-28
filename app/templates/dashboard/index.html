@@ -1,20 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="hero-card"><div><span class="eyebrow">Dizal</span><h1>{% if manager %}نظرة كاملة على المشروع{% else %}تشغيلك اليومي{% endif %}</h1><p>{% if manager %}الإدارة والمال والمخزون في مكان واحد.{% else %}واجهة بسيطة للموظف تركز على التشغيل وصندوقه.{% endif %}</p></div><div class="hero-icon"><i class="bi bi-fuel-pump-fill"></i></div></div>
-{% if employee_cashbox %}<div class="employee-balance"><div><small>صندوقي</small><strong>{{employee_cashbox.balance}}</strong><span>{{project_settings.currency}}</span></div><i class="bi bi-wallet2"></i></div>{% endif %}
-<div class="quick-grid">
-<a class="quick-card" href="{{url_for('cashbox.index')}}"><i class="bi bi-wallet2"></i><strong>الصندوق</strong><small>الرصيد والحركات</small></a>
-{% if manager %}<a class="quick-card" href="{{url_for('capital.index')}}"><i class="bi bi-bank"></i><strong>رأس المال</strong><small>الإضافة والتسليم</small></a><a class="quick-card" href="{{url_for('assets.index')}}"><i class="bi bi-building"></i><strong>الأصول</strong><small>أصول المشروع</small></a><a class="quick-card" href="{{url_for('employees.index')}}"><i class="bi bi-person-gear"></i><strong>الموظفون</strong><small>الحسابات والصلاحيات</small></a>{% endif %}
+<div class="hero-card"><div><span class="eyebrow">Dizal</span><h1>{% if manager %}لوحة تشغيل المشروع{% else %}تشغيلك اليومي{% endif %}</h1><p>{% if manager %}الأرقام المهمة والتنبيهات والإجراءات في شاشة واحدة.{% else %}صندوقك، المزارعون، الصرف والتوريدات المعلقة.{% endif %}</p></div><div class="hero-icon"><i class="bi bi-fuel-pump-fill"></i></div></div>
+
+{% if manager and summary %}
+<div class="stats-grid">
+<article class="stat-card"><i class="bi bi-cash-stack"></i><div><small>المبيعات</small><strong>{{summary.sales}}</strong><span>{{project_settings.currency}}</span></div></article>
+<article class="stat-card"><i class="bi bi-graph-up-arrow"></i><div><small>الربح الإجمالي</small><strong>{{summary.gross_profit}}</strong><span>{{project_settings.currency}}</span></div></article>
+<article class="stat-card"><i class="bi bi-person-exclamation"></i><div><small>ديون المزارعين</small><strong>{{summary.receivables}}</strong><span>{{project_settings.currency}}</span></div></article>
+<article class="stat-card"><i class="bi bi-droplet-half"></i><div><small>المخزون</small><strong>{{summary.stock_liters}}</strong><span>لتر</span></div></article>
 </div>
 <div class="stats-grid">
-<article class="stat-card"><i class="bi bi-people"></i><div><small>الموظفون</small><strong>{{employee_count}}</strong><span>في المشروع</span></div></article>
-<article class="stat-card"><i class="bi bi-shield-check"></i><div><small>الصلاحيات</small><strong>RBAC</strong><span>حسب الدور</span></div></article>
-<article class="stat-card"><i class="bi bi-phone"></i><div><small>PWA</small><strong>جاهز</strong><span>للهاتف</span></div></article>
-<article class="stat-card"><i class="bi bi-database-check"></i><div><small>المرحلة</small><strong>2</strong><span>الصناديق ورأس المال</span></div></article>
+<article class="stat-card"><i class="bi bi-truck"></i><div><small>توريدات تحتاج مراجعة</small><strong>{{pending_supplies}}</strong><span>إجراء مطلوب</span></div></article>
+<article class="stat-card"><i class="bi bi-person-lines-fill"></i><div><small>مزارعون ينتظرون</small><strong>{{pending_farmers}}</strong><span>مراجعة/استكمال</span></div></article>
+<article class="stat-card"><i class="bi bi-bell"></i><div><small>إشعارات غير مقروءة</small><strong>{{unread_all}}</strong><span>كل المستخدمين</span></div></article>
+<article class="stat-card"><i class="bi bi-boxes"></i><div><small>المخزون الحر</small><strong>{{inventory.free_liters}}</strong><span>لتر</span></div></article>
 </div>
+{% else %}
+{% if employee_cashbox %}<div class="employee-balance"><div><small>{{employee_cashbox.name}}</small><strong>{{employee_cashbox.balance}}</strong><span>{{project_settings.currency}}</span></div><i class="bi bi-wallet2"></i></div>{% endif %}
+<div class="stats-grid">
+<article class="stat-card"><i class="bi bi-people"></i><div><small>مزارعي المعتمدين</small><strong>{{employee_stats.farmers}}</strong><span>مزارع</span></div></article>
+<article class="stat-card"><i class="bi bi-person-exclamation"></i><div><small>ديون تحتاج تحصيل</small><strong>{{employee_stats.debt_count}}</strong><span>{{employee_stats.debt_amount}} {{project_settings.currency}}</span></div></article>
+<article class="stat-card"><i class="bi bi-cash-coin"></i><div><small>صرف اليوم</small><strong>{{employee_stats.today_sales}}</strong><span>{{project_settings.currency}}</span></div></article>
+<article class="stat-card"><i class="bi bi-truck"></i><div><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies}}</strong><span>للمراجعة</span></div></article>
+</div>
+{% endif %}
+
+<div class="quick-grid">
+<a class="quick-card" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet-fill"></i><strong>صرف ديزل</strong><small>بدء عملية صرف</small></a>
+<a class="quick-card" href="{{url_for('sales.payment')}}"><i class="bi bi-cash-coin"></i><strong>تحصيل</strong><small>تسجيل سداد</small></a>
+<a class="quick-card" href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><strong>المزارعون</strong><small>القائمة والحسابات</small></a>
+{% if manager %}<a class="quick-card" href="{{url_for('documents.index')}}"><i class="bi bi-receipt-cutoff"></i><strong>السندات</strong><small>طباعة PDF ومشاركة</small></a>{% endif %}
+</div>
+
 <div class="section-title"><h2>آخر سجل نشاط</h2><span>Audit Log</span></div>
-<div class="audit-list">
-{% for row in recent_audits %}<div class="audit-row"><i class="bi bi-clock-history"></i><div><strong>{{row.action}}</strong><small>{{row.object_type or "system"}} #{{row.object_id or "—"}}</small></div></div>
-{% else %}<div class="empty-state"><i class="bi bi-journal-check"></i><strong>لا توجد حركات بعد</strong><span>سيظهر النشاط هنا.</span></div>{% endfor %}
-</div>
+<div class="audit-list">{% for row in recent_audits %}<div class="audit-row"><i class="bi bi-clock-history"></i><div><strong>{{row.action}}</strong><small>{{row.object_type or "system"}} #{{row.object_id or "—"}}</small></div></div>{% else %}<div class="empty-state"><i class="bi bi-journal-check"></i><strong>لا توجد حركات بعد</strong><span>سيظهر النشاط هنا.</span></div>{% endfor %}</div>
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>تسويات الموظفين</h1><p>قارن المتوقع بالفعلي، ثم حدد التحويل والراتب ورأس المال المتبقي.</p></div>
+<div class="page-heading"><h1>تسويات الموظفين</h1><p>أنشئ المسودة ثم راجع الحسابات قبل الاعتماد.</p></div>
 <form method="post" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>الموظف<select name="employee_id" required><option value="">اختر الموظف</option>{% for employee in employees %}<option value="{{employee.id}}">{{employee.display_name}}</option>{% endfor %}</select></label>
@@ -10,6 +10,6 @@
 <label>ملاحظات<textarea name="notes" rows="3"></textarea></label>
 <button class="primary-btn"><i class="bi bi-check2-square"></i> إنشاء مسودة تسوية</button>
 </form>
-<div class="section-title"><h2>التسويات</h2></div>
-<div class="entity-list">{% for row in settlements %}<div class="entity-row"><div class="avatar"><i class="bi bi-arrow-left-right"></i></div><div class="entity-main"><strong>{{row.document.number}} · {{row.employee.display_name}}</strong><span>الفترة {{row.period_start}} → {{row.period_end}}</span><small>متوقع {{row.expected_cash}} · فعلي {{row.actual_cash}} · ربح {{row.gross_profit}}</small></div><div class="money-value">{{row.status}}</div>{% if row.status=="draft" %}<form method="post" action="{{url_for('settlements.approve',settlement_id=row.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="success-btn">اعتماد</button></form>{% endif %}</div>{% else %}<div class="empty-state">لا توجد تسويات.</div>{% endfor %}</div>
+<div class="section-title"><h2>التسويات</h2><span>آخر 50</span></div>
+<div class="entity-list">{% for row in settlements %}<a class="entity-row" href="{{url_for('settlements.detail',settlement_id=row.id)}}"><div class="avatar"><i class="bi bi-arrow-left-right"></i></div><div class="entity-main"><strong>{{row.document.number}} · {{row.employee.display_name}}</strong><span>الفترة {{row.period_start}} → {{row.period_end}}</span><small>متوقع {{row.expected_cash}} · فعلي {{row.actual_cash}} · عجز {{row.cash_shortage}} · زيادة {{row.cash_overage}}</small></div><span class="status-chip status-{{row.status}}">{{row.status}}</span></a>{% else %}<div class="empty-state">لا توجد تسويات.</div>{% endfor %}</div>
 {% endblock %}
