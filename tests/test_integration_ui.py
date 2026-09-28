@@ -84,3 +84,11 @@ def test_employee_sees_own_farmer_account_and_operations_only():
     assert client.get(f"/sales/farmer/{own_id}").status_code==200
     assert client.get(f"/reports/my-operations").status_code==200
     assert client.get(f"/sales/farmer/{other_id}").status_code==403
+
+
+def test_unauthenticated_protected_pages_redirect_to_login():
+    app=make_app()
+    client=app.test_client()
+    response=client.get("/farmers/")
+    assert response.status_code==302
+    assert "/auth/login" in response.headers["Location"]
