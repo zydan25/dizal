@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row"><div class="page-heading"><h1>{{tank.name}}</h1><p>{{tank.code}} · {{tank.location or "بدون موقع"}}</p></div><div class="header-actions"><a class="secondary-btn" href="{{url_for('fuel.tanks')}}"><i class="bi bi-arrow-right"></i><span>الخزانات</span></a>{% if current_user.has_role("manager") %}<a class="primary-btn" href="{{url_for('fuel.edit_tank',tank_id=tank.id)}}"><i class="bi bi-pencil"></i><span>تعديل</span></a>{% endif %}</div></div>
+<div class="stats-grid page-stats-compact">
+<div class="stat-card"><i class="bi bi-box-arrow-in-down"></i><div><small>إجمالي الداخل</small><strong>{{stats.inbound|clean_number}}</strong><span>لتر</span></div></div>
+<div class="stat-card"><i class="bi bi-droplet"></i><div><small>إجمالي المصروف</small><strong>{{stats.outbound|clean_number}}</strong><span>لتر</span></div></div>
+<div class="stat-card"><i class="bi bi-fuel-pump"></i><div><small>المتبقي</small><strong>{{stats.stock|clean_number}}</strong><span>لتر</span></div></div>
+<div class="stat-card"><i class="bi bi-speedometer2"></i><div><small>السعة</small><strong>{{(tank.capacity_liters or "—")|clean_number}}</strong><span>لتر</span></div></div>
+</div>
+<div class="info-card mt-3"><div class="detail-line"><strong>الملاحظات</strong><span>{{tank.notes or "لا توجد ملاحظات"}}</span></div></div>
+<div class="section-title"><h2>آخر التوريدات</h2><span>{{purchases|length}} عملية</span></div>
+<div class="operation-card-list">{% for row in purchases %}
+<a class="operation-card" href="{{url_for('documents.view',document_id=row.document_id)}}"><div class="operation-icon operation-supply"><i class="bi bi-truck"></i></div><div class="operation-main"><strong>{{row.document.number}} · {{row.liters}} لتر</strong><span>{{row.supplier_name or "بدون مورد"}} · {{row.landed_cost}} {{project_settings.currency}}</span><small>{{row.purchase_date}} · {{row.status}}</small></div><i class="bi bi-chevron-left"></i></a>
+{% else %}<div class="empty-state">لا توجد توريدات مرتبطة بهذا الخزان.</div>{% endfor %}</div>
+<div class="section-title"><h2>حركات الخزان</h2><span>{{movements|length}} حركة</span></div>
+<div class="operation-card-list">{% for row in movements %}{% set incoming=row.direction=="IN" %}
+<a class="operation-card" href="{% if row.document_id %}{{url_for('documents.view',document_id=row.document_id)}}{% else %}#{% endif %}"><div class="operation-icon {% if incoming %}operation-supply{% else %}operation-dispense{% endif %}"><i class="bi {% if incoming %}bi-box-arrow-in-down{% else %}bi-box-arrow-up{% endif %}"></i></div><div class="operation-main"><strong>{% if incoming %}دخول إلى الخزان{% else %}صرف من الخزان{% endif %}</strong><span>{{row.movement_type}} · {{row.liters}} لتر</span><small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div><div class="operation-value"><b>{{row.liters}}</b><small>لتر</small></div></a>
+{% else %}<div class="empty-state">لا توجد حركات.</div>{% endfor %}</div>
+{% endblock %}

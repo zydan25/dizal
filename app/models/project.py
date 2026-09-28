@@ -22,6 +22,7 @@ class ProjectSettings(db.Model):
     danger_color=db.Column(db.String(20),nullable=False,default="#dc3545")
     radius=db.Column(db.String(20),nullable=False,default="16px")
     font_family=db.Column(db.String(80),nullable=False,default="Tajawal")
+    font_scale=db.Column(db.String(10),nullable=False,default="1")
     logo_path=db.Column(db.String(500),nullable=True)
     manager_signature_path=db.Column(db.String(500),nullable=True)
     document_header=db.Column(db.Text,nullable=True)

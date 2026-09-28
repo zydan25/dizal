@@ -1,9 +1,59 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row"><div class="page-heading"><h1>الموظفون</h1><p>حسابات الموظفين وصناديقهم.</p></div><a class="primary-btn" href="{{url_for('employees.new')}}"><i class="bi bi-plus-lg"></i> موظف جديد</a></div>
-<div class="entity-list">
-{% for employee in employees %}
-<div class="entity-row"><div class="avatar"><i class="bi bi-person-badge"></i></div><div class="entity-main"><strong>{{employee.display_name}}</strong><span>{{employee.phone or employee.username}}</span><small>{{employee.employee_profile.employee_code if employee.employee_profile else "بدون كود"}}</small></div><div class="status-chip">فعال</div></div>
-{% else %}<div class="empty-state"><i class="bi bi-people"></i><strong>لا يوجد موظفون</strong><span>أنشئ أول موظف لبدء التشغيل.</span></div>{% endfor %}
+<div class="page-heading-row">
+  <div class="page-heading"><h1>الموظفون</h1><p>بطاقات الموظفين، الأداء، الصندوق، العمليات، والصلاحيات.</p></div>
+  <div class="header-actions">
+    <a class="secondary-btn" href="{{url_for('reports.employees')}}"><i class="bi bi-bar-chart"></i><span>تقرير</span></a>
+    <a class="primary-btn" href="{{url_for('employees.new')}}"><i class="bi bi-plus-lg"></i><span>موظف</span></a>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card"><i class="bi bi-people"></i><div><small>إجمالي الموظفين</small><strong>{{employees|length|clean_number}}</strong><span>حساب</span></div></div>
+  <div class="stat-card"><i class="bi bi-person-check"></i><div><small>النشطون</small><strong>{{employees|selectattr("active")|list|length|clean_number}}</strong><span>موظف</span></div></div>
+  <div class="stat-card"><i class="bi bi-droplet-fill"></i><div><small>السحب المسجل</small><strong>{{performance_total_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><i class="bi bi-cash-stack"></i><div><small>المبيعات</small><strong>{{performance_total_sales|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+</div>
+
+<div class="employee-card-grid">
+{% for row in employee_cards %}
+{% set employee=row.employee %}
+<div class="employee-card">
+  <a class="employee-card-main" href="{{url_for('employees.detail',user_id=employee.id)}}">
+    <div class="employee-card-head">
+      <div class="farmer-avatar"><i class="bi bi-person-badge-fill"></i></div>
+      <div class="farmer-title">
+        <strong>{{employee.display_name}}</strong>
+        <span>{{employee.employee_profile.employee_code if employee.employee_profile else "بدون كود"}} · {{employee.phone or employee.username}}</span>
+      </div>
+      <span class="status-chip {% if employee.active %}status-approved{% else %}status-suspended{% endif %}">{{"فعال" if employee.active else "متوقف"}}</span>
+    </div>
+    <div class="employee-metrics">
+      <div><small>المزارعون</small><strong>{{row.farmer_count|clean_number}}</strong><span>مزارع</span></div>
+      <div><small>السحب</small><strong>{{row.drums|clean_number}}</strong><span>دبة</span></div>
+      <div><small>المبيعات</small><strong>{{row.sales|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+      <div><small>الصندوق</small><strong>{{row.cashbox_balance|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+    </div>
+  </a>
+  <div class="employee-card-actions">
+    <a class="small-icon-btn" href="{{url_for('employees.detail',user_id=employee.id)}}" title="عرض وتقرير"><i class="bi bi-eye"></i></a>
+    <a class="small-icon-btn" href="{{url_for('reports.employee_statement',employee_id=employee.id)}}" title="كشف الحساب"><i class="bi bi-file-earmark-text"></i></a>
+    <a class="small-icon-btn" href="{{url_for('employees.edit',user_id=employee.id)}}" title="تعديل"><i class="bi bi-pencil-square"></i></a>
+    <a class="small-icon-btn" href="{{url_for('employees.reset_password',user_id=employee.id)}}" title="إعادة تعيين كلمة المرور"><i class="bi bi-key"></i></a>
+    <div class="dropdown">
+      <button class="small-icon-btn" data-bs-toggle="dropdown" aria-expanded="false" title="المزيد"><i class="bi bi-three-dots"></i></button>
+      <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+        <li><a class="dropdown-item" href="{{url_for('employees.detail',user_id=employee.id)}}"><i class="bi bi-person-lines-fill me-2"></i>ملف الموظف والعمليات</a></li>
+        <li><a class="dropdown-item" href="{{url_for('reports.employee_statement',employee_id=employee.id)}}"><i class="bi bi-receipt me-2"></i>كشف الحساب</a></li>
+        <li><a class="dropdown-item" href="{{url_for('reports.employee_statement',employee_id=employee.id)}}?print=1"><i class="bi bi-printer me-2"></i>طباعة الكشف</a></li>
+        <li><a class="dropdown-item" href="{{url_for('employees.permissions',user_id=employee.id)}}"><i class="bi bi-shield-lock me-2"></i>الصلاحيات</a></li>
+        <li><a class="dropdown-item" href="{{url_for('employees.reset_password',user_id=employee.id)}}"><i class="bi bi-key me-2"></i>إعادة تعيين كلمة المرور</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="empty-state"><i class="bi bi-people"></i><strong>لا يوجد موظفون</strong><span>أنشئ أول موظف لبدء التشغيل.</span></div>
+{% endfor %}
 </div>
 {% endblock %}

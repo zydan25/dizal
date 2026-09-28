@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row">
+  <div class="page-heading"><h1>{{employee.display_name}}</h1><p>{{employee.employee_profile.employee_code if employee.employee_profile else "بدون كود"}} · {{employee.phone or employee.username}}</p></div>
+  <div class="header-actions">
+    <a class="secondary-btn" href="{{url_for('reports.employee_statement',employee_id=employee.id)}}"><i class="bi bi-file-earmark-text"></i><span>كشف</span></a>
+    {% if current_user.has_role("manager") %}<a class="secondary-btn" href="{{url_for('employees.edit',user_id=employee.id)}}"><i class="bi bi-pencil"></i><span>تعديل</span></a><a class="secondary-btn" href="{{url_for('employees.reset_password',user_id=employee.id)}}"><i class="bi bi-key"></i><span>كلمة المرور</span></a>{% endif %}
+    {% if current_user.id==employee.id %}<a class="secondary-btn" href="{{url_for('employees.my_password')}}"><i class="bi bi-key"></i><span>كلمتي</span></a>{% endif %}
+  </div>
+</div>
+
+<div class="stats-grid employee-detail-stats">
+  <div class="stat-card"><i class="bi bi-people"></i><div><small>مزارعون</small><strong>{{farmers|length}}</strong><span>مرتبطون</span></div></div>
+  <div class="stat-card"><i class="bi bi-droplet-fill"></i><div><small>السحب</small><strong>{{operations.drums}}</strong><span>دبة · {{operations.liters}} لتر</span></div></div>
+  <div class="stat-card"><i class="bi bi-cash-stack"></i><div><small>المبيعات</small><strong>{{operations.sales}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><i class="bi bi-graph-up-arrow"></i><div><small>الربح الإجمالي</small><strong>{{profit|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><i class="bi bi-cash-coin"></i><div><small>التحصيل</small><strong>{{operations.collected}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><i class="bi bi-wallet2"></i><div><small>رصيد الصندوق</small><strong>{{cashbox_balance|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><i class="bi bi-truck"></i><div><small>التوريد</small><strong>{{operations.supplied_liters}}</strong><span>لتر</span></div></div>
+</div>
+
+<div class="quick-grid compact-quick-grid">
+  <a class="quick-card" href="{{url_for('reports.employee_statement',employee_id=employee.id)}}"><i class="bi bi-file-earmark-text"></i><strong>كشف الحساب</strong><small>الصندوق والتسويات والحركات</small></a>
+  <a class="quick-card" href="{{url_for('reports.my_operations') if current_user.id==employee.id else url_for('reports.employee_statement',employee_id=employee.id)}}"><i class="bi bi-clipboard-data"></i><strong>التقرير التشغيلي</strong><small>السحب والتحصيل والتوريدات</small></a>
+  <a class="quick-card" href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><strong>مزارعوه</strong><small>قائمة المزارعين المرتبطين</small></a>
+  {% if current_user.has_role("manager") %}<a class="quick-card" href="{{url_for('employees.permissions',user_id=employee.id)}}"><i class="bi bi-shield-lock"></i><strong>الصلاحيات</strong><small>الدور والاستثناءات</small></a>{% endif %}
+</div>
+
+<div class="section-title"><h2>المزارعون المرتبطون</h2><span>{{farmers|length}} حساب</span></div>
+<div class="farmer-card-grid">
+{% for farmer in farmers[:40] %}
+<div class="farmer-card">
+  <a class="farmer-card-main" href="{{url_for('sales.farmer_account_view',farmer_id=farmer.id)}}">
+    <div class="farmer-card-head"><div class="farmer-avatar"><i class="bi bi-person-fill"></i></div><div class="farmer-title"><strong>{{farmer.name}}</strong><span>{{farmer.code}} · {{farmer.phone}}</span></div><i class="bi bi-chevron-left"></i></div>
+  </a>
+</div>
+{% else %}<div class="empty-state"><strong>لا يوجد مزارعون</strong></div>{% endfor %}
+</div>
+
+<div class="section-title"><h2>كل عمليات الموظف</h2><span>آخر {{operations.dispenses|length + operations.payments|length + operations.supplies|length}} عملية محملة</span></div>
+<div class="operation-card-list">
+{% for row in operations.dispenses %}
+<a class="operation-card" href="{{url_for('documents.view',document_id=row.document_id)}}">
+  <div class="operation-icon operation-dispense"><i class="bi bi-droplet-fill"></i></div>
+  <div class="operation-main"><strong>صرف ديزل · {{row.document.number}}</strong><span>{{row.farmer.name}} · {{row.drums}} دبة · {{row.liters}} لتر</span><small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}} · {{row.status}}</small></div>
+  <div class="operation-value"><b>{{row.total_amount}}</b><small>{{project_settings.currency}}</small></div><i class="bi bi-chevron-left"></i>
+</a>
+{% endfor %}
+{% for row in operations.payments %}
+{% if row.document.status!="reversed" %}
+<a class="operation-card" href="{{url_for('documents.view',document_id=row.document_id)}}">
+  <div class="operation-icon operation-payment"><i class="bi bi-cash-coin"></i></div>
+  <div class="operation-main"><strong>تحصيل · {{row.document.number}}</strong><span>{{row.farmer.name}} · {{row.payment_method}}</span><small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div>
+  <div class="operation-value"><b>{{row.amount}}</b><small>{{project_settings.currency}}</small></div><i class="bi bi-chevron-left"></i>
+</a>
+{% endif %}
+{% endfor %}
+{% for row in operations.supplies %}
+<a class="operation-card" href="{{url_for('documents.view',document_id=row.document_id)}}">
+  <div class="operation-icon operation-supply"><i class="bi bi-truck"></i></div>
+  <div class="operation-main"><strong>توريد ديزل · {% if row.document %}{{row.document.number}}{% else %}توريد #{{row.id}}{% endif %}</strong><span>{{row.liters}} لتر</span><small>{{row.submitted_at.strftime("%Y-%m-%d %H:%M") if row.submitted_at else ""}} · {{row.status}}</small></div>
+  <div class="operation-value"><b>{{row.liters}}</b><small>لتر</small></div><i class="bi bi-chevron-left"></i>
+</a>
+{% endfor %}
+</div>
+{% endblock %}

@@ -6,6 +6,16 @@ from ...services.audit import audit
 from ...services.files import save_image
 from . import settings_bp
 
+PALETTES={
+    "blue":{"label":"أزرق احترافي","primary":"#1877F2","secondary":"#4f46e5","accent":"#10b981","surface":"#f6f8fc","danger":"#dc3545"},
+    "violet":{"label":"بنفسجي فاخر","primary":"#6d28d9","secondary":"#9333ea","accent":"#c026d3","surface":"#faf7ff","danger":"#dc3545"},
+    "teal":{"label":"فيروزي هادئ","primary":"#0f766e","secondary":"#0e7490","accent":"#14b8a6","surface":"#f3fbfa","danger":"#dc3545"},
+    "emerald":{"label":"أخضر تشغيلي","primary":"#15803d","secondary":"#0f766e","accent":"#16a34a","surface":"#f4fbf6","danger":"#dc3545"},
+    "sunset":{"label":"مرجاني دافئ","primary":"#ea580c","secondary":"#be185d","accent":"#f59e0b","surface":"#fff8f3","danger":"#dc3545"},
+    "night":{"label":"ليلي بنفسجي","primary":"#312e81","secondary":"#581c87","accent":"#a855f7","surface":"#f5f3ff","danger":"#dc3545"},
+}
+FONT_SCALES={"0.95":"أصغر","1":"متوسط","1.05":"كبير قليلًا","1.10":"كبير"}
+
 @settings_bp.route("/",methods=["GET","POST"])
 @permission_required("settings.manage")
 def index():
@@ -27,6 +37,17 @@ def index():
         settings.danger_color=(request.form.get("danger_color") or settings.danger_color).strip()
         settings.radius=(request.form.get("radius") or settings.radius).strip()
         settings.font_family=(request.form.get("font_family") or settings.font_family).strip()
+        font_scale=request.form.get("font_scale") or settings.font_scale or "1"
+        if font_scale not in FONT_SCALES: font_scale="1"
+        settings.font_scale=font_scale
+        selected_palette=request.form.get("color_preset") or ""
+        if selected_palette in PALETTES:
+            colors=PALETTES[selected_palette]
+            settings.primary_color=colors["primary"]
+            settings.secondary_color=colors["secondary"]
+            settings.accent_color=colors["accent"]
+            settings.surface_color=colors["surface"]
+            settings.danger_color=colors["danger"]
         settings.document_header=request.form.get("document_header")
         settings.document_footer=request.form.get("document_footer")
         logo=request.files.get("logo")
@@ -39,4 +60,5 @@ def index():
         db.session.commit()
         flash("تم حفظ إعدادات المشروع والثيم والسندات.","success")
         return redirect(url_for("settings.index"))
-    return render_template("settings/index.html",settings=settings)
+    current_palette=next((key for key,colors in PALETTES.items() if settings.primary_color==colors["primary"] and settings.secondary_color==colors["secondary"] and settings.accent_color==colors["accent"]), "")
+    return render_template("settings/index.html",settings=settings,palettes=PALETTES,font_scales=FONT_SCALES,current_palette=current_palette)

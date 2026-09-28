@@ -16,6 +16,9 @@ def login():
         if user and user.active and verify_password(password,user.password):
             login_user(user,remember=request.form.get("remember")=="1")
             audit("auth.login","user",user.id,after={"identifier":identifier})
+            next_url=(request.args.get("next") or "").strip()
+            if next_url.startswith("/") and not next_url.startswith("//"):
+                return redirect(next_url)
             return redirect(url_for("dashboard.index"))
         audit("auth.login_failed","user",user.id if user else None,after={"identifier":identifier})
         flash("بيانات الدخول غير صحيحة أو الحساب غير فعال.","danger")

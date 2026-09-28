@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row"><div class="page-heading"><h1>كشف حساب الموظف</h1><p>{{employee.display_name}} · {{employee.phone or employee.username}}</p></div><button class="secondary-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i> طباعة</button></div>
+<form class="filter-row" method="get">
+<label class="filter-chip">من <input name="start" type="date" value="{{start.isoformat()}}"></label>
+<label class="filter-chip">إلى <input name="end" type="date" value="{{end.isoformat()}}"></label>
+<button class="filter-chip active" type="submit">تطبيق</button>
+</form>
+<div class="stats-grid">
+<div class="stat-card"><i class="bi bi-arrow-down-left"></i><div><small>إجمالي الداخل</small><strong>{{total_in}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-arrow-up-right"></i><div><small>إجمالي الخارج</small><strong>{{total_out}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-wallet2"></i><div><small>صافي الفترة</small><strong>{{total_in-total_out}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-receipt"></i><div><small>التسويات</small><strong>{{settlements|length}}</strong><span>ضمن الفترة</span></div></div>
+</div>
+<div class="section-title"><h2>حركات الصندوق</h2><span>{{start}} → {{end}}</span></div>
+<div class="entity-list">
+{% for tx in transactions %}
+<div class="entity-row"><div class="avatar"><i class="bi {% if tx.direction=="IN" %}bi-arrow-down-left{% else %}bi-arrow-up-right{% endif %}"></i></div><div class="entity-main"><strong>{% if tx.document_id %}<a href="{{url_for('documents.view',document_id=tx.document_id)}}">{{tx.transaction_type}}</a>{% else %}{{tx.transaction_type}}{% endif %}</strong><span>{{tx.description or "—"}}</span><small>{{tx.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div><div class="money-value {% if tx.direction=="OUT" %}negative{% endif %}">{% if tx.direction=="OUT" %}-{% endif %}{{tx.amount}}</div></div>
+{% else %}<div class="empty-state">لا توجد حركات في الفترة المحددة.</div>{% endfor %}
+</div>
+<div class="section-title"><h2>التسويات المرتبطة</h2></div>
+<div class="entity-list">{% for row in settlements %}<a class="entity-row" href="{{url_for('settlements.detail',settlement_id=row.id)}}"><div class="avatar"><i class="bi bi-arrow-left-right"></i></div><div class="entity-main"><strong>{{row.document.number}}</strong><span>{{row.period_start}} → {{row.period_end}}</span><small>متوقع {{row.expected_cash}} · فعلي {{row.actual_cash}} · {{row.status}}</small></div><div class="money-value">{{row.cash_shortage-row.cash_overage}}</div></a>{% else %}<div class="empty-state">لا توجد تسويات مرتبطة.</div>{% endfor %}</div>
+{% endblock %}

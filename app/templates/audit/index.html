@@ -1,9 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>سجل التدقيق</h1><p>لاستخدام الإدارة والتتبع وليس للتعديل على السجلات.</p></div>
+<div class="page-heading-row">
+  <div class="page-heading"><h1>سجل النشاط</h1><p>كل عملية مهمة ببيان عربي واضح ورابط مباشر إلى موضعها عند توفره.</p></div>
+  <span class="status-chip status-approved">تتبع فقط</span>
+</div>
 <div class="entity-list">
 {% for row in rows %}
-<div class="entity-row"><div class="avatar"><i class="bi bi-shield-check"></i></div><div class="entity-main"><strong>{{row.action}}</strong><span>{{row.object_type or "system"}} #{{row.object_id or "—"}}</span><small>{{row.actor.display_name if row.actor else "system"}} · {{row.created_at.strftime("%Y-%m-%d %H:%M:%S")}} · {{row.ip_address or "—"}}</small></div></div>
-{% else %}<div class="empty-state">لا يوجد نشاط مسجل.</div>{% endfor %}
+{% set target=audit_target_url(row) %}
+<a class="entity-row audit-entry" href="{{target or '#'}}" {% if not target %}aria-disabled="true" onclick="return false"{% endif %}>
+  <div class="avatar"><i class="bi bi-clock-history"></i></div>
+  <div class="entity-main">
+    <strong>{{audit_action_label(row.action)}}</strong>
+    <span>{% if row.object_type %}{{audit_object_label(row.object_type)}}{% else %}النظام{% endif %}{% if row.object_id %} · رقم {{row.object_id}}{% endif %}</span>
+    <small>{% if row.actor %}بواسطة {{row.actor.display_name or row.actor.username}} · {% endif %}{{row.created_at.strftime("%Y-%m-%d %H:%M:%S")}}{% if row.ip_address %} · {{row.ip_address}}{% endif %}</small>
+  </div>
+  {% if target %}<i class="bi bi-chevron-left audit-link-icon"></i>{% endif %}
+</a>
+{% else %}<div class="empty-state"><i class="bi bi-journal-x"></i><strong>لا يوجد نشاط مسجل</strong><span>ستظهر العمليات المهمة هنا.</span></div>{% endfor %}
 </div>
 {% endblock %}

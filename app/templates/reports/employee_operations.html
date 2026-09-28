@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row">
+  <div class="page-heading">
+    <h1>تقريري التشغيلي</h1>
+    <p>كل عملياتك في الفترة المحددة: السحب والتحصيل والتوريدات.</p>
+  </div>
+  <button class="secondary-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i> طباعة</button>
+</div>
+
+<form class="filter-row" method="get">
+  <label class="filter-chip">من <input name="start" type="date" value="{{start.isoformat()}}"></label>
+  <label class="filter-chip">إلى <input name="end" type="date" value="{{end.isoformat()}}"></label>
+  <button class="filter-chip active" type="submit">تطبيق</button>
+</form>
+
+<div class="stats-grid">
+  <div class="stat-card"><i class="bi bi-droplet-fill"></i><div><small>السحب المعتمد</small><strong>{{data.drums}}</strong><span>دبة · {{data.liters}} لتر</span></div></div>
+  <div class="stat-card"><i class="bi bi-cash-stack"></i><div><small>مبيعات الديزل</small><strong>{{data.sales}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><i class="bi bi-cash-coin"></i><div><small>إجمالي المقبوض</small><strong>{{data.collected}}</strong><span>فوري {{data.instant_collected}} + لاحق {{data.payment_collected}}</span></div></div>
+  <div class="stat-card"><i class="bi bi-credit-card-2-front"></i><div><small>الدين الناتج</small><strong>{{data.credit}}</strong><span>{{project_settings.currency}}</span></div></div>
+</div>
+
+<div class="section-title"><h2>سحبيات الديزل</h2><span>{{data.dispenses|length}} عملية</span></div>
+<div class="entity-list">
+{% for row in data.dispenses %}
+<a class="entity-row" href="{{url_for('sales.farmer_account_view',farmer_id=row.farmer.id)}}">
+  <div class="avatar"><i class="bi bi-droplet-fill"></i></div>
+  <div class="entity-main">
+    <strong>{{row.document.number}} · {{row.farmer.name}}</strong>
+    <span>{{row.drums}} دبة · {{row.liters}} لتر · {{row.total_amount}} {{project_settings.currency}}</span>
+    <small>مدفوع {{row.paid_amount}} · دين {{row.credit_amount}} · {{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small>
+  </div>
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% else %}<div class="empty-state">لا توجد سحبيات في الفترة.</div>{% endfor %}
+</div>
+
+<div class="section-title"><h2>التحصيلات</h2><span>{{data.payments|length}} سند</span></div>
+<div class="entity-list">
+{% for row in data.payments %}
+<a class="entity-row" href="{{url_for('sales.farmer_account_view',farmer_id=row.farmer.id)}}">
+  <div class="avatar"><i class="bi bi-cash-coin"></i></div>
+  <div class="entity-main">
+    <strong>{{row.document.number}} · {{row.farmer.name}}</strong>
+    <span>{{row.amount}} {{project_settings.currency}} · {{row.payment_method}}{% if row.reference %} · {{row.reference}}{% endif %}</span>
+    <small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}} · يغطي {{row.allocations|length}} سحب</small>
+  </div>
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% else %}<div class="empty-state">لا توجد تحصيلات في الفترة.</div>{% endfor %}
+</div>
+
+<div class="section-title"><h2>التوريدات التي رفعتها</h2><span>{{data.supplies|length}} توريد · {{data.supplied_liters}} لتر معتمد</span></div>
+<div class="entity-list">
+{% for row in data.supplies %}
+<a class="entity-row" href="{{url_for('documents.view',document_id=row.document_id)}}">
+  <div class="avatar"><i class="bi bi-truck"></i></div>
+  <div class="entity-main">
+    <strong>{{row.document.number}} · {{row.liters}} لتر</strong>
+    <span>{{row.supplier_name or "بدون مورد"}} · {{row.landed_cost}} {{project_settings.currency}}</span>
+    <small>{{row.status}} · {{row.submitted_at.strftime("%Y-%m-%d %H:%M")}}</small>
+  </div>
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% else %}<div class="empty-state">لا توجد توريدات في الفترة.</div>{% endfor %}
+</div>
+{% endblock %}

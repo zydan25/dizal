@@ -1,19 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row"><div class="page-heading"><h1>{{document.title}}</h1><p>{{document.number}} · {{document.issue_date}} · {{document.status}}</p></div><a class="primary-btn" href="{{url_for('documents.print_document',document_id=document.id)}}" target="_blank"><i class="bi bi-printer"></i> طباعة</a></div>
+<div class="page-heading-row">
+<div class="page-heading"><h1>{{document.title}}</h1><p>{{document.number}} · {{document.issue_date}} · {{document.status}}</p></div>
+<div class="d-flex flex-wrap gap-1">
+<a class="primary-btn" href="{{url_for('documents.print_document',document_id=document.id)}}" target="_blank"><i class="bi bi-printer"></i> طباعة</a>
+<a class="secondary-btn" href="{{url_for('documents.pdf',document_id=document.id)}}" target="_blank"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+<a class="secondary-btn" href="{{url_for('documents.share',document_id=document.id)}}"><i class="bi bi-share"></i> مشاركة</a>
+</div>
+</div>
 <div class="document-card">
+{% if project_settings.logo_path %}<div class="text-center mb-2"><img src="{{url_for('media.branding',path=project_settings.logo_path)}}" alt="شعار المشروع" style="max-height:64px;max-width:180px;object-fit:contain"></div>{% endif %}
 <div class="document-header"><strong>{{project_settings.project_name}}</strong><span>{{project_settings.manager_name or ""}}</span></div>
 <div class="document-meta"><span>رقم السند <b>{{document.number}}</b></span><span>التاريخ <b>{{document.issue_date}}</b></span></div>
-{% if source %}
+{% if document.document_type=="REV" and source %}
+<div class="info-card"><strong>عكس السند</strong><p><a href="{{url_for('documents.view',document_id=source.id)}}">{{source.number}} · {{source.title}}</a></p></div>
+{% elif source %}
 <div class="entity-list">
-{% if source.amount is defined %}<div class="entity-row"><div class="entity-main"><strong>المبلغ</strong><span>{{source.amount}} {{project_settings.currency}}</span></div></div>{% endif %}
-{% if source.total_amount is defined %}<div class="entity-row"><div class="entity-main"><strong>الإجمالي</strong><span>{{source.total_amount}} {{project_settings.currency}}</span></div></div>{% endif %}
-{% if source.liters is defined %}<div class="entity-row"><div class="entity-main"><strong>الكمية</strong><span>{{source.liters}} لتر{% if source.drums is defined %} · {{source.drums}} دبة{% endif %}</span></div></div>{% endif %}
+{% if source.amount is defined %}<div class="entity-row"><div class="entity-main"><strong>المبلغ</strong><span>{{source.amount|clean_number}} {{project_settings.currency}}</span></div></div>{% endif %}
+{% if source.total_amount is defined %}<div class="entity-row"><div class="entity-main"><strong>الإجمالي</strong><span>{{source.total_amount|clean_number}} {{project_settings.currency}}</span></div></div>{% endif %}
+{% if source.landed_cost is defined %}<div class="entity-row"><div class="entity-main"><strong>التكلفة الكاملة</strong><span>{{source.landed_cost|clean_number}} {{project_settings.currency}}</span></div></div>{% endif %}
+{% if source.acquisition_cost is defined %}<div class="entity-row"><div class="entity-main"><strong>قيمة الأصل</strong><span>{{source.acquisition_cost|clean_number}} {{project_settings.currency}}</span></div></div>{% endif %}
+{% if source.liters is defined %}<div class="entity-row"><div class="entity-main"><strong>الكمية</strong><span>{{source.liters|clean_number}} لتر{% if source.drums is defined %} · {{source.drums|clean_number}} دبة{% endif %}</span></div></div>{% endif %}
 {% if source.employee is defined %}<div class="entity-row"><div class="entity-main"><strong>الموظف</strong><span>{{source.employee.display_name}}</span></div></div>{% endif %}
 {% if source.farmer is defined %}<div class="entity-row"><div class="entity-main"><strong>المزارع</strong><span>{{source.farmer.name}}</span></div></div>{% endif %}
+{% if source.name is defined and document.document_type=="AST" %}<div class="entity-row"><div class="entity-main"><strong>الأصل</strong><span>{{source.name}} · {{source.asset_code}}</span></div></div>{% endif %}
 </div>
 {% endif %}
 {% if document.notes %}<div class="info-card"><strong>البيان</strong><p>{{document.notes}}</p></div>{% endif %}
+{% if document.attachments %}
+<div class="section-title"><h2>المرفقات</h2><span>{{document.attachments|length}} ملف</span></div>
+<div class="entity-list">
+{% for attachment in document.attachments %}
+<div class="entity-row"><div class="avatar"><i class="bi bi-paperclip"></i></div><div class="entity-main"><strong>{{attachment.original_name}}</strong><small>{{attachment.mime_type or "file"}} · {{attachment.size_bytes or 0}} bytes</small></div><div class="d-flex gap-1"><a class="icon-btn" href="{{url_for('documents.attachment',document_id=document.id,attachment_id=attachment.id)}}" target="_blank" aria-label="فتح"><i class="bi bi-eye"></i></a><a class="icon-btn" href="{{url_for('documents.attachment',document_id=document.id,attachment_id=attachment.id,download=1)}}" aria-label="تنزيل"><i class="bi bi-download"></i></a></div></div>
+{% endfor %}
+</div>
+{% endif %}
 <div class="sign-row"><span>المستلم / المسؤول</span><span>المدير<br>{{project_settings.manager_name or ""}}</span></div>
 </div>
+{% if document.status=="approved" and document.document_type!="REV" and current_user.has_role("manager") %}
+<div class="section-title"><h2>تصحيح العملية</h2><span>لا تحذف العملية المعتمدة؛ استخدم العكس.</span></div>
+<form method="post" action="{{url_for('documents.reverse',document_id=document.id)}}" class="mobile-form card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<label>سبب العكس<textarea name="reason" rows="2" required placeholder="مثال: تسجيل المبلغ بشكل غير صحيح"></textarea></label>
+<button class="secondary-danger" type="submit" data-confirm="سيتم إنشاء مستند REV وعكس الحركات المرتبطة. هل تريد المتابعة؟"><i class="bi bi-arrow-counterclockwise"></i> عكس السند</button>
+</form>
+{% elif document.status=="reversed" %}
+<div class="info-card mt-3"><strong>هذا السند معكوس</strong><p>تم الحفاظ على السند الأصلي، وتم إنشاء مستند REV للحركة العكسية.</p></div>
+{% endif %}
 {% endblock %}

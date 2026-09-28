@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>السندات</h1><p>مركز موحد للوصول إلى المستندات والطباعة وPDF والمشاركة والعكس عند السماح.</p></div>
+<div class="filter-row">
+<a class="filter-chip {% if not status and not document_type %}active{% endif %}" href="{{url_for('documents.index')}}">الكل</a>
+{% for type in types %}<a class="filter-chip {% if document_type==type %}active{% endif %}" href="{{url_for('documents.index',type=type)}}">{{type}}</a>{% endfor %}
+{% for value,label in [("approved","معتمد"),("reversed","معكوس"),("submitted","معلق"),("changes_requested","استكمال"),("rejected","مرفوض"),("cancelled","ملغى")] %}
+<a class="filter-chip {% if status==value %}active{% endif %}" href="{{url_for('documents.index',status=value)}}">{{label}}</a>
+{% endfor %}
+</div>
+<div class="entity-list">
+{% for document in documents %}
+<a class="entity-row" href="{{url_for('documents.view',document_id=document.id)}}">
+<div class="avatar"><i class="bi bi-receipt"></i></div>
+<div class="entity-main"><strong>{{document.number}} · {{document.title}}</strong><span>{{document.document_type}} · {{document.issue_date}}</span><small>{{document.status}}{% if document.created_by %} · {{document.created_by.display_name}}{% endif %}</small></div>
+<span class="status-chip status-{{document.status}}">{{document.status}}</span>
+</a>
+{% else %}<div class="empty-state"><i class="bi bi-receipt-cutoff"></i><strong>لا توجد سندات</strong><span>ستظهر السندات التي تنتجها العمليات هنا.</span></div>{% endfor %}
+</div>
+{% endblock %}

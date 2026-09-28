@@ -1,19 +1,105 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row"><div class="page-heading"><h1>المزارعون</h1><p>المزارع المعتمد فقط يدخل دورة الصرف.</p></div><a class="primary-btn" href="{{url_for('farmers.new')}}"><i class="bi bi-plus-lg"></i> إضافة مزارع</a></div>
-<div class="filter-row">
-<a class="filter-chip {% if not status %}active{% endif %}" href="{{url_for('farmers.index')}}">الكل</a>
-<a class="filter-chip {% if status=='approved' %}active{% endif %}" href="{{url_for('farmers.index',status='approved')}}">معتمد</a>
-<a class="filter-chip {% if status=='submitted' %}active{% endif %}" href="{{url_for('farmers.index',status='submitted')}}">معلق</a>
-<a class="filter-chip {% if status=='suspended' %}active{% endif %}" href="{{url_for('farmers.index',status='suspended')}}">موقوف</a>
+<div class="page-heading-row">
+  <div class="page-heading">
+    <h1>المزارعون</h1>
+    <p>بطاقات تشغيلية سريعة: السحب، المتبقي، الدين، والإجراءات.</p>
+  </div>
+  <div class="header-actions">
+    <a class="primary-btn" href="{{url_for('sales.dispense')}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>
+    <a class="secondary-btn" href="{{url_for('sales.payment')}}"><i class="bi bi-cash-coin"></i><span>دفع</span></a>
+    {% if current_user.has_role("manager") %}<a class="primary-btn" href="{{url_for('farmers.new')}}"><i class="bi bi-plus-lg"></i><span>مزارع</span></a>{% endif %}
+  </div>
 </div>
-<div class="entity-list">
-{% for farmer in farmers %}
-<a class="entity-row" href="{{url_for('farmers.detail',farmer_id=farmer.id)}}">
-<div class="avatar"><i class="bi bi-person"></i></div>
-<div class="entity-main"><strong>{{farmer.name}}</strong><span>{{farmer.phone}} · {{farmer.code}}</span><small>{{farmer.assigned_employee.display_name}} · سقف {{farmer.quota_drums}} دبة</small></div>
-<div class="status-chip status-{{farmer.status}}">{{{"approved":"معتمد","submitted":"معلق","changes_requested":"استكمال","rejected":"مرفوض","suspended":"موقوف"}.get(farmer.status,farmer.status)}}</div>
-</a>
-{% else %}<div class="empty-state"><i class="bi bi-people"></i><strong>لا توجد نتائج</strong><span>أضف أول مزارع أو غيّر الفلتر.</span></div>{% endfor %}
+
+<div class="stats-grid farmer-overview page-stats-compact">
+  <div class="stat-card"><div><small>المزارعون</small><strong>{{stats.total|clean_number}}</strong><span>حساب</span></div></div>
+  <div class="stat-card"><div><small>صرف الديزل</small><strong>{{stats.consumed|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>المتبقي للسحب</small><strong>{{stats.remaining|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>المديونية</small><strong>{{stats.debt|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>المعتمد</small><strong>{{stats.approved|clean_number}}</strong><span>حساب</span></div></div>
+  <div class="stat-card"><div><small>بانتظار</small><strong>{{stats.pending|clean_number}}</strong><span>مراجعة</span></div></div>
+  <div class="stat-card"><div><small>موقوف</small><strong>{{stats.suspended|clean_number}}</strong><span>حساب</span></div></div>
+</div>
+
+<form class="farmer-tools" method="get">
+  {% if status %}<input type="hidden" name="status" value="{{status}}">{% endif %}
+  <div class="farmer-search"><i class="bi bi-search"></i><input name="search" value="{{search or ''}}" placeholder="بحث بالاسم أو الهاتف أو الكود"><button class="small-icon-btn" aria-label="بحث"><i class="bi bi-arrow-return-left"></i></button></div>
+  <label class="sort-select"><i class="bi bi-sort-down"></i><select name="sort" onchange="this.form.submit()">
+    <option value="name" {% if sort=="name" %}selected{% endif %}>الاسم</option>
+    <option value="consumed" {% if sort=="consumed" %}selected{% endif %}>الأكثر سحبًا</option>
+    <option value="remaining" {% if sort=="remaining" %}selected{% endif %}>الأعلى متبقيًا</option>
+    <option value="debt" {% if sort=="debt" %}selected{% endif %}>الأعلى مديونية</option>
+  </select></label>
+</form>
+
+<div class="filter-row">
+  <a class="filter-chip {% if not status %}active{% endif %}" href="{{url_for('farmers.index')}}">الكل</a>
+  <a class="filter-chip {% if status=='approved' %}active{% endif %}" href="{{url_for('farmers.index',status='approved')}}">معتمد</a>
+  <a class="filter-chip {% if status=='submitted' %}active{% endif %}" href="{{url_for('farmers.index',status='submitted')}}">معلق</a>
+  <a class="filter-chip {% if status=='changes_requested' %}active{% endif %}" href="{{url_for('farmers.index',status='changes_requested')}}">استكمال</a>
+  <a class="filter-chip {% if status=='suspended' %}active{% endif %}" href="{{url_for('farmers.index',status='suspended')}}">موقوف</a>
+  {% if current_user.has_role("manager") %}<a class="filter-chip {% if status=='deleted' %}active{% endif %}" href="{{url_for('farmers.index',status='deleted')}}">المؤرشف</a>{% endif %}
+</div>
+
+<div class="farmer-card-grid">
+{% for item in cards %}
+{% set farmer=item.farmer %}
+{% set account=item.account %}
+<article class="farmer-card">
+  <a class="farmer-card-main" href="{{url_for('sales.farmer_account_view',farmer_id=farmer.id)}}">
+    <div class="farmer-card-head">
+      <div class="farmer-avatar"><i class="bi bi-person-fill"></i></div>
+      <div class="farmer-title">
+        <strong>{{farmer.name}}</strong>
+        <span>{{farmer.code}} · {{farmer.phone}}</span>
+      </div>
+      <span class="status-chip status-{{farmer.status}}">{{{"approved":"معتمد","submitted":"معلق","changes_requested":"استكمال","rejected":"مرفوض","suspended":"موقوف","deleted":"مؤرشف"}.get(farmer.status,farmer.status)}}</span>
+    </div>
+    <div class="farmer-metrics">
+      <div><small>السقف</small><strong>{{farmer.quota_drums|clean_number}}</strong><span>دبة</span></div>
+      <div class="metric-primary"><small>المسحوب</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div>
+      <div class="metric-success"><small>المتبقي</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div>
+      <div class="{% if account.outstanding_amount>0 %}metric-danger{% endif %}"><small>الدين</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+    </div>
+    <div class="farmer-card-footer">
+      <span><i class="bi bi-shield-check"></i> حد الدين المتبقي {{account.remaining_credit_drums|clean_number}} دبة</span>
+      <i class="bi bi-chevron-left"></i>
+    </div>
+  </a>
+  <div class="farmer-card-actions">
+    <a class="small-icon-btn" href="{{url_for('sales.farmer_account_view',farmer_id=farmer.id)}}" aria-label="عرض كشف الحساب" title="كشف الحساب"><i class="bi bi-file-earmark-text"></i></a>
+    {% if farmer.status in ["approved","suspended"] %}
+      <a class="small-icon-btn" href="{{url_for('sales.dispense')}}?farmer_id={{farmer.id}}" aria-label="صرف ديزل" title="صرف ديزل"><i class="bi bi-droplet-fill"></i></a>
+      <a class="small-icon-btn" href="{{url_for('sales.payment')}}?farmer_id={{farmer.id}}" aria-label="دفع" title="دفع"><i class="bi bi-cash-coin"></i></a>
+    {% endif %}
+    {% if current_user.has_role("manager") or farmer.status in ["submitted","changes_requested"] %}
+      <a class="small-icon-btn" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}" aria-label="تعديل" title="تعديل"><i class="bi bi-pencil-square"></i></a>
+    {% endif %}
+    <div class="dropdown">
+      <button class="small-icon-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="المزيد" title="المزيد"><i class="bi bi-three-dots"></i></button>
+      <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+        <li><a class="dropdown-item" href="{{url_for('farmers.detail',farmer_id=farmer.id)}}"><i class="bi bi-eye me-2"></i>عرض الملف</a></li>
+        {% if current_user.has_role("manager") %}
+        <li><a class="dropdown-item" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil me-2"></i>تعديل</a></li>
+        <li><hr class="dropdown-divider"></li>
+        {% if farmer.status=="suspended" %}
+          <li><form method="post" action="{{url_for('farmers.status_change',farmer_id=farmer.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="dropdown-item" name="action" value="activate" type="submit"><i class="bi bi-person-check me-2"></i>إعادة التفعيل</button></form></li>
+        {% elif farmer.status!="deleted" %}
+          <li><form method="post" action="{{url_for('farmers.status_change',farmer_id=farmer.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="dropdown-item" name="action" value="suspend" type="submit"><i class="bi bi-person-x me-2"></i>إيقاف المزارع</button></form></li>
+        {% endif %}
+        {% if farmer.status=="deleted" %}
+          <li><form method="post" action="{{url_for('farmers.status_change',farmer_id=farmer.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="dropdown-item" name="action" value="activate" type="submit"><i class="bi bi-arrow-counterclockwise me-2"></i>استعادة الحساب</button></form></li>
+        {% else %}
+          <li><form method="post" action="{{url_for('farmers.status_change',farmer_id=farmer.id)}}" onsubmit="return confirm('سيتم أرشفة المزارع وإخفاؤه من القوائم التشغيلية مع حفظ معاملاته. متابعة؟')"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="dropdown-item text-danger" name="action" value="delete" type="submit"><i class="bi bi-trash3 me-2"></i>حذف / أرشفة</button></form></li>
+        {% endif %}
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</article>
+{% else %}
+<div class="empty-state"><i class="bi bi-people"></i><strong>لا توجد نتائج</strong><span>أضف أول مزارع أو غيّر الفلتر.</span></div>
+{% endfor %}
 </div>
 {% endblock %}

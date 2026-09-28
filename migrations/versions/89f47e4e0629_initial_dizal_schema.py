@@ -7,6 +7,7 @@ Create Date: 2026-09-28 01:56:08.370601
 """
 from alembic import op
 import sqlalchemy as sa
+import flask_security
 
 
 # revision identifiers, used by Alembic.

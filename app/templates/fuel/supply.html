@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>توريدات الديزل</h1><p>الموظف يرفع التوريد، ويظل معلقًا حتى يعتمد المدير.</p></div>
+<div class="page-heading-row"><div class="page-heading"><h1>توريدات الديزل</h1><p>التوريد غير المعتمد يبقى قابلًا للمراجعة، والتوريد المعتمد يظهر في حركة الخزان.</p></div><button class="primary-btn" type="button" data-bs-toggle="collapse" data-bs-target="#supply-new" aria-expanded="false" aria-controls="supply-new"><i class="bi bi-plus-lg"></i><span>إضافة توريد</span></button></div>
+<div class="collapse" id="supply-new">
 <form method="post" enctype="multipart/form-data" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 {% if current_user.has_role("manager") %}<label>الموظف المسؤول<select name="employee_id"><option value="">اختر الموظف</option>{% for e in employees %}<option value="{{e.id}}">{{e.display_name}}</option>{% endfor %}</select></label>{% endif %}
@@ -12,15 +13,25 @@
 <label>البيان<textarea name="notes" rows="3"></textarea></label>
 <button class="primary-btn"><i class="bi bi-upload"></i> رفع التوريد</button>
 </form>
+</div>
 
 <div class="section-title"><h2>آخر التوريدات</h2><span>آخر 50 عملية</span></div>
 <div class="entity-list">
 {% for purchase in purchases %}
 <div class="entity-row">
 <div class="avatar"><i class="bi bi-truck"></i></div>
-<div class="entity-main"><strong>{{purchase.document.number}} · {{purchase.liters}} لتر</strong><span>{{purchase.supplier_name or "بدون مورد"}} · {{purchase.landed_cost}}</span><small>{{purchase.status}} · {{purchase.employee.display_name}}</small></div>
-{% if current_user.has_role("manager") and purchase.status=="submitted" %}<form method="post" action="{{url_for('fuel.approve',purchase_id=purchase.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="success-btn">اعتماد</button></form>{% endif %}
-</div>
+<div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=purchase.document_id)}}">{{purchase.document.number}}</a> · {{purchase.liters}} لتر</strong><span>{{purchase.supplier_name or "بدون مورد"}} · {{purchase.landed_cost}}</span><small>{{purchase.status}} · {{purchase.employee.display_name}}</small></div>
+<div class="d-flex flex-wrap gap-1">
+{% if current_user.has_role("manager") and purchase.status=="submitted" %}
+<form method="post" action="{{url_for('fuel.review',purchase_id=purchase.id)}}" class="d-flex gap-1">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<button class="success-btn" name="action" value="approve">اعتماد</button>
+<button class="icon-btn" name="action" value="changes_requested" title="استكمال"><i class="bi bi-pencil-square"></i></button>
+<button class="icon-btn" name="action" value="rejected" title="رفض"><i class="bi bi-x-circle"></i></button>
+</form>
+{% endif %}
+<a class="icon-btn" href="{{url_for('documents.view',document_id=purchase.document_id)}}" aria-label="السند"><i class="bi bi-receipt"></i></a>
+</div></div>
 {% else %}<div class="empty-state"><i class="bi bi-truck"></i><strong>لا توجد توريدات</strong><span>سيظهر أول توريد هنا.</span></div>{% endfor %}
 </div>
 {% endblock %}

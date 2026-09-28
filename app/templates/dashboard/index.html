@@ -1,20 +1,127 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="hero-card"><div><span class="eyebrow">Dizal</span><h1>{% if manager %}نظرة كاملة على المشروع{% else %}تشغيلك اليومي{% endif %}</h1><p>{% if manager %}الإدارة والمال والمخزون في مكان واحد.{% else %}واجهة بسيطة للموظف تركز على التشغيل وصندوقه.{% endif %}</p></div><div class="hero-icon"><i class="bi bi-fuel-pump-fill"></i></div></div>
-{% if employee_cashbox %}<div class="employee-balance"><div><small>صندوقي</small><strong>{{employee_cashbox.balance}}</strong><span>{{project_settings.currency}}</span></div><i class="bi bi-wallet2"></i></div>{% endif %}
-<div class="quick-grid">
-<a class="quick-card" href="{{url_for('cashbox.index')}}"><i class="bi bi-wallet2"></i><strong>الصندوق</strong><small>الرصيد والحركات</small></a>
-{% if manager %}<a class="quick-card" href="{{url_for('capital.index')}}"><i class="bi bi-bank"></i><strong>رأس المال</strong><small>الإضافة والتسليم</small></a><a class="quick-card" href="{{url_for('assets.index')}}"><i class="bi bi-building"></i><strong>الأصول</strong><small>أصول المشروع</small></a><a class="quick-card" href="{{url_for('employees.index')}}"><i class="bi bi-person-gear"></i><strong>الموظفون</strong><small>الحسابات والصلاحيات</small></a>{% endif %}
+<div class="hero-card">
+  <div>
+    <span class="eyebrow">Dizal</span>
+    <h1>{% if manager %}لوحة تشغيل المشروع{% else %}تشغيلك اليومي{% endif %}</h1>
+    <p>{% if manager %}ملخص سريع لحركة الديزل والمال والمزارعين.{% else %}الصندوق، المزارعون، الصرف والتحصيل في شاشة خفيفة.{% endif %}</p>
+  </div>
+  <div class="hero-icon"><i class="bi bi-fuel-pump-fill"></i></div>
 </div>
-<div class="stats-grid">
-<article class="stat-card"><i class="bi bi-people"></i><div><small>الموظفون</small><strong>{{employee_count}}</strong><span>في المشروع</span></div></article>
-<article class="stat-card"><i class="bi bi-shield-check"></i><div><small>الصلاحيات</small><strong>RBAC</strong><span>حسب الدور</span></div></article>
-<article class="stat-card"><i class="bi bi-phone"></i><div><small>PWA</small><strong>جاهز</strong><span>للهاتف</span></div></article>
-<article class="stat-card"><i class="bi bi-database-check"></i><div><small>المرحلة</small><strong>2</strong><span>الصناديق ورأس المال</span></div></article>
+
+{% if manager and summary %}
+<div class="stats-grid dashboard-kpis">
+  <div class="dashboard-kpi"><small>المبيعات</small><strong>{{summary.sales|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi"><small>الربح الإجمالي</small><strong>{{summary.gross_profit|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi is-danger"><small>ديون المزارعين</small><strong>{{summary.receivables|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi"><small>مخزون الديزل</small><strong>{{summary.stock_liters|clean_number}}</strong><span>لتر</span></div>
+  <div class="dashboard-kpi"><small>المخزون الحر</small><strong>{{inventory.free_liters|clean_number}}</strong><span>لتر</span></div>
+  <div class="dashboard-kpi"><small>الملتزم للمزارعين</small><strong>{{inventory.committed_liters|clean_number}}</strong><span>لتر</span></div>
+  <div class="dashboard-kpi {% if pending_supplies %}is-warning{% endif %}"><small>توريدات معلقة</small><strong>{{pending_supplies}}</strong><span>مراجعة</span></div>
+  <div class="dashboard-kpi"><small>مزارعون بانتظارك</small><strong>{{pending_farmers}}</strong><span>مراجعة</span></div>
 </div>
-<div class="section-title"><h2>آخر سجل نشاط</h2><span>Audit Log</span></div>
+{% else %}
+<div class="stats-grid dashboard-kpis">
+  <div class="dashboard-kpi"><small>صندوقي</small><strong>{{(employee_cashbox.balance if employee_cashbox else 0)|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi"><small>المزارعون</small><strong>{{employee_stats.farmers|clean_number}}</strong><span>معتمد</span></div>
+  <div class="dashboard-kpi is-danger"><small>ديون للتحصيل</small><strong>{{employee_stats.debt_amount|clean_number}}</strong><span>{{employee_stats.debts_count|clean_number}} حساب</span></div>
+  <div class="dashboard-kpi"><small>صرف اليوم</small><strong>{{employee_stats.today_drums|clean_number}}</strong><span>دبة</span></div>
+  <div class="dashboard-kpi"><small>لترات اليوم</small><strong>{{employee_stats.today_liters|clean_number}}</strong><span>لتر</span></div>
+  <div class="dashboard-kpi"><small>تحصيل اليوم</small><strong>{{employee_stats.today_collected|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi"><small>الديزل المتاح</small><strong>{{employee_stats.available_liters|clean_number}}</strong><span>لتر</span></div>
+  <div class="dashboard-kpi {% if employee_stats.pending_supplies %}is-warning{% endif %}"><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies|clean_number}}</strong><span>متابعة</span></div>
+</div>
+{% endif %}
+
+<div class="dashboard-ops-grid">
+  <section class="dashboard-panel">
+    <div class="section-title"><h2>حركة آخر 7 أيام</h2><span>صرف الديزل والتحصيل</span></div>
+    <div class="trend-chart">
+    {% for row in trend_rows %}
+      <div class="trend-row">
+        <span class="trend-day">{{row.label}}</span>
+        <div class="trend-bars" aria-label="حركة {{row.label}}">
+          <div class="trend-bar" title="صرف {{row.liters}} لتر"><span style="width:{{row.liters_pct}}%"></span></div>
+          <div class="trend-bar collect" title="تحصيل {{row.collected}}"><span style="width:{{row.collected_pct}}%"></span></div>
+        </div>
+        <span class="trend-values">{{row.liters|round(0)}} لتر · {{row.collected|round(0)}}</span>
+      </div>
+    {% endfor %}
+    </div>
+    <div class="legend-row"><span><i class="legend-dot"></i> الصرف باللتر</span><span><i class="legend-dot collect"></i> التحصيل</span></div>
+  </section>
+
+  <section class="dashboard-panel">
+    <div class="section-title"><h2>الخزانات</h2><a href="{{url_for('fuel.tanks')}}">إدارة</a></div>
+    <div class="dashboard-tanks">
+    {% for item in tank_overview %}
+      <a class="dashboard-tank" href="{{url_for('fuel.tank_detail',tank_id=item.tank.id)}}">
+        <div><strong>{{item.tank.name}}</strong><small>{{item.tank.code}} · {{item.tank.location or "بدون موقع"}}</small></div>
+        <div class="dashboard-tank-value">{{item.stock}}<small> لتر</small></div>
+      </a>
+    {% else %}
+      <div class="empty-state"><strong>لا توجد خزانات فعالة</strong><span>أضف خزانًا من شاشة الخزانات.</span></div>
+    {% endfor %}
+    </div>
+    {% if manager and inventory.shortage_liters>0 %}<div class="kpi-note">تنبيه: الالتزام الحالي أعلى من المخزون بمقدار {{inventory.shortage_liters|clean_number}} لتر.</div>{% endif %}
+  </section>
+</div>
+
+{% if manager %}
+<div class="section-title"><h2>إجراءات سريعة</h2><span>وصول مباشر</span></div>
+<div class="quick-grid compact-quick-grid dashboard-shortcuts">
+  <a class="quick-card" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet"></i><strong>صرف ديزل</strong><small>تسجيل صرف جديد</small></a>
+  <a class="quick-card" href="{{url_for('sales.payment')}}"><i class="bi bi-cash"></i><strong>تحصيل</strong><small>سداد مزارع</small></a>
+  <a class="quick-card" href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><strong>المزارعون</strong><small>السقوف والديون</small></a>
+  <a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong><small>مراجعة وإضافة</small></a>
+  <a class="quick-card" href="{{url_for('documents.index')}}"><i class="bi bi-receipt"></i><strong>السندات</strong><small>طباعة وPDF</small></a>
+  <a class="quick-card" href="{{url_for('employees.index')}}"><i class="bi bi-person-gear"></i><strong>الموظفون</strong><small>الحسابات والصلاحيات</small></a>
+</div>
+{% else %}
+<div class="section-title"><h2>إجراءاتك</h2><span>بدون ازدحام</span></div>
+<div class="quick-grid compact-quick-grid dashboard-shortcuts">
+  <a class="quick-card" href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><strong>المزارعون</strong><small>بطاقاتك وسقوفهم</small></a>
+  <a class="quick-card" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet"></i><strong>صرف ديزل</strong><small>تسجيل سحب</small></a>
+  <a class="quick-card" href="{{url_for('sales.payment')}}"><i class="bi bi-cash"></i><strong>تحصيل</strong><small>سداد مزارع</small></a>
+  <a class="quick-card" href="{{url_for('reports.my_operations')}}"><i class="bi bi-clipboard-data"></i><strong>تقريري</strong><small>السحب والتحصيل</small></a>
+  <a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong><small>إضافة ومتابعة</small></a>
+  <a class="quick-card" href="{{url_for('employees.my_password')}}"><i class="bi bi-key"></i><strong>كلمة المرور</strong><small>تحديث الحساب</small></a>
+</div>
+
+<div class="section-title"><h2>مزارعيني</h2><span>{{employee_farmers|length|clean_number}} من {{employee_farmers_total|clean_number}}</span></div>
+<div class="entity-list">
+{% for item in employee_farmers %}
+<a class="entity-row" href="{{url_for('sales.farmer_account_view',farmer_id=item.farmer.id)}}">
+  <div class="avatar"><i class="bi bi-person"></i></div>
+  <div class="entity-main">
+    <strong>{{item.farmer.name}}</strong>
+    <span>صرف {{item.account.consumed_drums}} دبة · متبقي السقف {{item.account.remaining_quota_drums}} دبة</span>
+    <small>الدين {{item.account.outstanding_amount}} {{project_settings.currency}} · حد الدين المتبقي {{item.account.remaining_credit_drums}} دبة</small>
+  </div>
+  {% if item.account.outstanding_amount > 0 %}<span class="status-chip status-submitted">تحصيل</span>{% else %}<i class="bi bi-chevron-left"></i>{% endif %}
+</a>
+{% else %}<div class="empty-state"><strong>لا يوجد مزارعون مرتبطون بك</strong><span>سيظهرون هنا بعد اعتماد حساباتهم.</span></div>{% endfor %}
+</div>
+
+<div class="section-title"><h2>آخر تنبيهاتك</h2><a href="{{url_for('notifications.index')}}">عرض الكل</a></div>
+<div class="entity-list">
+{% for row in employee_notifications %}
+<a class="entity-row {% if not row.read_at %}notification-unread{% endif %}" href="{{url_for('notifications.read',notification_id=row.id)}}">
+  <div class="avatar"><i class="bi bi-bell"></i></div>
+  <div class="entity-main"><strong>{{row.title}}</strong><span>{{row.message}}</span><small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div>
+</a>
+{% else %}<div class="empty-state"><strong>لا توجد تنبيهات</strong><span>ستظهر الإشعارات المرتبطة بعملك هنا.</span></div>{% endfor %}
+</div>
+{% endif %}
+
+<div class="section-title"><h2>آخر النشاط</h2><a href="{{url_for('audit.index')}}">سجل النشاط</a></div>
 <div class="audit-list">
-{% for row in recent_audits %}<div class="audit-row"><i class="bi bi-clock-history"></i><div><strong>{{row.action}}</strong><small>{{row.object_type or "system"}} #{{row.object_id or "—"}}</small></div></div>
-{% else %}<div class="empty-state"><i class="bi bi-journal-check"></i><strong>لا توجد حركات بعد</strong><span>سيظهر النشاط هنا.</span></div>{% endfor %}
+{% for row in recent_audits %}
+{% set target=audit_target_url(row) %}
+<a class="audit-row" href="{{target or '#'}}" {% if not target %}aria-disabled="true" onclick="return false"{% endif %}>
+  <i class="bi bi-clock-history"></i>
+  <div><strong>{{audit_action_label(row.action)}}</strong><small>{% if row.actor %}{{row.actor.display_name or row.actor.username}} · {% endif %}{{row.object_type or "النظام"}}{% if row.object_id %} #{{row.object_id}}{% endif %}</small></div>
+</a>
+{% else %}<div class="empty-state"><strong>لا توجد حركات بعد</strong><span>سيظهر النشاط هنا.</span></div>{% endfor %}
 </div>
 {% endblock %}

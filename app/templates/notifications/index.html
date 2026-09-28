@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>الإشعارات</h1><p>كل التنبيهات المتعلقة بالعمليات التي تخصك.</p></div>
+<div class="page-heading-row"><div class="page-heading"><h1>الإشعارات</h1><p>كل التنبيهات المتعلقة بالعمليات التي تخصك.</p></div>
+<form method="post" action="{{url_for('notifications.read_all')}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="secondary-danger" type="submit">تحديد الكل كمقروء</button></form></div>
 <div class="entity-list">
 {% for row in notifications %}
 <div class="entity-row {% if not row.read_at %}notification-unread{% endif %}">

@@ -1,26 +1,55 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>رأس المال</h1><p>إضافة رأس المال وتسليمه للموظف كسند واضح.</p></div>
-<div class="balance-card"><span>الصندوق الرئيسي</span><strong>{{central_balance}}</strong><small>{{project_settings.currency}}</small></div>
-<div class="section-title"><h2>إضافة رأس مال</h2><span>لصندوق المشروع</span></div>
+<div class="page-heading-row">
+  <div class="page-heading"><h1>رأس المال</h1><p>الإضافة والتسليم من أزرار واضحة، أما العمليات فتظهر كبطاقات وسندات قابلة للمراجعة.</p></div>
+  <div class="header-actions">
+    <button class="primary-btn" type="button" data-bs-toggle="modal" data-bs-target="#capitalAdd"><i class="bi bi-plus-lg"></i><span>إضافة رأس مال</span></button>
+    <button class="secondary-btn" type="button" data-bs-toggle="modal" data-bs-target="#capitalAllocate"><i class="bi bi-send"></i><span>تسليم لموظف</span></button>
+  </div>
+</div>
+
+<div class="balance-card"><div><span>الصندوق الرئيسي</span><strong>{{central_balance}}</strong><small>{{project_settings.currency}}</small></div><i class="bi bi-bank"></i></div>
+<div class="stats-grid page-stats-compact">
+<div class="stat-card"><i class="bi bi-piggy-bank"></i><div><small>إجمالي رأس المال</small><strong>{{totals.contributed}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-send"></i><div><small>المسلم للموظفين</small><strong>{{totals.allocated}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-wallet2"></i><div><small>في صناديق الموظفين</small><strong>{{totals.employee_cash}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-bank"></i><div><small>غير مخصص</small><strong>{{totals.unallocated}}</strong><span>{{project_settings.currency}}</span></div></div>
+</div>
+
+<div class="section-title"><h2>عمليات رأس المال</h2><span>فتح السند للتفاصيل أو العكس</span></div>
+<div class="entity-list">
+{% for row in contributions %}
+<div class="entity-row"><div class="avatar"><i class="bi bi-bank"></i></div><div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number if row.document else "CAP"}}</a></strong><span>{{row.source or "رأس مال"}}</span><small>{{row.contribution_date}} · {{row.status}}</small></div><div class="money-value">{{row.amount}}</div></div>
+{% endfor %}
+{% for row in allocations %}
+<div class="entity-row"><div class="avatar"><i class="bi bi-arrow-left-right"></i></div><div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number if row.document else "TRF"}}</a></strong><span>{{row.employee.display_name}} · تسليم رأس مال</span><small>{{row.allocation_date}} · افتح السند للمراجعة أو العكس</small></div><div class="money-value">{{row.amount}}</div></div>
+{% endfor %}
+{% if not contributions and not allocations %}<div class="empty-state"><i class="bi bi-bank"></i><strong>لا توجد عمليات</strong><span>أضف رأس مال أو سلّمه لموظف من الأزرار أعلاه.</span></div>{% endif %}
+</div>
+
+<div class="modal fade" id="capitalAdd" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+<div class="modal-header"><h5 class="modal-title">إضافة رأس مال</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button></div>
 <form method="post" action="{{url_for('capital.add')}}" class="mobile-form card-form">
+<div class="modal-body">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-<label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required></label>
+<label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required autofocus></label>
 <label>المصدر<input name="source" placeholder="رأس مال المستثمر"></label>
 <label>البيان<textarea name="notes" rows="2"></textarea></label>
-<button class="primary-btn">تسجيل رأس المال</button>
+</div><div class="modal-footer"><button type="button" class="secondary-btn" data-bs-dismiss="modal">إلغاء</button><button class="primary-btn"><i class="bi bi-check2"></i><span>تسجيل</span></button></div>
 </form>
-<div class="section-title"><h2>تسليم للموظف</h2><span>ينشئ سند تحويل</span></div>
+</div></div></div>
+
+<div class="modal fade" id="capitalAllocate" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+<div class="modal-header"><h5 class="modal-title">تسليم رأس مال للموظف</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button></div>
 <form method="post" action="{{url_for('capital.allocate')}}" class="mobile-form card-form">
+<div class="modal-body">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>الموظف<select name="employee_id" required><option value="">اختر موظفًا</option>{% for e in employees_for_capital %}<option value="{{e.id}}">{{e.display_name}}</option>{% endfor %}</select></label>
 <label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required></label>
 <label>البيان<textarea name="notes" rows="2"></textarea></label>
-<button class="primary-btn"><i class="bi bi-send"></i> تسليم رأس المال</button>
+</div><div class="modal-footer"><button type="button" class="secondary-btn" data-bs-dismiss="modal">إلغاء</button><button class="primary-btn"><i class="bi bi-send"></i><span>تسجيل التسليم</span></button></div>
 </form>
-<div class="section-title"><h2>آخر العمليات</h2></div>
-<div class="entity-list">
-{% for row in contributions %}<div class="entity-row"><div class="avatar"><i class="bi bi-bank"></i></div><div class="entity-main"><strong>{{row.document.number if row.document else "CAP"}}</strong><span>{{row.source or "رأس مال"}}</span></div><div class="money-value">{{row.amount}}</div></div>{% endfor %}
-{% for row in allocations %}<div class="entity-row"><div class="avatar"><i class="bi bi-arrow-left-right"></i></div><div class="entity-main"><strong>{{row.document.number if row.document else "TRF"}}</strong><span>{{row.employee.display_name}} · تسليم رأس مال</span></div><div class="money-value">{{row.amount}}</div></div>{% endfor %}
-</div>
+</div></div></div>
 {% endblock %}

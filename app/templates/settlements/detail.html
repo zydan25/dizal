@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row"><div class="page-heading"><h1>تسوية الموظف</h1><p>{{settlement.document.number}} · {{settlement.employee.display_name}} · {{settlement.period_start}} → {{settlement.period_end}}</p></div><span class="status-chip status-{{settlement.status}}">{{settlement.status}}</span></div>
+<div class="calculation-card">
+<div><small>المتوقع</small><strong>{{settlement.expected_cash}}</strong><span>{{project_settings.currency}}</span></div>
+<div><small>الفعلي</small><strong>{{settlement.actual_cash}}</strong><span>{{project_settings.currency}}</span></div>
+<div><small>العجز</small><strong>{{settlement.cash_shortage}}</strong><span>{{project_settings.currency}}</span></div>
+<div><small>الزيادة</small><strong>{{settlement.cash_overage}}</strong><span>{{project_settings.currency}}</span></div>
+<div><small>المبيعات</small><strong>{{settlement.sales_amount}}</strong><span>{{project_settings.currency}}</span></div>
+<div><small>الربح التشغيلي</small><strong>{{settlement.sales_amount-settlement.cost_of_sales-settlement.operating_expenses-settlement.employee_salary}}</strong><span>{{project_settings.currency}}</span></div>
+</div>
+<div class="section-title"><h2>تفاصيل الحساب</h2><span>قبل الاعتماد</span></div>
+<div class="entity-list">
+<div class="entity-row"><div class="entity-main"><strong>تكلفة المبيعات</strong></div><div class="money-value">{{settlement.cost_of_sales}}</div></div>
+<div class="entity-row"><div class="entity-main"><strong>الربح الإجمالي</strong></div><div class="money-value">{{settlement.gross_profit}}</div></div>
+<div class="entity-row"><div class="entity-main"><strong>المصروفات التشغيلية</strong></div><div class="money-value negative">{{settlement.operating_expenses}}</div></div>
+<div class="entity-row"><div class="entity-main"><strong>الراتب/العمولة</strong></div><div class="money-value negative">{{settlement.employee_salary}}</div></div>
+<div class="entity-row"><div class="entity-main"><strong>التحويل للمدير</strong></div><div class="money-value">{{settlement.owner_transfer}}</div></div>
+<div class="entity-row"><div class="entity-main"><strong>رأس المال المتبقي</strong></div><div class="money-value">{{settlement.retained_operating_capital}}</div></div>
+</div>
+
+{% if settlement.status=="draft" %}
+<div class="section-title"><h2>تعديل المسودة</h2><span>قبل الاعتماد فقط</span></div>
+<form method="post" action="{{url_for('settlements.edit',settlement_id=settlement.id)}}" class="mobile-form card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<label>النقد الفعلي<input name="actual_cash" type="number" step="0.001" value="{{settlement.actual_cash}}" required></label>
+<div class="two-col"><label>التحويل للمدير<input name="owner_transfer" type="number" step="0.001" value="{{settlement.owner_transfer}}"></label><label>رأس المال المتبقي<input name="retained_operating_capital" type="number" step="0.001" value="{{settlement.retained_operating_capital}}"></label></div>
+<label>ملاحظات<textarea name="notes" rows="3">{{settlement.notes or ''}}</textarea></label>
+<button class="primary-btn"><i class="bi bi-pencil-square"></i> حفظ المسودة</button>
+</form>
+{% if current_user.has_role("manager") %}
+<form method="post" action="{{url_for('settlements.approve',settlement_id=settlement.id)}}" class="card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<button class="primary-btn w-100"><i class="bi bi-check2-circle"></i> اعتماد التسوية</button>
+</form>
+{% endif %}
+{% endif %}
+<div class="section-title"><h2>السند</h2><span>الطباعة والمشاركة والعكس</span></div>
+<div class="quick-grid">
+<a class="quick-card" href="{{url_for('documents.view',document_id=settlement.document_id)}}"><i class="bi bi-receipt"></i><strong>فتح السند</strong><small>PDF وطباعة ومشاركة</small></a>
+</div>
+{% endblock %}
