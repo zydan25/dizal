@@ -1,34 +1,74 @@
-# Dizal — حالة المشروع
+# Dizal Status
 
 ## Phase 0 — Specification
+مكتملة.
 
-الحالة: قيد الإنجاز الآن.
+## Phase 1 — Foundation
+مكتملة على feature/phase1-foundation:
+- Flask Factory
+- SQLAlchemy
+- Flask-Migrate
+- Flask-Security-Too
+- RBAC
+- Audit
+- Theme
+- PWA
+- ERP Navigation
+- Login
+- Settings
 
-المخرجات المطلوبة للمرحلة:
-- تعريف المشروع.
-- دورة المال.
-- دورة المخزون.
-- المزارعون.
-- التوريدات.
-- الصناديق.
-- التسويات.
-- الأرباح.
-- الصلاحيات.
-- UI.
-- PWA.
-- السندات.
-- التقارير.
-- WhatsApp.
-- Architecture.
-- Data Model.
-- Deployment.
-- Testing.
+## Phase 2 — Finance Core
+مكتملة:
+- Employees
+- Employee Profile
+- Central and employee cashboxes
+- Cashbox transactions
+- Capital contribution
+- Employee capital allocation
+- Documents and sequences
+- Assets
+- Tests
 
-## ملاحظة
+## Phase 3 — Fuel Operations
+مكتملة:
+- Fuel tanks
+- Fuel purchases
+- Supply attachments
+- Manager approval
+- Fuel stock movements
+- Stock calculation
+- Landed cost per liter
+- Tests
 
-تم إنشاء المستودع وبدأت مرحلة التوصيف.
+## Phase 4 — Farmers
+مكتملة:
+- Farmer profiles
+- Employee assignment
+- Farmer limits
+- Debt ceiling
+- Identity and contract attachments
+- Pending review
+- Approve / changes requested / reject
+- Quota history and manager changes
+- Tests
 
-لن يتم اعتبار أي Skeleton سابق كمرجع نهائي للبرنامج إلا بعد مواءمته مع هذه الوثائق.
+## المرحلة التالية
+Phase 5:
+- صرف الديزل.
+- التسعير.
+- الدين.
+- التحصيل.
+- سند الصرف.
+- سند القبض.
+- كشف حساب المزارع.
+- حساب المتبقي من السقف.
+- منع الصرف للمزارع غير المعتمد.
 
-الخطوة التالية بعد اعتماد Phase 0:
-بدء Phase 1 وبناء Foundation فقط، ثم اختبارها قبل الانتقال للمرحلة التالية.
+## الجودة
+GitHub Actions workflow موجود ويشغل:
+- compileall
+- migration generation
+- migration upgrade
+- pytest
+
+لم يتم الإعلان عن CI أخضر حتى يتم الحصول على نتيجة تشغيل موثقة من Actions.

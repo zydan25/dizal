@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-page">
+<div class="auth-card">
+<div class="brand-mark brand-large"><i class="bi bi-fuel-pump-fill"></i></div>
+<h1>مرحبًا بك</h1>
+<p>الدخول إلى نظام إدارة توزيع الديزل</p>
+<form method="post" class="mobile-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<label>رقم الهاتف أو اسم المستخدم<input name="identifier" autocomplete="username" required></label>
+<label>كلمة المرور<input type="password" name="password" autocomplete="current-password" required></label>
+<label class="check-row"><input type="checkbox" name="remember" value="1"> تذكرني</label>
+<button class="primary-btn" type="submit"><i class="bi bi-box-arrow-in-left"></i> دخول</button>
+</form>
+</div></div>
+{% endblock %}

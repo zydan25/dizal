@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>طلبات المزارعين</h1><p>راجع البيانات والمرفقات، ثم اعتمد أو اطلب استكمالًا.</p></div>
+<div class="entity-list">
+{% for farmer in farmers %}
+<a class="entity-row" href="{{url_for('farmers.detail',farmer_id=farmer.id)}}"><div class="avatar"><i class="bi bi-hourglass-split"></i></div><div class="entity-main"><strong>{{farmer.name}}</strong><span>{{farmer.phone}} · {{farmer.code}}</span><small>{{farmer.assigned_employee.display_name}} · {{farmer.created_at.strftime("%Y-%m-%d")}}</small></div><div class="status-chip status-{{farmer.status}}">{{"معلق" if farmer.status=="submitted" else "استكمال"}}</div></a>
+{% else %}<div class="empty-state"><i class="bi bi-check2-circle"></i><strong>لا توجد طلبات معلقة</strong><span>كل المزارعين تمت مراجعتهم.</span></div>{% endfor %}
+</div>
+{% endblock %}

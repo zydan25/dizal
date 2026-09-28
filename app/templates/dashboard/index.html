@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero-card"><div><span class="eyebrow">Dizal</span><h1>{% if manager %}نظرة كاملة على المشروع{% else %}تشغيلك اليومي{% endif %}</h1><p>{% if manager %}الإدارة والمال والمخزون في مكان واحد.{% else %}واجهة بسيطة للموظف تركز على التشغيل وصندوقه.{% endif %}</p></div><div class="hero-icon"><i class="bi bi-fuel-pump-fill"></i></div></div>
+{% if employee_cashbox %}<div class="employee-balance"><div><small>صندوقي</small><strong>{{employee_cashbox.balance}}</strong><span>{{project_settings.currency}}</span></div><i class="bi bi-wallet2"></i></div>{% endif %}
+<div class="quick-grid">
+<a class="quick-card" href="{{url_for('cashbox.index')}}"><i class="bi bi-wallet2"></i><strong>الصندوق</strong><small>الرصيد والحركات</small></a>
+{% if manager %}<a class="quick-card" href="{{url_for('capital.index')}}"><i class="bi bi-bank"></i><strong>رأس المال</strong><small>الإضافة والتسليم</small></a><a class="quick-card" href="{{url_for('assets.index')}}"><i class="bi bi-building"></i><strong>الأصول</strong><small>أصول المشروع</small></a><a class="quick-card" href="{{url_for('employees.index')}}"><i class="bi bi-person-gear"></i><strong>الموظفون</strong><small>الحسابات والصلاحيات</small></a>{% endif %}
+</div>
+<div class="stats-grid">
+<article class="stat-card"><i class="bi bi-people"></i><div><small>الموظفون</small><strong>{{employee_count}}</strong><span>في المشروع</span></div></article>
+<article class="stat-card"><i class="bi bi-shield-check"></i><div><small>الصلاحيات</small><strong>RBAC</strong><span>حسب الدور</span></div></article>
+<article class="stat-card"><i class="bi bi-phone"></i><div><small>PWA</small><strong>جاهز</strong><span>للهاتف</span></div></article>
+<article class="stat-card"><i class="bi bi-database-check"></i><div><small>المرحلة</small><strong>2</strong><span>الصناديق ورأس المال</span></div></article>
+</div>
+<div class="section-title"><h2>آخر سجل نشاط</h2><span>Audit Log</span></div>
+<div class="audit-list">
+{% for row in recent_audits %}<div class="audit-row"><i class="bi bi-clock-history"></i><div><strong>{{row.action}}</strong><small>{{row.object_type or "system"}} #{{row.object_id or "—"}}</small></div></div>
+{% else %}<div class="empty-state"><i class="bi bi-journal-check"></i><strong>لا توجد حركات بعد</strong><span>سيظهر النشاط هنا.</span></div>{% endfor %}
+</div>
+{% endblock %}

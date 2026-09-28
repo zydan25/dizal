@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>الإشعارات</h1><p>كل التنبيهات المتعلقة بالعمليات التي تخصك.</p></div>
+<div class="entity-list">
+{% for row in notifications %}
+<div class="entity-row {% if not row.read_at %}notification-unread{% endif %}">
+<div class="avatar"><i class="bi bi-{% if row.severity=="danger" %}exclamation-triangle{% elif row.severity=="warning" %}exclamation-circle{% else %}bell{% endif %}"></i></div>
+<div class="entity-main"><strong>{{row.title}}</strong><span>{{row.body}}</span><small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div>
+{% if not row.read_at %}<form method="post" action="{{url_for('notifications.read',notification_id=row.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="success-btn">قراءة</button></form>{% endif %}
+</div>
+{% else %}<div class="empty-state"><i class="bi bi-bell-slash"></i><strong>لا توجد إشعارات</strong></div>{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>{{box.name}}</h1><p>الرصيد الناتج من الحركات.</p></div>
+<div class="balance-card"><span>الرصيد الحالي</span><strong>{{balance}}</strong><small>{{project_settings.currency}}</small></div>
+<div class="section-title"><h2>آخر 100 حركة</h2><span>سجل الصندوق</span></div>
+<div class="entity-list">{% for tx in transactions %}<div class="entity-row"><div class="avatar"><i class="bi {% if tx.direction=='IN' %}bi-arrow-down-left{% else %}bi-arrow-up-right{% endif %}"></i></div><div class="entity-main"><strong>{{tx.transaction_type}}</strong><span>{{tx.description or "—"}}</span><small>{{tx.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div><div class="money-value {% if tx.direction=='OUT' %}negative{% endif %}">{% if tx.direction=='OUT' %}-{% endif %}{{tx.amount}}</div></div>{% else %}<div class="empty-state">لا توجد حركات.</div>{% endfor %}</div>
+{% endblock %}

@@ -6,7 +6,7 @@ Dizal هو نظام إداري وتشغيلي ومحاسبي داخلي لمشر
 
 ## الحالة الحالية
 
-مرحلة المشروع الحالية هي مرحلة التوصيف والتصميم المعماري فقط.
+تم تنفيذ طبقات التشغيل الأساسية من التوصيف حتى الإدارة والإشعارات والنشر: Finance Core، Fuel، Farmers، Sales/Collections، Accounting/Settlements، Reports/Documents، RBAC، Notifications، WhatsApp، وProduction Hardening. ما يزال التحقق النهائي على CI والنشر الفعلي على الخادم خطوات قبول قبل الدمج إلى main.
 
 تم اعتماد التوجه التالي:
 - Flask / Python

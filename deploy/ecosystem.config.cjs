@@ -1,0 +1,1 @@
+module.exports={apps:[{name:"dizal",cwd:"/home/root/projects/dizal",script:"./.venv/bin/gunicorn",args:"--workers 2 --threads 4 --timeout 120 --bind 127.0.0.1:4012 wsgi:app",interpreter:"none",autorestart:true,watch:false,max_memory_restart:"700M",env:{PYTHONUNBUFFERED:"1",FLASK_ENV:"production"}}]};

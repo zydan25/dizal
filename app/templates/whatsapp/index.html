@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><h1>ربط واتساب</h1><p>ربط موحد مع API خارجي أو Gateway مثل Baileys دون ربط منطق النظام بمزود محدد.</p></div>
+<form method="post" class="mobile-form card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<label>المزود<select name="provider"><option value="http" {% if config.provider=="http" %}selected{% endif %}>HTTP API</option><option value="baileys" {% if config.provider=="baileys" %}selected{% endif %}>Baileys Gateway</option><option value="cloud" {% if config.provider=="cloud" %}selected{% endif %}>WhatsApp Cloud</option></select></label>
+<label>عنوان الـAPI<input name="base_url" value="{{config.base_url or ''}}" placeholder="https://..."></label>
+<label>Token<input name="api_token" type="password" value="********" autocomplete="new-password"></label>
+<div class="two-col"><label>رقم الإرسال<input name="sender_number" value="{{config.sender_number or ''}}"></label><label>مهلة الاتصال<input name="timeout_seconds" type="number" value="{{config.timeout_seconds}}"></label></div>
+<div class="two-col"><label>عدد المحاولات<input name="retry_limit" type="number" min="1" value="{{config.retry_limit}}"></label><label>Webhook Secret<input name="webhook_secret" value="{{config.webhook_secret or ''}}"></label></div>
+<label class="check-row"><input type="checkbox" name="enabled" value="1" {% if config.enabled %}checked{% endif %}> تفعيل واتساب</label>
+<button class="primary-btn"><i class="bi bi-whatsapp"></i> حفظ الربط</button>
+</form>
+
+<div class="section-title"><h2>إرسال رسالة</h2><span>اختبار أو رسالة تشغيلية</span></div>
+<form method="post" action="{{url_for('whatsapp.send')}}" class="mobile-form card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<label>رقم المستلم<input name="recipient" inputmode="tel" required></label>
+<label>قالب<select name="template_key"><option value="">بدون قالب</option>{% for template in templates %}<option value="{{template.key}}">{{template.title}}</option>{% endfor %}</select></label>
+<div class="two-col"><label>الاسم<input name="name"></label><label>اسم المشروع<input name="project" value="{{project_settings.project_name}}"></label></div>
+<label>نص الرسالة<textarea name="body" rows="4" placeholder="اكتب الرسالة أو اختر قالبًا"></textarea></label>
+<button class="primary-btn"><i class="bi bi-send"></i> إرسال</button>
+</form>
+
+<div class="section-title"><h2>قوالب الرسائل</h2><span>{{templates|length}}</span></div>
+<div class="entity-list">{% for template in templates %}<div class="entity-row"><div class="avatar"><i class="bi bi-chat-square-text"></i></div><div class="entity-main"><strong>{{template.title}}</strong><span>{{template.key}}</span><small>{{template.body}}</small></div></div>{% endfor %}</div>
+
+<div class="section-title"><h2>سجل الرسائل</h2><span>آخر 50</span></div>
+<div class="entity-list">{% for message in messages %}<div class="entity-row"><div class="avatar"><i class="bi bi-whatsapp"></i></div><div class="entity-main"><strong>{{message.recipient}}</strong><span>{{message.body}}</span><small>{{message.status}} · {{message.retry_count}} محاولة</small></div></div>{% else %}<div class="empty-state">لا توجد رسائل.</div>{% endfor %}</div>
+{% endblock %}
