@@ -120,7 +120,7 @@ def permissions(user_id):
 
 
 @employees_bp.get("/<int:user_id>")
-@permission_required("users.view")
+@permission_required("employee.statement.view")
 def detail(user_id):
     employee=User.query.filter_by(id=user_id,is_employee=True).first_or_404()
     if not current_user.has_role("manager") and current_user.id!=employee.id:
