@@ -11,25 +11,25 @@
 
 {% if manager and summary %}
 <div class="stats-grid dashboard-kpis">
-  <div class="dashboard-kpi"><small>المبيعات</small><strong>{{summary.sales}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>الربح الإجمالي</small><strong>{{summary.gross_profit}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi is-danger"><small>ديون المزارعين</small><strong>{{summary.receivables}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>مخزون الديزل</small><strong>{{summary.stock_liters}}</strong><span>لتر</span></div>
-  <div class="dashboard-kpi"><small>المخزون الحر</small><strong>{{inventory.free_liters}}</strong><span>لتر</span></div>
-  <div class="dashboard-kpi"><small>الملتزم للمزارعين</small><strong>{{inventory.committed_liters}}</strong><span>لتر</span></div>
+  <div class="dashboard-kpi"><small>المبيعات</small><strong>{{summary.sales|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi"><small>الربح الإجمالي</small><strong>{{summary.gross_profit|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi is-danger"><small>ديون المزارعين</small><strong>{{summary.receivables|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi"><small>مخزون الديزل</small><strong>{{summary.stock_liters|clean_number}}</strong><span>لتر</span></div>
+  <div class="dashboard-kpi"><small>المخزون الحر</small><strong>{{inventory.free_liters|clean_number}}</strong><span>لتر</span></div>
+  <div class="dashboard-kpi"><small>الملتزم للمزارعين</small><strong>{{inventory.committed_liters|clean_number}}</strong><span>لتر</span></div>
   <div class="dashboard-kpi {% if pending_supplies %}is-warning{% endif %}"><small>توريدات معلقة</small><strong>{{pending_supplies}}</strong><span>مراجعة</span></div>
   <div class="dashboard-kpi"><small>مزارعون بانتظارك</small><strong>{{pending_farmers}}</strong><span>مراجعة</span></div>
 </div>
 {% else %}
 <div class="stats-grid dashboard-kpis">
-  <div class="dashboard-kpi"><small>صندوقي</small><strong>{{employee_cashbox.balance if employee_cashbox else 0}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>المزارعون</small><strong>{{employee_stats.farmers}}</strong><span>معتمد</span></div>
-  <div class="dashboard-kpi is-danger"><small>ديون للتحصيل</small><strong>{{employee_stats.debt_amount}}</strong><span>{{employee_stats.debts_count}} حساب</span></div>
-  <div class="dashboard-kpi"><small>صرف اليوم</small><strong>{{employee_stats.today_drums}}</strong><span>دبة</span></div>
-  <div class="dashboard-kpi"><small>لترات اليوم</small><strong>{{employee_stats.today_liters}}</strong><span>لتر</span></div>
-  <div class="dashboard-kpi"><small>تحصيل اليوم</small><strong>{{employee_stats.today_collected}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>الديزل المتاح</small><strong>{{employee_stats.available_liters}}</strong><span>لتر</span></div>
-  <div class="dashboard-kpi {% if employee_stats.pending_supplies %}is-warning{% endif %}"><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies}}</strong><span>متابعة</span></div>
+  <div class="dashboard-kpi"><small>صندوقي</small><strong>{{(employee_cashbox.balance if employee_cashbox else 0)|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi"><small>المزارعون</small><strong>{{employee_stats.farmers|clean_number}}</strong><span>معتمد</span></div>
+  <div class="dashboard-kpi is-danger"><small>ديون للتحصيل</small><strong>{{employee_stats.debt_amount|clean_number}}</strong><span>{{employee_stats.debts_count|clean_number}} حساب</span></div>
+  <div class="dashboard-kpi"><small>صرف اليوم</small><strong>{{employee_stats.today_drums|clean_number}}</strong><span>دبة</span></div>
+  <div class="dashboard-kpi"><small>لترات اليوم</small><strong>{{employee_stats.today_liters|clean_number}}</strong><span>لتر</span></div>
+  <div class="dashboard-kpi"><small>تحصيل اليوم</small><strong>{{employee_stats.today_collected|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi"><small>الديزل المتاح</small><strong>{{employee_stats.available_liters|clean_number}}</strong><span>لتر</span></div>
+  <div class="dashboard-kpi {% if employee_stats.pending_supplies %}is-warning{% endif %}"><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies|clean_number}}</strong><span>متابعة</span></div>
 </div>
 {% endif %}
 
@@ -63,7 +63,7 @@
       <div class="empty-state"><strong>لا توجد خزانات فعالة</strong><span>أضف خزانًا من شاشة الخزانات.</span></div>
     {% endfor %}
     </div>
-    {% if manager and inventory.shortage_liters>0 %}<div class="kpi-note">تنبيه: الالتزام الحالي أعلى من المخزون بمقدار {{inventory.shortage_liters}} لتر.</div>{% endif %}
+    {% if manager and inventory.shortage_liters>0 %}<div class="kpi-note">تنبيه: الالتزام الحالي أعلى من المخزون بمقدار {{inventory.shortage_liters|clean_number}} لتر.</div>{% endif %}
   </section>
 </div>
 
@@ -88,7 +88,7 @@
   <a class="quick-card" href="{{url_for('employees.my_password')}}"><i class="bi bi-key"></i><strong>كلمة المرور</strong><small>تحديث الحساب</small></a>
 </div>
 
-<div class="section-title"><h2>مزارعيني</h2><span>{{employee_farmers|length}} من {{employee_farmers_total}}</span></div>
+<div class="section-title"><h2>مزارعيني</h2><span>{{employee_farmers|length|clean_number}} من {{employee_farmers_total|clean_number}}</span></div>
 <div class="entity-list">
 {% for item in employee_farmers %}
 <a class="entity-row" href="{{url_for('sales.farmer_account_view',farmer_id=item.farmer.id)}}">
