@@ -1,9 +1,10 @@
 from datetime import date
 from flask import current_app,flash,redirect,render_template,request,url_for
 from flask_login import current_user
+from sqlalchemy import func
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import FuelPurchase,FuelTank,User
+from ...models import FuelPurchase,FuelStockMovement,FuelTank,User
 from ...services.audit import audit
 from ...services.files import save_attachment
 from ...services.fuel import approve_purchase,attach_proof,create_purchase,current_stock_liters
@@ -107,31 +108,77 @@ def stock():
     rows=[{"tank":tank,"stock":current_stock_liters(tank.id)} for tank in tanks]
     return render_template("fuel/stock.html",rows=rows,total=current_stock_liters())
 
+def _next_tank_code():
+    number=FuelTank.query.count()+1
+    while FuelTank.query.filter_by(code=f"TANK-{number:04d}").first():
+        number+=1
+    return f"TANK-{number:04d}"
+
+def _tank_stats(tank):
+    inbound=db.session.query(func.coalesce(func.sum(FuelStockMovement.liters),0)).filter(
+        FuelStockMovement.tank_id==tank.id,FuelStockMovement.direction=="IN"
+    ).scalar() or 0
+    outbound=db.session.query(func.coalesce(func.sum(FuelStockMovement.liters),0)).filter(
+        FuelStockMovement.tank_id==tank.id,FuelStockMovement.direction=="OUT"
+    ).scalar() or 0
+    stock=current_stock_liters(tank.id)
+    capacity=tank.capacity_liters
+    percent=float((stock/ capacity)*100) if capacity and capacity>0 else None
+    return {"inbound":inbound,"outbound":outbound,"stock":stock,"capacity_percent":min(max(percent or 0,0),100) if percent is not None else None}
+
 @fuel_bp.route("/tanks",methods=["GET","POST"])
 @permission_required("fuel.tank.manage")
 def tanks():
     if request.method=="POST":
         try:
+            name=(request.form.get("name") or "").strip()
+            if not name:
+                raise ValueError("اسم الخزان مطلوب.")
             tank=FuelTank(
-                name=request.form.get("name","").strip(),
-                code=request.form.get("code","").strip().upper(),
+                name=name,
+                code=_next_tank_code(),
                 capacity_liters=request.form.get("capacity_liters") or None,
-                location=request.form.get("location"),
-                notes=request.form.get("notes"),
+                location=(request.form.get("location") or "").strip() or None,
+                notes=(request.form.get("notes") or "").strip() or None,
                 is_active=True,
             )
-            if not tank.name or not tank.code:
-                raise ValueError("اسم الخزان والكود مطلوبان.")
-            if FuelTank.query.filter_by(code=tank.code).first():
-                raise ValueError("كود الخزان مستخدم بالفعل.")
             db.session.add(tank)
             db.session.flush()
             audit("fuel.tank.created","fuel_tank",tank.id,after={"name":tank.name,"code":tank.code})
             db.session.commit()
             flash("تم إنشاء الخزان.","success")
             return redirect(url_for("fuel.tanks"))
-        except ValueError as exc:
+        except (ValueError,TypeError) as exc:
             db.session.rollback()
             flash(str(exc),"danger")
-    rows=FuelTank.query.order_by(FuelTank.id.desc()).all()
+    rows=[{"tank":tank,"stats":_tank_stats(tank)} for tank in FuelTank.query.order_by(FuelTank.id.desc()).all()]
     return render_template("fuel/tanks.html",rows=rows)
+
+@fuel_bp.route("/tanks/<int:tank_id>/edit",methods=["GET","POST"])
+@permission_required("fuel.tank.manage")
+def edit_tank(tank_id):
+    tank=FuelTank.query.get_or_404(tank_id)
+    if request.method=="POST":
+        try:
+            tank.name=(request.form.get("name") or tank.name).strip()
+            tank.capacity_liters=request.form.get("capacity_liters") or None
+            tank.location=(request.form.get("location") or "").strip() or None
+            tank.notes=(request.form.get("notes") or "").strip() or None
+            tank.is_active=request.form.get("is_active")=="1"
+            audit("fuel.tank.updated","fuel_tank",tank.id,after={"name":tank.name,"capacity_liters":str(tank.capacity_liters or 0),"is_active":tank.is_active})
+            db.session.commit()
+            flash("تم تحديث بيانات الخزان.","success")
+            return redirect(url_for("fuel.tanks"))
+        except (ValueError,TypeError) as exc:
+            db.session.rollback()
+            flash(str(exc),"danger")
+    return render_template("fuel/tank_form.html",tank=tank)
+
+@fuel_bp.get("/tanks/<int:tank_id>")
+@permission_required("fuel.stock.view")
+def tank_detail(tank_id):
+    tank=FuelTank.query.get_or_404(tank_id)
+    stats=_tank_stats(tank)
+    purchases=FuelPurchase.query.filter_by(tank_id=tank.id).order_by(FuelPurchase.id.desc()).limit(50).all()
+    movements=FuelStockMovement.query.filter_by(tank_id=tank.id).order_by(FuelStockMovement.id.desc()).limit(80).all()
+    return render_template("fuel/tank_detail.html",tank=tank,stats=stats,purchases=purchases,movements=movements)
