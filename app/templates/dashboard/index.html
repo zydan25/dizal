@@ -20,8 +20,36 @@
 <div class="stats-grid">
 <article class="stat-card"><i class="bi bi-people"></i><div><small>مزارعي المعتمدين</small><strong>{{employee_stats.farmers}}</strong><span>مزارع</span></div></article>
 <article class="stat-card"><i class="bi bi-person-exclamation"></i><div><small>ديون تحتاج تحصيل</small><strong>{{employee_stats.debts_count}}</strong><span>{{employee_stats.debt_amount}} {{project_settings.currency}}</span></div></article>
-<article class="stat-card"><i class="bi bi-cash-coin"></i><div><small>صرف اليوم</small><strong>{{employee_stats.today_sales}}</strong><span>{{project_settings.currency}}</span></div></article>
-<article class="stat-card"><i class="bi bi-truck"></i><div><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies}}</strong><span>للمراجعة</span></div></article>
+<article class="stat-card"><i class="bi bi-droplet-fill"></i><div><small>سحب اليوم</small><strong>{{employee_stats.today_drums}}</strong><span>دبة · {{employee_stats.today_liters}} لتر</span></div></article>
+<article class="stat-card"><i class="bi bi-cash-coin"></i><div><small>مبيعات اليوم</small><strong>{{employee_stats.today_sales}}</strong><span>{{project_settings.currency}}</span></div></article>
+<article class="stat-card"><i class="bi bi-wallet2"></i><div><small>تحصيل اليوم</small><strong>{{employee_stats.today_collected}}</strong><span>{{project_settings.currency}}</span></div></article>
+<article class="stat-card"><i class="bi bi-fuel-pump"></i><div><small>الديزل المتاح</small><strong>{{employee_stats.available_liters}}</strong><span>لتر</span></div></article>
+<article class="stat-card"><i class="bi bi-truck"></i><div><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies}}</strong><span>للمتابعة</span></div></article>
+</div>
+{% if not manager %}
+<div class="section-title"><h2>مزارعيني</h2><span>{{employee_farmers|length}} حساب</span></div>
+<div class="entity-list">
+{% for item in employee_farmers %}
+<a class="entity-row" href="{{url_for('sales.farmer_account_view',farmer_id=item.farmer.id)}}">
+  <div class="avatar"><i class="bi bi-person"></i></div>
+  <div class="entity-main">
+    <strong>{{item.farmer.name}}</strong>
+    <span>سحب {{item.account.consumed_drums}} دبة · متبقي السقف {{item.account.remaining_quota_drums}} دبة</span>
+    <small>عليه {{item.account.outstanding_amount}} {{project_settings.currency}} · حد الدين المتبقي {{item.account.remaining_credit_drums}} دبة</small>
+  </div>
+  {% if item.account.outstanding_amount > 0 %}<span class="status-chip status-submitted">تحصيل</span>{% else %}<i class="bi bi-chevron-left"></i>{% endif %}
+</a>
+{% else %}<div class="empty-state"><strong>لا يوجد مزارعون مرتبطون بك</strong><span>سيظهرون هنا بعد اعتماد حساباتهم.</span></div>{% endfor %}
+</div>
+
+<div class="section-title"><h2>آخر تنبيهاتك</h2><a href="{{url_for('notifications.index')}}">عرض الكل</a></div>
+<div class="entity-list">
+{% for row in employee_notifications %}
+<a class="entity-row {% if not row.read_at %}notification-unread{% endif %}" href="{{url_for('notifications.read',notification_id=row.id)}}">
+  <div class="avatar"><i class="bi bi-bell"></i></div>
+  <div class="entity-main"><strong>{{row.title}}</strong><span>{{row.message}}</span><small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div>
+</a>
+{% else %}<div class="empty-state"><strong>لا توجد تنبيهات</strong><span>ستظهر الإشعارات المرتبطة بعملك هنا.</span></div>{% endfor %}
 </div>
 {% endif %}
 
@@ -36,7 +64,8 @@
 <a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong><small>مراجعة واستكمال</small></a>
 {% else %}
 <a class="quick-card" href="{{url_for('cashbox.index')}}"><i class="bi bi-wallet2"></i><strong>صندوقي</strong><small>الرصيد والحركات</small></a>
-<a class="quick-card" href="{{url_for('reports.employee_statement',employee_id=current_user.id)}}"><i class="bi bi-file-earmark-text"></i><strong>كشف حسابي</strong><small>الحركات والتسويات</small></a>
+<a class="quick-card" href="{{url_for('reports.my_statement')}}"><i class="bi bi-file-earmark-text"></i><strong>كشف حسابي</strong><small>الحركات والتسويات</small></a>
+<a class="quick-card" href="{{url_for('reports.my_operations')}}"><i class="bi bi-clipboard-data"></i><strong>تقريري التشغيلي</strong><small>السحب والتحصيل والتوريدات</small></a>
 <a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong><small>إضافة ومتابعة التوريد</small></a>
 {% endif %}
 </div>
