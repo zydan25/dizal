@@ -37,7 +37,7 @@ def index():
         active_tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).limit(8).all()
         from ...services.fuel import current_stock_liters
         tank_overview=[{"tank":tank,"stock":current_stock_liters(tank.id)} for tank in active_tanks]
-    elif current_user.is_employee:
+    if current_user.is_employee and not manager:
         box=Cashbox.query.filter_by(owner_user_id=current_user.id,box_type="employee",is_active=True).first()
         if box:
             employee_cashbox={"name":box.name,"balance":balance(box.id)}
@@ -93,7 +93,7 @@ def operational_trend(employee_id=None):
     rows=[]
     for offset in range(6,-1,-1):
         day=today-timedelta(days=offset)
-        d_liters=sum((float(row.liters or 0) for row in dispenses if row.created_at.astimezone(timezone.utc).date()==day),0.0)
+        d_liters=sum((float(row.liters or 0) for row in dispenses if row.created_at.date()==day),0.0)
         d_collected=sum((float(row.paid_amount or 0) for row in dispenses if row.created_at.astimezone(timezone.utc).date()==day),0.0)
         d_collected+=sum((float(row.amount or 0) for row in payments if row.created_at.astimezone(timezone.utc).date()==day),0.0)
         rows.append({"label":day.strftime("%d/%m"),"liters":d_liters,"collected":d_collected})
