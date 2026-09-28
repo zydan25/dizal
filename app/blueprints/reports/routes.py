@@ -4,7 +4,7 @@ from flask_login import current_user
 from sqlalchemy import func
 from ...decorators import permission_required
 from ...models import Cashbox,CashboxTransaction,EmployeeSettlement,User
-from ...services.reports import employee_performance,farmer_debts,inventory_commitment,project_summary
+from ...services.reports import employee_operations,employee_performance,farmer_debts,inventory_commitment,project_summary
 from . import reports_bp
 
 @reports_bp.get("/")
@@ -26,6 +26,20 @@ def employees():
 @permission_required("employee.statement.view")
 def my_statement():
     return redirect(url_for("reports.employee_statement",employee_id=current_user.id))
+
+@reports_bp.get("/my-operations")
+@permission_required("employee.statement.view")
+def my_operations():
+    from datetime import date
+    try:
+        start=date.fromisoformat(request.args.get("start") or date.today().replace(day=1).isoformat())
+        end=date.fromisoformat(request.args.get("end") or date.today().isoformat())
+    except ValueError:
+        abort(400,description="صيغة التاريخ غير صحيحة.")
+    if end<start:
+        abort(400,description="نهاية الفترة لا يمكن أن تسبق بدايتها.")
+    data=employee_operations(current_user.id,start,end)
+    return render_template("reports/employee_operations.html",data=data,start=start,end=end)
 
 @reports_bp.get("/employee/<int:employee_id>")
 @permission_required("reports.view")
