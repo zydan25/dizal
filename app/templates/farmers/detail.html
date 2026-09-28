@@ -25,12 +25,12 @@
 </div>
 
 <div class="stats-grid farmer-overview page-stats-compact">
-  <div class="stat-card"><div><small>السقف</small><strong>{{farmer.quota_drums}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><div><small>صرف الديزل</small><strong>{{account.consumed_drums}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><div><small>المتبقي للسحب</small><strong>{{account.remaining_quota_drums}}</strong><span>دبة</span></div></div>
-  <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الدين</small><strong>{{account.outstanding_amount}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><div><small>حد الدين المتبقي</small><strong>{{account.remaining_credit_drums}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><div><small>عمر الدين</small><strong>{{account.debt_age_days}}</strong><span>يوم</span></div></div>
+  <div class="stat-card"><div><small>السقف</small><strong>{{farmer.quota_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>صرف الديزل</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>المتبقي للسحب</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الدين</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>حد الدين المتبقي</small><strong>{{account.remaining_credit_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>عمر الدين</small><strong>{{account.debt_age_days|clean_number}}</strong><span>يوم</span></div></div>
 </div>
 
 <div class="action-row">
@@ -40,7 +40,7 @@
   {% if current_user.has_role("manager") %}<a class="secondary-btn" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil"></i><span>تعديل الملف</span></a>{% endif %}
 </div>
 
-<div class="section-title"><h2>آخر المعاملات</h2><span>{{operations|length}} حركة</span></div>
+<div class="section-title"><h2>آخر المعاملات</h2><span>{{operations|length|clean_number}} حركة</span></div>
 <div class="operation-card-list">
 {% for item in operations %}
 {% set row=item.row %}
@@ -48,10 +48,10 @@
   <div class="operation-icon {% if item.kind=="payment" %}operation-payment{% else %}operation-dispense{% endif %}"><i class="bi {% if item.kind=="payment" %}bi-cash-coin{% else %}bi-droplet-fill{% endif %}"></i></div>
   <div class="operation-main">
     <strong>{% if item.kind=="payment" %}سداد{% else %}صرف ديزل{% endif %} · {{row.document.number}}</strong>
-    <span>{% if item.kind=="payment" %}{{row.amount}} {{project_settings.currency}} · {{row.payment_method}}{% else %}{{row.drums}} دبة · {{row.liters}} لتر · {{row.total_amount}} {{project_settings.currency}}{% endif %}</span>
+    <span>{% if item.kind=="payment" %}{{row.amount|clean_number}} {{project_settings.currency}} · {{row.payment_method}}{% else %}{{row.drums|clean_number}} دبة · {{row.liters|clean_number}} لتر · {{row.total_amount|clean_number}} {{project_settings.currency}}{% endif %}</span>
     <small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small>
   </div>
-  <div class="operation-value">{% if item.kind=="payment" %}<b>{{row.amount}}</b><small>تحصيل</small>{% else %}<b>{{row.drums}}</b><small>دبة</small>{% endif %}</div>
+  <div class="operation-value">{% if item.kind=="payment" %}<b>{{row.amount|clean_number}}</b><small>تحصيل</small>{% else %}<b>{{row.drums|clean_number}}</b><small>دبة</small>{% endif %}</div>
   <i class="bi bi-chevron-left"></i>
 </a>
 {% else %}<div class="empty-state"><i class="bi bi-journal-x"></i><strong>لا توجد معاملات</strong><span>ستظهر السحبيات والتحصيلات هنا.</span></div>{% endfor %}
@@ -70,7 +70,7 @@
 <div class="collapse" id="quota-edit">
 <form method="post" action="{{url_for('farmers.quota',farmer_id=farmer.id)}}" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-<div class="two-col"><label>السقف بالدبة<input name="quota_drums" type="number" step="0.1" value="{{farmer.quota_drums}}"></label><label>حد الدين بالدبة<input name="credit_limit_drums" type="number" step="0.1" value="{{farmer.credit_limit_drums}}"></label></div>
+<div class="two-col"><label>السقف بالدبة<input name="quota_drums" type="number" step="0.1" value="{{farmer.quota_drums|clean_number}}"></label><label>حد الدين بالدبة<input name="credit_limit_drums" type="number" step="0.1" value="{{farmer.credit_limit_drums}}"></label></div>
 <label>سبب التعديل<textarea name="reason" rows="2" required></textarea></label>
 <button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ السقف</span></button>
 </form>
