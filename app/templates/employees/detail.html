@@ -58,7 +58,7 @@
 {% for row in operations.supplies %}
 <a class="operation-card" href="{{url_for('documents.view',document_id=row.document_id)}}">
   <div class="operation-icon operation-supply"><i class="bi bi-truck"></i></div>
-  <div class="operation-main"><strong>توريد ديزل · {{row.document.number if row.document else ("توريد #"+row.id|string)}}</strong><span>{{row.liters}} لتر</span><small>{{row.submitted_at.strftime("%Y-%m-%d %H:%M") if row.submitted_at else ""}} · {{row.status}}</small></div>
+  <div class="operation-main"><strong>توريد ديزل · {% if row.document %}{{row.document.number}}{% else %}توريد #{{row.id}}{% endif %}</strong><span>{{row.liters}} لتر</span><small>{{row.submitted_at.strftime("%Y-%m-%d %H:%M") if row.submitted_at else ""}} · {{row.status}}</small></div>
   <div class="operation-value"><b>{{row.liters}}</b><small>لتر</small></div><i class="bi bi-chevron-left"></i>
 </a>
 {% endfor %}
