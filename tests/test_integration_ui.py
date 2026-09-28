@@ -121,3 +121,10 @@ def test_settings_palette_and_font_scale_persist():
         assert settings.primary_color=="#6d28d9"
         assert settings.secondary_color=="#9333ea"
         assert settings.font_scale=="1.05"
+
+def test_template_numeric_output_removes_trailing_decimal_zeroes():
+    app=make_app()
+    with app.app_context():
+        from flask import render_template_string
+        rendered=render_template_string("{{ amount }}|{{ count }}", amount=Decimal("1250.00"), count=7.0)
+        assert rendered=="1250|7"
