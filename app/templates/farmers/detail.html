@@ -7,9 +7,10 @@
 <div class="stat-card"><i class="bi bi-person-badge"></i><div><small>الموظف</small><strong>{{farmer.assigned_employee.display_name}}</strong><span>المسؤول</span></div></div>
 <div class="stat-card"><i class="bi bi-calendar"></i><div><small>الحالة</small><strong>{{farmer.status}}</strong><span>الحالة الحالية</span></div></div>
 </div>
-{% if current_user.has_role("manager") or (farmer.status in ["changes_requested","submitted"] and farmer.assigned_employee_id==current_user.id) %}
-<div class="quick-grid"><a class="quick-card" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil-square"></i><strong>تعديل الملف</strong><small>{% if farmer.status=="changes_requested" %}استكمال وإعادة إرسال{% else %}تحديث البيانات{% endif %}</small></a></div>
-{% endif %}
+<div class="quick-grid">
+{% if farmer.status in ["approved","suspended"] %}<a class="quick-card" href="{{url_for('sales.farmer_account_view',farmer_id=farmer.id)}}"><i class="bi bi-journal-text"></i><strong>كشف الحساب والحركات</strong><small>السحب والتحصيل والدين والسقف والسندات</small></a>{% endif %}
+{% if current_user.has_role("manager") or (farmer.status in ["changes_requested","submitted"] and farmer.assigned_employee_id==current_user.id) %}<a class="quick-card" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil-square"></i><strong>تعديل الملف</strong><small>{% if farmer.status=="changes_requested" %}استكمال وإعادة إرسال{% else %}تحديث البيانات{% endif %}</small></a>{% endif %}
+</div>
 <div class="section-title"><h2>البيانات</h2><span>العنوان والملاحظات</span></div>
 <div class="info-card"><div><strong>العنوان</strong><p>{{farmer.address or "غير محدد"}}</p><strong>ملاحظات</strong><p>{{farmer.notes or "لا توجد ملاحظات"}}</p>{% if farmer.review_note %}<strong>ملاحظة المدير</strong><p>{{farmer.review_note}}</p>{% endif %}</div></div>
 <div class="section-title"><h2>المرفقات</h2><span>{{farmer.documents|length}} ملف</span></div>
