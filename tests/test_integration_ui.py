@@ -52,7 +52,7 @@ def test_capital_reversal_creates_reversal_and_restores_cash():
 
 def test_employee_sees_own_farmer_account_and_operations_only():
     app=make_app()
-    seed(app)
+    manager_id=seed(app)
     with app.app_context():
         employee_role=Role(name="employee",description="employee",label="موظف")
         db.session.add(employee_role)
@@ -73,7 +73,7 @@ def test_employee_sees_own_farmer_account_and_operations_only():
         db.session.add(employee)
         db.session.flush()
         own=Farmer(code="F-EMP-1",name="مزارع الموظف",phone="700000001",quota_drums=20,credit_limit_drums=10,assigned_employee_id=employee.id,created_by_id=employee.id,status="approved")
-        other=Farmer(code="F-OTHER-1",name="مزارع آخر",phone="700000002",quota_drums=20,credit_limit_drums=10,assigned_employee_id=seed(app),created_by_id=employee.id,status="approved")
+        other=Farmer(code="F-OTHER-1",name="مزارع آخر",phone="700000002",quota_drums=20,credit_limit_drums=10,assigned_employee_id=manager_id,created_by_id=employee.id,status="approved")
         db.session.add_all([own,other])
         db.session.commit()
         own_id,other_id=own.id,other.id
