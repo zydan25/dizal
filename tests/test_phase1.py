@@ -40,7 +40,7 @@ def test_health_and_login():
     assert client.get("/health").status_code==200
     response=client.post("/auth/login",data={"identifier":"admin","password":"secret"},follow_redirects=True)
     assert response.status_code==200
-    assert "نظرة كاملة" in response.get_data(as_text=True)
+    assert "لوحة تشغيل المشروع" in response.get_data(as_text=True)
 
 def test_permission_service():
     app=make_app()
