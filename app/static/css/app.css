@@ -167,3 +167,20 @@ body{font-size:1rem}
 /* User-facing units: drums first, liters secondary */
 .metric-secondary-unit{display:block!important;font-size:.6rem!important;color:#8290a4!important;font-weight:500}
 .number-words-hint{font-size:.72rem!important;color:#c62828!important;font-weight:800!important;margin-top:4px!important;direction:rtl}
+
+/* 2026-09-28 global number/branding refinement */
+.sidebar-credit{margin-top:auto;padding:11px 12px 13px;border-top:1px solid #ece9f6;background:linear-gradient(180deg,#fcfbff 0%,#f7f4ff 100%);text-align:center}
+.sidebar-credit .credit-kicker,.sidebar-credit strong,.sidebar-credit .credit-phone,.sidebar-credit .credit-brand{display:block;text-align:center}
+.sidebar-credit .credit-kicker{color:#8a819e;font-size:.57rem;font-weight:700;margin-bottom:2px}
+.sidebar-credit strong{color:#342b45;font-size:.78rem;line-height:1.45;font-weight:800}
+.sidebar-credit .credit-phone{width:max-content;min-width:104px;margin:5px auto 6px;padding:3px 10px;border:1px solid #e2d8fb;border-radius:999px;background:#fff;color:#6d28d9;font-size:.66rem;font-weight:800;letter-spacing:.25px;direction:ltr}
+.sidebar-credit .credit-brand{padding-top:7px;border-top:1px solid rgba(124,58,237,.10);color:#6d28d9;font-size:.62rem;line-height:1.35;font-weight:800}
+.app-footer{position:relative;overflow:hidden;padding:38px 16px 20px;text-align:center;background:#0e1020;color:#fff}
+.footer-wave{position:absolute;inset:-36px -8% auto;height:62px;background:linear-gradient(100deg,var(--primary),#7c3aed,var(--secondary),#c026d3,var(--primary));border-radius:50% 50% 45% 55% / 72% 72% 28% 28%}
+.footer-content{position:relative;width:min(100%,360px);margin:0 auto;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}
+.footer-content .footer-kicker{font-size:.62rem;color:#b9b0c8;font-weight:700}
+.footer-content strong{font-size:.88rem;font-weight:800;line-height:1.45}
+.footer-content .footer-phone{display:inline-flex;align-items:center;justify-content:center;min-width:118px;margin:5px auto 6px;padding:4px 12px;border:1px solid rgba(196,181,253,.28);border-radius:999px;background:rgba(255,255,255,.07);color:#e9ddff;font-size:.68rem;font-weight:800;direction:ltr}
+.footer-content .footer-brand{width:100%;padding-top:8px;border-top:1px solid rgba(255,255,255,.10);color:#d8c7ff;font-size:.68rem;font-weight:800;line-height:1.4}
+.footer-content .footer-brand i{margin-inline-end:4px}
+.number-words-hint{font-size:.72rem!important;color:#c62828!important;font-weight:800!important;margin-top:4px!important;direction:rtl}
