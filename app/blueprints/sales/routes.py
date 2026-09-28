@@ -52,7 +52,7 @@ def dispense():
     tanks=FuelTank.query.filter_by(is_active=True).all()
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
     settings=ProjectSettings.get()
-    farmer_info={str(farmer.id):farmer_account(farmer) for farmer in farmers}
+    farmer_info={str(farmer.id):{key:(float(value) if isinstance(value,(int,float)) else str(value)) for key,value in farmer_account(farmer).items()} for farmer in farmers}
     return render_template("sales/dispense.html",farmers=farmers,tanks=tanks,employees=employees,settings=settings,farmer_info=farmer_info)
 
 @sales_bp.route("/payment",methods=["GET","POST"])
