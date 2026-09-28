@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>صرف الديزل</h1><p>اختر المزارع وعدد الدباب، والنظام يحسب اللترات والمبلغ والدين والتكلفة.</p></div>
+<div class="page-heading-row"><div class="page-heading"><h1>إضافة صرف ديزل</h1><p>اختر المزارع وعدد الدباب، والنظام يحسب اللترات والمبلغ والدين والتكلفة.</p></div><a class="secondary-btn" href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><span>المزارعون</span></a></div>
 
 <form method="post" class="mobile-form card-form" id="dispense-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 {% if current_user.has_role("manager") %}
-<label>الموظف المسؤول<select name="employee_id" id="employee_id" required><option value="">اختر الموظف</option>{% for employee in employees %}<option value="{{employee.id}}">{{employee.display_name}}</option>{% endfor %}</select></label>
+<label>الموظف المسؤول<select name="employee_id" id="employee_id" required><option value="">اختر الموظف</option>{% for employee in employees %}<option value="{{employee.id}}" {% if selected_employee_id|string==employee.id|string %}selected{% endif %}>{{employee.display_name}}</option>{% endfor %}</select></label>
 {% endif %}
 <label>المزارع
 <select name="farmer_id" id="farmer_id" required>
 <option value="">اختر المزارع</option>
 {% for farmer in farmers %}
 {% set acc = farmer.__dict__.get('id') and none %}
-<option value="{{farmer.id}}">{{farmer.name}} · سقفه {{farmer.quota_drums}} دبة</option>
+<option value="{{farmer.id}}" {% if selected_farmer_id|string==farmer.id|string %}selected{% endif %}>{{farmer.name}} · سقفه {{farmer.quota_drums}} دبة</option>
 {% endfor %}
 </select>
 </label>
@@ -46,7 +46,7 @@
 (function(){
 const farmerInfo={{farmer_info|tojson}};
 const farmerSelect=document.getElementById("farmer_id");
-const keys=["quota_drums","consumed_drums","remaining_quota_drums","outstanding_amount","remaining_credit_drums"];
+
 function refreshFarmerInfo(){
   const data=farmerInfo[farmerSelect?.value] || {};
   document.getElementById("farmer_quota").textContent=Number(data.quota_drums ?? 0).toFixed(1);
