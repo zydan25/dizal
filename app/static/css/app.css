@@ -143,3 +143,11 @@ body{font-size:1rem}
  .dashboard-ops-grid{gap:8px}
  .app-footer{padding-bottom:16px}
 }
+
+.palette-preview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:-4px}
+.palette-chip{border:1px solid #e2e8f0;background:#fff;border-radius:11px;padding:7px 6px;display:flex;align-items:center;gap:4px;font:inherit;color:#526176;cursor:pointer;min-width:0}
+.palette-chip span{width:13px;height:13px;border-radius:5px;display:block;flex:0 0 auto}
+.palette-chip b{font-size:.61rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.theme-tip{font-size:.68rem;color:#748197;display:flex;align-items:center}
+.audit-entry[aria-disabled="true"]{cursor:default}.audit-link-icon{font-size:.7rem;color:#94a0b1}
+@media(max-width:600px){.palette-preview{grid-template-columns:repeat(2,minmax(0,1fr))}}
