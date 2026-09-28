@@ -176,7 +176,7 @@ def status_change(farmer_id):
         farmer.status="deleted"; message="تمت أرشفة المزارع وإخفاؤه من القوائم التشغيلية مع الحفاظ على السجلات."
     else:
         abort(400,description="إجراء غير معروف.")
-    audit(`farmer.${action}`,"farmer",farmer.id,after={"status":farmer.status})
+    audit("farmer."+action,"farmer",farmer.id,after={"status":farmer.status})
     db.session.commit()
     flash(message,"success")
     return redirect(url_for("farmers.index"))
