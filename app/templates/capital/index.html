@@ -2,6 +2,12 @@
 {% block content %}
 <div class="page-heading"><h1>رأس المال</h1><p>إضافة رأس المال وتسليمه للموظف، مع الوصول المباشر للسند والعكس عند الحاجة.</p></div>
 <div class="balance-card"><span>الصندوق الرئيسي</span><strong>{{central_balance}}</strong><small>{{project_settings.currency}}</small></div>
+<div class="stats-grid">
+<div class="stat-card"><i class="bi bi-piggy-bank"></i><div><small>إجمالي رأس المال</small><strong>{{totals.contributed}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-send"></i><div><small>المسلم للموظفين</small><strong>{{totals.allocated}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-wallet2"></i><div><small>في صناديق الموظفين</small><strong>{{totals.employee_cash}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-bank"></i><div><small>غير مخصص محاسبيًا</small><strong>{{totals.unallocated}}</strong><span>{{project_settings.currency}}</span></div></div>
+</div>
 <div class="section-title"><h2>إضافة رأس مال</h2><span>ينشئ CAP</span></div>
 <form method="post" action="{{url_for('capital.add')}}" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
