@@ -12,6 +12,11 @@ AUDIT_ACTION_LABELS={
     "document.reversed":"عكس سند","employee.created":"إضافة موظف","employee.updated":"تعديل موظف","employee.password.reset":"تغيير كلمة مرور موظف",
 }
 
+AUDIT_OBJECT_LABELS={"farmer":"المزارع","fuel_dispense":"صرف ديزل","farmer_payment":"سند قبض","fuel_purchase":"توريد ديزل","fuel_tank":"خزان","asset":"أصل","capital_contribution":"رأس مال","capital_allocation":"تسليم رأس مال","employee":"موظف","user":"مستخدم","document":"سند","project_settings":"إعدادات المشروع","system":"النظام"}
+
+def audit_object_label(value):
+    return AUDIT_OBJECT_LABELS.get(value, value.replace("_"," ") if value else "النظام")
+
 def audit_action_label(action):
     if not action: return "نشاط"
     return AUDIT_ACTION_LABELS.get(action, action.replace("_"," ").replace("."," · "))
@@ -43,4 +48,4 @@ def register_context(app):
         if current_user.is_authenticated:
             unread=Notification.query.filter_by(user_id=current_user.id,read_at=None).count()
             navigation=build_navigation(current_user)
-        return {"project_settings":settings,"navigation":navigation,"unread_notifications":unread,"audit_action_label":audit_action_label,"audit_target_url":audit_target_url}
+        return {"project_settings":settings,"navigation":navigation,"unread_notifications":unread,"audit_action_label":audit_action_label,"audit_object_label":audit_object_label,"audit_target_url":audit_target_url}
