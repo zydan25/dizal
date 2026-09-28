@@ -13,13 +13,13 @@
 </div>
 
 <div class="stats-grid farmer-overview page-stats-compact">
-  <div class="stat-card"><div><small>المزارعون</small><strong>{{stats.total}}</strong><span>حساب</span></div></div>
-  <div class="stat-card"><div><small>صرف الديزل</small><strong>{{stats.consumed}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><div><small>المتبقي للسحب</small><strong>{{stats.remaining}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><div><small>المديونية</small><strong>{{stats.debt}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><div><small>المعتمد</small><strong>{{stats.approved}}</strong><span>حساب</span></div></div>
-  <div class="stat-card"><div><small>بانتظار</small><strong>{{stats.pending}}</strong><span>مراجعة</span></div></div>
-  <div class="stat-card"><div><small>موقوف</small><strong>{{stats.suspended}}</strong><span>حساب</span></div></div>
+  <div class="stat-card"><div><small>المزارعون</small><strong>{{stats.total|clean_number}}</strong><span>حساب</span></div></div>
+  <div class="stat-card"><div><small>صرف الديزل</small><strong>{{stats.consumed|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>المتبقي للسحب</small><strong>{{stats.remaining|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>المديونية</small><strong>{{stats.debt|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>المعتمد</small><strong>{{stats.approved|clean_number}}</strong><span>حساب</span></div></div>
+  <div class="stat-card"><div><small>بانتظار</small><strong>{{stats.pending|clean_number}}</strong><span>مراجعة</span></div></div>
+  <div class="stat-card"><div><small>موقوف</small><strong>{{stats.suspended|clean_number}}</strong><span>حساب</span></div></div>
 </div>
 
 <form class="farmer-tools" method="get">
@@ -57,13 +57,13 @@
       <span class="status-chip status-{{farmer.status}}">{{{"approved":"معتمد","submitted":"معلق","changes_requested":"استكمال","rejected":"مرفوض","suspended":"موقوف","deleted":"مؤرشف"}.get(farmer.status,farmer.status)}}</span>
     </div>
     <div class="farmer-metrics">
-      <div><small>السقف</small><strong>{{farmer.quota_drums}}</strong><span>دبة</span></div>
-      <div class="metric-primary"><small>المسحوب</small><strong>{{account.consumed_drums}}</strong><span>دبة</span></div>
-      <div class="metric-success"><small>المتبقي</small><strong>{{account.remaining_quota_drums}}</strong><span>دبة</span></div>
-      <div class="{% if account.outstanding_amount>0 %}metric-danger{% endif %}"><small>الدين</small><strong>{{account.outstanding_amount}}</strong><span>{{project_settings.currency}}</span></div>
+      <div><small>السقف</small><strong>{{farmer.quota_drums|clean_number}}</strong><span>دبة</span></div>
+      <div class="metric-primary"><small>المسحوب</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div>
+      <div class="metric-success"><small>المتبقي</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div>
+      <div class="{% if account.outstanding_amount>0 %}metric-danger{% endif %}"><small>الدين</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
     </div>
     <div class="farmer-card-footer">
-      <span><i class="bi bi-shield-check"></i> حد الدين المتبقي {{account.remaining_credit_drums}} دبة</span>
+      <span><i class="bi bi-shield-check"></i> حد الدين المتبقي {{account.remaining_credit_drums|clean_number}} دبة</span>
       <i class="bi bi-chevron-left"></i>
     </div>
   </a>
