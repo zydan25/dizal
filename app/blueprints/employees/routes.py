@@ -11,12 +11,31 @@ from ...services.reports import employee_operations
 from ...services.audit import audit
 from . import employees_bp
 import uuid
+from ..models import Farmer
+
+def employee_operations_cards(employees):
+    cards=[]
+    for employee in employees:
+        data=employee_operations(employee.id)
+        box=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
+        cards.append({
+            "employee":employee,
+            "farmer_count":Farmer.query.filter_by(assigned_employee_id=employee.id,status="approved").count(),
+            "drums":data["drums"],
+            "sales":data["sales"],
+            "cashbox_balance":balance(box.id) if box else 0,
+        })
+    return cards
+
 
 @employees_bp.get("/")
 @permission_required("users.view")
 def index():
     employees=User.query.filter_by(is_employee=True).order_by(User.id.desc()).all()
-    return render_template("employees/index.html",employees=employees)
+    performance_rows=employee_operations_cards(employees)
+    performance_total_drums=sum((row["drums"] for row in performance_rows),0)
+    performance_total_sales=sum((row["sales"] for row in performance_rows),0)
+    return render_template("employees/index.html",employees=employees,employee_cards=performance_rows,performance_total_drums=performance_total_drums,performance_total_sales=performance_total_sales)
 
 @employees_bp.route("/new",methods=["GET","POST"])
 @permission_required("users.manage")
