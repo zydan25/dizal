@@ -27,7 +27,7 @@
 <article class="stat-card"><i class="bi bi-truck"></i><div><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies}}</strong><span>للمتابعة</span></div></article>
 </div>
 {% if not manager %}
-<div class="section-title"><h2>مزارعيني</h2><span>{{employee_farmers|length}} حساب</span></div>
+<div class="section-title"><h2>مزارعيني</h2><span>{{employee_farmers|length}} من {{employee_farmers_total}} حساب</span></div>
 <div class="entity-list">
 {% for item in employee_farmers %}
 <a class="entity-row" href="{{url_for('sales.farmer_account_view',farmer_id=item.farmer.id)}}">
@@ -41,6 +41,7 @@
 </a>
 {% else %}<div class="empty-state"><strong>لا يوجد مزارعون مرتبطون بك</strong><span>سيظهرون هنا بعد اعتماد حساباتهم.</span></div>{% endfor %}
 </div>
+{% if employee_farmers_total > employee_farmers|length %}<div class="section-title"><a class="secondary-btn" href="{{url_for('farmers.index',status='approved')}}">عرض كل المزارعين</a></div>{% endif %}
 
 <div class="section-title"><h2>آخر تنبيهاتك</h2><a href="{{url_for('notifications.index')}}">عرض الكل</a></div>
 <div class="entity-list">
