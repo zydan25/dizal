@@ -17,9 +17,15 @@ AUDIT_OBJECT_LABELS={"farmer":"المزارع","fuel_dispense":"صرف ديزل"
 def audit_object_label(value):
     return AUDIT_OBJECT_LABELS.get(value, value.replace("_"," ") if value else "النظام")
 
+AUDIT_VERB_LABELS={"created":"إضافة","added":"إضافة","updated":"تعديل","changed":"تغيير","reviewed":"مراجعة","deleted":"حذف","reversed":"عكس","approved":"اعتماد","rejected":"رفض","suspended":"إيقاف","activated":"تفعيل","failed":"فشل","read":"قراءة","sent":"إرسال","uploaded":"رفع"}
+
 def audit_action_label(action):
     if not action: return "نشاط"
-    return AUDIT_ACTION_LABELS.get(action, action.replace("_"," ").replace("."," · "))
+    if action in AUDIT_ACTION_LABELS: return AUDIT_ACTION_LABELS[action]
+    parts=[]
+    for token in action.replace("_",".").split("."):
+        parts.append(AUDIT_VERB_LABELS.get(token, {"auth":"حساب","farmer":"مزارع","fuel":"ديزل","purchase":"توريد","dispense":"صرف","payment":"سداد","capital":"رأس مال","employee":"موظف","asset":"أصل","document":"سند","settings":"إعدادات"}.get(token,token)))
+    return " · ".join(parts)
 
 def audit_target_url(row):
     try:
@@ -35,6 +41,12 @@ def audit_target_url(row):
         if row.object_type in {"document","capital_contribution","capital_allocation","fuel_dispense","farmer_payment"} and after.get("document_id"):
             return url_for("documents.view",document_id=int(after["document_id"]))
         if row.object_type in {"employee","user"}: return url_for("employees.detail",user_id=object_id)
+        if row.object_type=="project_settings": return url_for("settings.index")
+        if row.object_type=="role": return url_for("roles.index")
+        if row.object_type=="whatsapp": return url_for("whatsapp.index")
+        if row.object_type in {"cashbox","cashbox_transaction"}: return url_for("cashbox.index")
+        if row.object_type in {"operating_expense","expense"}: return url_for("expenses.index")
+        if row.object_type in {"settlement","employee_settlement"}: return url_for("settlements.index")
     except Exception:
         return None
     return None
