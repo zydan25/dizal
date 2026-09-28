@@ -1,17 +1,22 @@
 from datetime import date
 from flask import flash,redirect,render_template,request,url_for
+from sqlalchemy import func
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import Asset,Cashbox,User
+from ...models import Asset,Cashbox,CapitalContribution,FuelTank,User
 from ...services.assets import create_asset
 from ...services.audit import audit
+from ...services.fuel import current_stock_liters
 from . import assets_bp
 
 @assets_bp.get("/")
 @permission_required("assets.view")
 def index():
     assets=Asset.query.order_by(Asset.id.desc()).all()
-    return render_template("assets/index.html",assets=assets)
+    tanks=FuelTank.query.order_by(FuelTank.id.desc()).all()
+    tank_rows=[{"tank":tank,"stock_liters":current_stock_liters(tank.id)} for tank in tanks]
+    capital_total=db.session.query(func.coalesce(func.sum(CapitalContribution.amount),0)).filter(CapitalContribution.status=="approved").scalar() or 0
+    return render_template("assets/index.html",assets=assets,tank_rows=tank_rows,capital_total=capital_total)
 
 @assets_bp.get("/<int:asset_id>")
 @permission_required("assets.view")
