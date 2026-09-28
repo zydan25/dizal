@@ -37,8 +37,11 @@ def index():
             {"farmer":farmer,"account":farmer_account(farmer)}
             for farmer in Farmer.query.filter_by(assigned_employee_id=current_user.id).filter(
                 Farmer.status.in_(["approved","suspended"])
-            ).order_by(Farmer.name).limit(80).all()
+            ).order_by(Farmer.name).limit(40).all()
         ]
+        employee_farmers_total=Farmer.query.filter_by(assigned_employee_id=current_user.id).filter(
+            Farmer.status.in_(["approved","suspended"])
+        ).count()
         employee_notifications=Notification.query.filter_by(user_id=current_user.id).order_by(
             Notification.created_at.desc()
         ).limit(5).all()
@@ -51,11 +54,11 @@ def index():
             "today_sales":db_sum(FuelDispense.total_amount,FuelDispense.employee_id,current_user.id,FuelDispense.status,"approved",FuelDispense.created_at>=start),
             "today_liters":db_sum(FuelDispense.liters,FuelDispense.employee_id,current_user.id,FuelDispense.status,"approved",FuelDispense.created_at>=start),
             "today_drums":db_sum(FuelDispense.drums,FuelDispense.employee_id,current_user.id,FuelDispense.status,"approved",FuelDispense.created_at>=start),
-            "today_collected":db_sum(FarmerPayment.amount,FarmerPayment.employee_id,current_user.id,FarmerPayment.created_at>=start),
+            "today_collected":float(__import__("app.extensions",fromlist=["db"]).db.session.query(func.coalesce(func.sum(FarmerPayment.amount),0)).join(__import__("app.models",fromlist=["Document"]).Document,FarmerPayment.document_id==__import__("app.models",fromlist=["Document"]).Document.id).filter(FarmerPayment.employee_id==current_user.id,FarmerPayment.created_at>=start,__import__("app.models",fromlist=["Document"]).Document.status!="reversed").scalar() or 0),
             "pending_supplies":FuelPurchase.query.filter_by(employee_id=current_user.id,status="submitted").count(),
             "available_liters":inventory_commitment()["stock_liters"],
         }
-    return render_template("dashboard/index.html",manager=manager,employee_count=employee_count,recent_audits=recent_audits,employee_cashbox=employee_cashbox,employee_stats=employee_stats,employee_farmers=employee_farmers,employee_notifications=employee_notifications,summary=summary,inventory=inventory,pending_supplies=pending_supplies,pending_farmers=pending_farmers,unread_all=unread_all)
+    return render_template("dashboard/index.html",manager=manager,employee_count=employee_count,recent_audits=recent_audits,employee_cashbox=employee_cashbox,employee_stats=employee_stats,employee_farmers=employee_farmers,employee_farmers_total=employee_farmers_total if not manager else 0,employee_notifications=employee_notifications,summary=summary,inventory=inventory,pending_supplies=pending_supplies,pending_farmers=pending_farmers,unread_all=unread_all)
 
 def db_sum(column,*conditions):
     return float(__import__("app.extensions",fromlist=["db"]).db.session.query(func.coalesce(func.sum(column),0)).filter(*conditions).scalar() or 0)
