@@ -19,10 +19,17 @@ def editable_farmer(farmer):
     if current_user.has_role("manager"): return True
     return farmer.assigned_employee_id==current_user.id and farmer.status in {"draft","changes_requested","submitted"}
 
-def _farmer_file(row):
+def _farmer_file_path(row):
     root=Path(current_app.config["UPLOAD_FOLDER"]).resolve()
     target=(root/row.storage_key).resolve()
-    if root not in target.parents or not target.is_file(): abort(404)
+    if root not in target.parents:
+        abort(404)
+    return target
+
+def _farmer_file(row):
+    target=_farmer_file_path(row)
+    if not target.is_file():
+        abort(404)
     return target
 
 @farmers_bp.get("/")
@@ -104,9 +111,29 @@ def edit(farmer_id):
                 if file and file.filename:
                     db.session.add(FarmerDocument(farmer_id=farmer.id,document_type=doc_type,created_by_id=current_user.id,**save_attachment(file,current_app.config["UPLOAD_FOLDER"],"farmers")))
                     uploaded+=1
+            replaced=0
+            for doc in list(farmer.documents):
+                file=request.files.get(f"replace_{doc.id}")
+                if not file or not file.filename:
+                    continue
+                old_key=doc.storage_key
+                saved=save_attachment(file,current_app.config["UPLOAD_FOLDER"],"farmers")
+                doc.original_name=saved["original_name"]
+                doc.storage_key=saved["storage_key"]
+                doc.mime_type=saved.get("mime_type")
+                doc.size_bytes=saved.get("size_bytes")
+                doc.sha256=saved.get("sha256")
+                try:
+                    root=Path(current_app.config["UPLOAD_FOLDER"]).resolve()
+                    old_path=(root/old_key).resolve()
+                    if root in old_path.parents and old_path.is_file():
+                        old_path.unlink()
+                except OSError:
+                    pass
+                replaced+=1
             if not current_user.has_role("manager") and farmer.status=="changes_requested":
                 farmer.status="submitted";farmer.review_note=None
-            audit("farmer.updated","farmer",farmer.id,before=before,after={"name":farmer.name,"phone":farmer.phone,"status":farmer.status,"uploaded_documents":uploaded})
+            audit("farmer.updated","farmer",farmer.id,before=before,after={"name":farmer.name,"phone":farmer.phone,"status":farmer.status,"uploaded_documents":uploaded,"replaced_documents":replaced})
             db.session.commit()
             flash("تم حفظ بيانات المزارع وإعادة إرساله للمراجعة." if before["status"]=="changes_requested" and farmer.status=="submitted" else "تم تحديث بيانات المزارع.","success")
             return redirect(url_for("farmers.detail",farmer_id=farmer.id))
@@ -167,6 +194,27 @@ def quota(farmer_id):
     except ValueError as exc:
         db.session.rollback();flash(str(exc),"danger")
     return redirect(url_for("farmers.detail",farmer_id=farmer.id))
+
+@farmers_bp.post("/<int:farmer_id>/documents/<int:document_id>/delete")
+@permission_required("farmers.create")
+def delete_document(farmer_id,document_id):
+    farmer=Farmer.query.get_or_404(farmer_id)
+    if not editable_farmer(farmer):
+        abort(403)
+    row=FarmerDocument.query.filter_by(id=document_id,farmer_id=farmer.id).first_or_404()
+    old_path=_farmer_file_path(row)
+    db.session.delete(row)
+    audit("farmer.document.deleted","farmer",farmer.id,after={"document_id":document_id,"document_type":row.document_type})
+    db.session.commit()
+    try:
+        root=Path(current_app.config["UPLOAD_FOLDER"]).resolve()
+        if root in old_path.parents and old_path.is_file():
+            old_path.unlink()
+    except OSError:
+        pass
+    flash("تم حذف المرفق من ملف المزارع.","success")
+    return redirect(url_for("farmers.edit",farmer_id=farmer.id))
+
 
 def user_has_role_manager():
     return current_user.has_role("manager")
