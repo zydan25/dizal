@@ -1,3 +1,4 @@
+from decimal import Decimal,InvalidOperation
 from flask import Flask,render_template,redirect,request,url_for
 from .config import Config
 from .extensions import db,migrate,csrf,security
@@ -9,6 +10,18 @@ def create_app(config_object=None):
         app.config.from_mapping(config_object)
     elif config_object is not None:
         app.config.from_object(config_object)
+    def clean_number(value):
+        if value is None or value == "": return ""
+        try:
+            number=Decimal(str(value).replace(",",""))
+            text=format(number,"f")
+            if "." in text:
+                text=text.rstrip("0").rstrip(".")
+            return text or "0"
+        except (InvalidOperation,ValueError,TypeError):
+            return value
+    app.jinja_env.filters["clean_number"]=clean_number
+
     db.init_app(app)
     migrate.init_app(app,db)
     csrf.init_app(app)
