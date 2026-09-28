@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row report-no-print"><div class="page-heading"><h1>تقرير الصندوق</h1><p>{{box.name}} · {% if period=="week" %}هذا الأسبوع{% elif period=="month" %}هذا الشهر{% else %}كامل الحركات{% endif %}</p></div><button class="primary-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i><span>طباعة التقرير</span></button></div>
+<div class="formal-report finance-report">
+  <div class="formal-report-head"><div><small>تقرير مالي</small><h1>{{project_settings.project_name}}</h1><strong>كشف حركة {{box.name}}</strong></div><div class="report-number">التاريخ<br><b>{{date.today().isoformat() if false else ""}}</b>{% if start %}<br>{{start}} إلى {{end}}{% endif %}</div></div>
+  <div class="report-summary-grid">
+    <div><span>الرصيد الحالي</span><b>{{balance|clean_number}}</b><small>{{project_settings.currency}}</small></div>
+    <div><span>إجمالي الداخل</span><b>{{total_in|clean_number}}</b><small>{{project_settings.currency}}</small></div>
+    <div><span>إجمالي الخارج</span><b>{{total_out|clean_number}}</b><small>{{project_settings.currency}}</small></div>
+    <div><span>الصافي</span><b>{{(total_in-total_out)|clean_number}}</b><small>{{project_settings.currency}}</small></div>
+  </div>
+  <table class="formal-table"><thead><tr><th>التاريخ</th><th>السند</th><th>البيان</th><th>داخل</th><th>خارج</th></tr></thead><tbody>
+  {% for tx in transactions %}<tr><td>{{tx.created_at.strftime("%Y-%m-%d %H:%M")}}</td><td>{{tx.document.number if tx.document else "—"}}</td><td>{{tx.description or tx.transaction_type}}</td><td>{% if tx.direction=="IN" %}{{tx.amount|clean_number}}{% else %}—{% endif %}</td><td>{% if tx.direction=="OUT" %}{{tx.amount|clean_number}}{% else %}—{% endif %}</td></tr>{% else %}<tr><td colspan="5">لا توجد حركات.</td></tr>{% endfor %}
+  </tbody></table>
+  <div class="formal-signatures"><span>إعداد التقرير<br>________________</span><span>اعتماد المدير<br>________________</span></div>
+</div>
+{% endblock %}
