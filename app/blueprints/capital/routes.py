@@ -1,3 +1,4 @@
+from datetime import date,timedelta
 from flask import flash,redirect,render_template,request,url_for
 from flask_security import current_user
 from sqlalchemy import func
@@ -8,6 +9,15 @@ from ...services.audit import audit
 from ...services.capital import add_capital,allocate_to_employee,central_cashbox
 from ...services.cashbox import balance
 from . import capital_bp
+
+def _period_window(value):
+    today=date.today()
+    if value=="week":
+        start=today-timedelta(days=today.weekday())
+        return start,today
+    if value=="month":
+        return today.replace(day=1),today
+    return None,None
 
 @capital_bp.get("/")
 @permission_required("capital.view")
@@ -21,10 +31,39 @@ def index():
     )
     employee_boxes=Cashbox.query.filter_by(box_type="employee",is_active=True).all()
     operating_cash=sum((balance(box.id) for box in employee_boxes),0)
-    contributions=CapitalContribution.query.order_by(CapitalContribution.id.desc()).limit(50).all()
-    allocations=CapitalAllocation.query.order_by(CapitalAllocation.id.desc()).limit(50).all()
-    totals={"contributed":contributed,"allocated":allocated,"central_balance":balance(central.id),"employee_cash":operating_cash,"unallocated":max(contributed-allocated,0)}
-    return render_template("capital/index.html",central=central,central_balance=balance(central.id),contributions=contributions,allocations=allocations,totals=totals)
+    period=request.args.get("period") or "all"
+    if period not in {"all","week","month"}: period="all"
+    start,end=_period_window(period)
+    contributions_q=CapitalContribution.query
+    allocations_q=CapitalAllocation.query
+    if start:
+        contributions_q=contributions_q.filter(CapitalContribution.contribution_date>=start,CapitalContribution.contribution_date<=end)
+        allocations_q=allocations_q.filter(CapitalAllocation.allocation_date>=start,CapitalAllocation.allocation_date<=end)
+    contributions=contributions_q.order_by(CapitalContribution.id.desc()).limit(100).all()
+    allocations=allocations_q.order_by(CapitalAllocation.id.desc()).limit(100).all()
+    totals={
+        "contributed":contributed,"allocated":allocated,"central_balance":balance(central.id),
+        "employee_cash":operating_cash,"unallocated":max(contributed-allocated,0),
+        "period_contributed":sum((row.amount for row in contributions if row.status=="approved"),0),
+        "period_allocated":sum((row.amount for row in allocations if row.document and row.document.status!="reversed"),0),
+    }
+    return render_template("capital/index.html",central=central,central_balance=balance(central.id),contributions=contributions,allocations=allocations,totals=totals,period=period)
+
+@capital_bp.get("/report")
+@permission_required("capital.view")
+def report():
+    period=request.args.get("period") or "month"
+    if period not in {"all","week","month"}: period="month"
+    start,end=_period_window(period)
+    contributions_q=CapitalContribution.query
+    allocations_q=CapitalAllocation.query
+    if start:
+        contributions_q=contributions_q.filter(CapitalContribution.contribution_date>=start,CapitalContribution.contribution_date<=end)
+        allocations_q=allocations_q.filter(CapitalAllocation.allocation_date>=start,CapitalAllocation.allocation_date<=end)
+    contributions=contributions_q.order_by(CapitalContribution.id.desc()).limit(200).all()
+    allocations=allocations_q.order_by(CapitalAllocation.id.desc()).limit(200).all()
+    central=central_cashbox()
+    return render_template("capital/report.html",central=central,central_balance=balance(central.id),contributions=contributions,allocations=allocations,period=period,start=start,end=end,total_in=sum((row.amount for row in contributions if row.status=="approved"),0),total_out=sum((row.amount for row in allocations if row.document and row.document.status!="reversed"),0))
 
 @capital_bp.post("/add")
 @permission_required("capital.create")
@@ -48,6 +87,39 @@ def allocate():
     except ValueError as exc:
         db.session.rollback();flash(str(exc),"danger")
     return redirect(url_for("capital.index"))
+
+@capital_bp.route("/contribution/<int:contribution_id>/edit",methods=["GET","POST"])
+@permission_required("capital.create")
+def edit_contribution(contribution_id):
+    row=CapitalContribution.query.get_or_404(contribution_id)
+    if row.status=="reversed" or (row.document and row.document.status=="reversed"):
+        flash("لا يمكن تعديل عملية رأس مال معكوسة.","danger")
+        return redirect(url_for("capital.index"))
+    if request.method=="POST":
+        before={"source":row.source,"notes":row.notes}
+        row.source=(request.form.get("source") or "").strip() or None
+        row.notes=(request.form.get("notes") or "").strip() or None
+        audit("capital.contribution.updated","capital_contribution",row.id,before=before,after={"source":row.source,"notes":row.notes})
+        db.session.commit()
+        flash("تم تحديث بيانات رأس المال. لتصحيح المبلغ استخدم عكس السند.","success")
+        return redirect(url_for("capital.index"))
+    return render_template("capital/edit_contribution.html",row=row)
+
+@capital_bp.route("/allocation/<int:allocation_id>/edit",methods=["GET","POST"])
+@permission_required("capital.allocate")
+def edit_allocation(allocation_id):
+    row=CapitalAllocation.query.get_or_404(allocation_id)
+    if row.document and row.document.status=="reversed":
+        flash("لا يمكن تعديل تحويل رأس مال معكوس.","danger")
+        return redirect(url_for("capital.index"))
+    if request.method=="POST":
+        before={"notes":row.notes}
+        row.notes=(request.form.get("notes") or "").strip() or None
+        audit("capital.allocation.updated","capital_allocation",row.id,before=before,after={"notes":row.notes})
+        db.session.commit()
+        flash("تم تحديث بيان تحويل رأس المال. لتصحيح المبلغ استخدم عكس السند.","success")
+        return redirect(url_for("capital.index"))
+    return render_template("capital/edit_allocation.html",row=row)
 
 @capital_bp.context_processor
 def capital_context():
