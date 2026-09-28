@@ -151,3 +151,15 @@ body{font-size:1rem}
 .theme-tip{font-size:.68rem;color:#748197;display:flex;align-items:center}
 .audit-entry[aria-disabled="true"]{cursor:default}.audit-link-icon{font-size:.7rem;color:#94a0b1}
 @media(max-width:600px){.palette-preview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Final navigation and branding polish */
+.sidebar-credit{margin-top:auto;padding:9px 12px 11px;border-top:1px solid #edf0f5;text-align:center;background:#fbfaff}
+.sidebar-credit strong,.sidebar-credit>bdi,.sidebar-credit span{display:block}
+.sidebar-credit strong{font-size:.7rem;color:#4c4861}
+.sidebar-credit>bdi{font-size:.68rem;color:#7c3aed;font-weight:800;direction:ltr}
+.sidebar-credit span{font-size:.6rem;font-weight:800;background:linear-gradient(90deg,#7c3aed,#a855f7,#c026d3,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav-section-head{font-size:.9rem}
+.nav-item{font-size:.84rem}
+.nav-item i{font-size:.88rem}
+.sidebar-logout button{font-size:.82rem}
+@media(max-width:991.98px){.sidebar-credit{padding-bottom:12px}}
