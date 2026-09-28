@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row"><div class="page-heading"><h1>تعديل بيانات الحركة</h1><p>{{box.name}} · لا يتم تغيير المبلغ أو اتجاه الحركة مباشرة.</p></div><a class="secondary-btn" href="{{url_for('cashbox.detail',cashbox_id=box.id,period=period)}}"><i class="bi bi-arrow-right"></i><span>العودة للصندوق</span></a></div>
+<div class="info-card finance-edit-summary">
+  <div class="detail-line"><strong>الحركة</strong><span>{{transaction.transaction_type}}</span></div>
+  <div class="detail-line"><strong>المبلغ</strong><span>{{transaction.amount|clean_number}} {{project_settings.currency}}</span></div>
+  <div class="detail-line"><strong>الاتجاه</strong><span>{% if transaction.direction=="IN" %}داخل{% else %}خارج{% endif %}</span></div>
+  <div class="detail-line"><strong>التاريخ</strong><span>{{transaction.created_at.strftime("%Y-%m-%d %H:%M")}}</span></div>
+</div>
+<form method="post" class="mobile-form card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<input type="hidden" name="period" value="{{period}}">
+<label>بيان الحركة<textarea name="description" rows="4" placeholder="البيان الظاهر في كشف الصندوق">{{transaction.description or ""}}</textarea></label>
+<button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ البيان</span></button>
+</form>
+{% if transaction.document_id %}
+<div class="action-row">
+  <a class="secondary-btn" href="{{url_for('documents.view',document_id=transaction.document_id)}}"><i class="bi bi-receipt"></i><span>فتح السند</span></a>
+  <a class="secondary-btn" href="{{url_for('documents.print_document',document_id=transaction.document_id)}}" target="_blank"><i class="bi bi-printer"></i><span>طباعة السند</span></a>
+</div>
+{% endif %}
+{% endblock %}
