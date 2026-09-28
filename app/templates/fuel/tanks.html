@@ -14,6 +14,12 @@
 <button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ الخزان</span></button>
 </form></div>
 <div class="section-title"><h2>الخزانات</h2><span>{{rows|length}} خزان</span></div>
+<div class="stats-grid page-stats-compact">
+  <div class="stat-card"><div><small>عدد الخزانات</small><strong>{{rows|length}}</strong><span>خزان</span></div></div>
+  <div class="stat-card"><div><small>المخزون الحالي</small><strong>{{rows|sum(attribute='stats.stock')}}</strong><span>لتر</span></div></div>
+  <div class="stat-card"><div><small>المصروف</small><strong>{{rows|sum(attribute='stats.outbound')}}</strong><span>لتر</span></div></div>
+  <div class="stat-card"><div><small>السعة</small><strong>{{rows|sum(attribute='tank.capacity_liters')}}</strong><span>لتر</span></div></div>
+</div>
 <div class="tank-card-grid">
 {% for row in rows %}{% set tank=row.tank %}{% set s=row.stats %}
 <article class="entity-card">
