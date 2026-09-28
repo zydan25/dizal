@@ -41,7 +41,7 @@ def supply():
             if current_user.has_role("manager"):
                 approve_purchase(row,current_user.id)
             audit("fuel.purchase.created","fuel_purchase",row.id,after={
-                "status":row.status,"employee_id":row.employee_id,"liters":str(row.liters),"amount":str(row.landed_cost)
+                "status":row.status,"employee_id":row.employee_id,"liters":str(row.liters),"amount":str(row.landed_cost),"document_id":row.document_id
             })
             if row.status=="submitted" and row.employee_id!=current_user.id:
                 notify_user(row.employee_id,"توريد جديد","تم رفع توريد ديزل ويحتاج مراجعة المدير.","info",url_for("fuel.supply"))
