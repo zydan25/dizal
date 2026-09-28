@@ -14,6 +14,7 @@ jobs:
       SECURITY_PASSWORD_SALT: ci-salt
       DATABASE_URL: sqlite://
       WTF_CSRF_ENABLED: "false"
+      PYTHONPATH: ${{ github.workspace }}
 
     steps:
       - uses: actions/checkout@v4

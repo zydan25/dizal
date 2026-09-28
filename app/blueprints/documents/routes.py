@@ -39,6 +39,8 @@ def _print_context(document,source):
 def index():
     status=request.args.get("status");document_type=request.args.get("type")
     query=Document.query.order_by(Document.created_at.desc())
+    if not user_has_permission(current_user,"documents.reverse") and not user_has_permission(current_user,"users.manage"):
+        query=query.filter(Document.created_by_id==current_user.id)
     if status: query=query.filter_by(status=status)
     if document_type: query=query.filter_by(document_type=document_type)
     documents=query.limit(200).all()

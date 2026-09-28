@@ -63,7 +63,7 @@ def supply():
 @permission_required("fuel.supply.approve")
 def review(purchase_id):
     purchase=FuelPurchase.query.get_or_404(purchase_id)
-    action=request.form.get("action")
+    action=request.form.get("action") or "approve"
     if action=="approve":
         try:
             approve_purchase(purchase,current_user.id)
