@@ -1,9 +1,9 @@
-from datetime import datetime,timezone,time
+from datetime import datetime,timezone,time,timedelta
 from sqlalchemy import func
 from flask import render_template
 from flask_login import current_user
 from ...decorators import permission_required
-from ...models import AuditLog,Cashbox,Document,Farmer,FarmerPayment,FuelDispense,FuelPurchase,Notification,User
+from ...models import AuditLog,Cashbox,Document,Farmer,FarmerPayment,FuelDispense,FuelPurchase,FuelTank,Notification,User
 from ...permissions import user_has_permission
 from ...services.cashbox import balance
 from ...services.sales import farmer_account
@@ -26,10 +26,17 @@ def index():
     employee_notifications=[]
     summary=None
     inventory=None
+    trend_rows=[]
+    tank_overview=[]
     if manager:
         recent_audits=AuditLog.query.order_by(AuditLog.created_at.desc()).limit(8).all()
         summary=project_summary()
         inventory=inventory_commitment()
+    if manager or current_user.is_employee:
+        trend_rows=operational_trend(None if manager else current_user.id)
+        active_tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).limit(8).all()
+        from ...services.fuel import current_stock_liters
+        tank_overview=[{"tank":tank,"stock":current_stock_liters(tank.id)} for tank in active_tanks]
     elif current_user.is_employee:
         box=Cashbox.query.filter_by(owner_user_id=current_user.id,box_type="employee",is_active=True).first()
         if box:
@@ -60,7 +67,39 @@ def index():
             "pending_supplies":FuelPurchase.query.filter_by(employee_id=current_user.id,status="submitted").count(),
             "available_liters":inventory_commitment()["stock_liters"],
         }
-    return render_template("dashboard/index.html",manager=manager,employee_count=employee_count,recent_audits=recent_audits,employee_cashbox=employee_cashbox,employee_stats=employee_stats,employee_farmers=employee_farmers,employee_farmers_total=employee_farmers_total,employee_notifications=employee_notifications,summary=summary,inventory=inventory,pending_supplies=pending_supplies,pending_farmers=pending_farmers,unread_all=unread_all)
+    return render_template("dashboard/index.html",manager=manager,employee_count=employee_count,recent_audits=recent_audits,employee_cashbox=employee_cashbox,employee_stats=employee_stats,employee_farmers=employee_farmers,employee_farmers_total=employee_farmers_total,employee_notifications=employee_notifications,summary=summary,inventory=inventory,pending_supplies=pending_supplies,pending_farmers=pending_farmers,unread_all=unread_all,trend_rows=trend_rows,tank_overview=tank_overview)
 
 def db_sum(column,*conditions):
     return float(__import__("app.extensions",fromlist=["db"]).db.session.query(func.coalesce(func.sum(column),0)).filter(*conditions).scalar() or 0)
+
+ 
+def operational_trend(employee_id=None):
+    today=datetime.now(timezone.utc).date()
+    start_day=today-timedelta(days=6)
+    start_dt=datetime.combine(start_day,time.min).replace(tzinfo=timezone.utc)
+    end_dt=datetime.combine(today,time.max).replace(tzinfo=timezone.utc)
+    dq=FuelDispense.query.filter(
+        FuelDispense.status=="approved",
+        FuelDispense.created_at>=start_dt,
+        FuelDispense.created_at<=end_dt,
+    )
+    pq=(FarmerPayment.query.join(Document,FarmerPayment.document_id==Document.id)
+        .filter(FarmerPayment.created_at>=start_dt,FarmerPayment.created_at<=end_dt,Document.status!="reversed"))
+    if employee_id is not None:
+        dq=dq.filter(FuelDispense.employee_id==employee_id)
+        pq=pq.filter(FarmerPayment.employee_id==employee_id)
+    dispenses=dq.all()
+    payments=pq.all()
+    rows=[]
+    for offset in range(6,-1,-1):
+        day=today-timedelta(days=offset)
+        d_liters=sum((float(row.liters or 0) for row in dispenses if row.created_at.astimezone(timezone.utc).date()==day),0.0)
+        d_collected=sum((float(row.paid_amount or 0) for row in dispenses if row.created_at.astimezone(timezone.utc).date()==day),0.0)
+        d_collected+=sum((float(row.amount or 0) for row in payments if row.created_at.astimezone(timezone.utc).date()==day),0.0)
+        rows.append({"label":day.strftime("%d/%m"),"liters":d_liters,"collected":d_collected})
+    max_liters=max((row["liters"] for row in rows),default=0)
+    max_collected=max((row["collected"] for row in rows),default=0)
+    for row in rows:
+        row["liters_pct"]=round((row["liters"]/max_liters)*100,1) if max_liters else 0
+        row["collected_pct"]=round((row["collected"]/max_collected)*100,1) if max_collected else 0
+    return rows
