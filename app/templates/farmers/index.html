@@ -22,6 +22,17 @@
   <div class="stat-card"><i class="bi bi-person-x"></i><div><small>موقوفون</small><strong>{{stats.suspended}}</strong><span>حساب</span></div></div>
 </div>
 
+<form class="farmer-tools" method="get">
+  {% if status %}<input type="hidden" name="status" value="{{status}}">{% endif %}
+  <div class="farmer-search"><i class="bi bi-search"></i><input name="search" value="{{search or ''}}" placeholder="بحث بالاسم أو الهاتف أو الكود"><button class="small-icon-btn" aria-label="بحث"><i class="bi bi-arrow-return-left"></i></button></div>
+  <label class="sort-select"><i class="bi bi-sort-down"></i><select name="sort" onchange="this.form.submit()">
+    <option value="name" {% if sort=="name" %}selected{% endif %}>الاسم</option>
+    <option value="consumed" {% if sort=="consumed" %}selected{% endif %}>الأكثر سحبًا</option>
+    <option value="remaining" {% if sort=="remaining" %}selected{% endif %}>الأعلى متبقيًا</option>
+    <option value="debt" {% if sort=="debt" %}selected{% endif %}>الأعلى مديونية</option>
+  </select></label>
+</form>
+
 <div class="filter-row">
   <a class="filter-chip {% if not status %}active{% endif %}" href="{{url_for('farmers.index')}}">الكل</a>
   <a class="filter-chip {% if status=='approved' %}active{% endif %}" href="{{url_for('farmers.index',status='approved')}}">معتمد</a>
