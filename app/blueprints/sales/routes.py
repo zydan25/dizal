@@ -85,25 +85,28 @@ def farmer_account_view(farmer_id):
     farmer=Farmer.query.get_or_404(farmer_id)
     if not user_has_permission(current_user,"farmers.view_all") and farmer.assigned_employee_id!=current_user.id:
         abort(403)
+    start_value=request.args.get("start")
+    end_value=request.args.get("end")
     try:
-        start_date=date.fromisoformat(request.args.get("start") or date.today().replace(day=1).isoformat())
-        end_date=date.fromisoformat(request.args.get("end") or date.today().isoformat())
+        start_date=date.fromisoformat(start_value) if start_value else None
+        end_date=date.fromisoformat(end_value) if end_value else None
     except ValueError:
         abort(400,description="صيغة التاريخ غير صحيحة.")
-    if end_date<start_date:
+    if start_date and end_date and end_date<start_date:
         abort(400,description="نهاية الفترة لا يمكن أن تسبق بدايتها.")
-    start_dt=datetime.combine(start_date,time.min).replace(tzinfo=timezone.utc)
-    end_dt=datetime.combine(end_date,time.max).replace(tzinfo=timezone.utc)
-
-    dispenses=(FuelDispense.query
-               .filter_by(farmer_id=farmer.id,status="approved")
-               .filter(FuelDispense.created_at>=start_dt,FuelDispense.created_at<=end_dt)
-               .order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc()).all())
-    payments=(FarmerPayment.query
-              .join(Document,FarmerPayment.document_id==Document.id)
-              .filter(FarmerPayment.farmer_id==farmer.id,Document.status!="reversed",
-                      FarmerPayment.created_at>=start_dt,FarmerPayment.created_at<=end_dt)
-              .order_by(FarmerPayment.created_at.desc(),FarmerPayment.id.desc()).all())
+    dispenses_q=FuelDispense.query.filter_by(farmer_id=farmer.id,status="approved")
+    payments_q=(FarmerPayment.query.join(Document,FarmerPayment.document_id==Document.id)
+                .filter(FarmerPayment.farmer_id==farmer.id,Document.status!="reversed"))
+    if start_date:
+        start_dt=datetime.combine(start_date,time.min).replace(tzinfo=timezone.utc)
+        dispenses_q=dispenses_q.filter(FuelDispense.created_at>=start_dt)
+        payments_q=payments_q.filter(FarmerPayment.created_at>=start_dt)
+    if end_date:
+        end_dt=datetime.combine(end_date,time.max).replace(tzinfo=timezone.utc)
+        dispenses_q=dispenses_q.filter(FuelDispense.created_at<=end_dt)
+        payments_q=payments_q.filter(FarmerPayment.created_at<=end_dt)
+    dispenses=dispenses_q.order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc()).all()
+    payments=payments_q.order_by(FarmerPayment.created_at.desc(),FarmerPayment.id.desc()).all()
     ledger=[{"kind":"dispense","date":row.created_at,"row":row} for row in dispenses]
     ledger += [{"kind":"payment","date":row.created_at,"row":row} for row in payments]
     ledger.sort(key=lambda item:item["date"],reverse=True)
