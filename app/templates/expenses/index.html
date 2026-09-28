@@ -13,5 +13,5 @@
 </form>
 </div>
 <div class="section-title"><h2>آخر المصروفات</h2><span>السند والمراجعة من هنا</span></div>
-<div class="entity-list">{% for row in expenses %}<div class="entity-row"><div class="avatar"><i class="bi bi-receipt"></i></div><div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number}}</a> · {{row.category}}</strong><span>{{row.description or "—"}}</span><small>{{row.expense_date}} · {{row.cashbox.name}} · {{row.status}}</small></div><div class="money-value negative">{{row.amount}}</div></div>{% else %}<div class="empty-state">لا توجد مصروفات.</div>{% endfor %}</div>
+<div class="entity-list">{% for row in expenses %}<div class="entity-row"><div class="avatar"><i class="bi bi-receipt"></i></div><div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number}}</a> · {{row.category}}</strong><span>{{row.description or "—"}}</span><small>{{row.expense_date}} · {{row.cashbox.name}} · {{row.status}}</small></div><div class="money-value negative">{{row.amount|clean_number}}</div></div>{% else %}<div class="empty-state">لا توجد مصروفات.</div>{% endfor %}</div>
 {% endblock %}
