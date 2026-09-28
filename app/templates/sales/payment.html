@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>تحصيل من المزارعين</h1><p>سجل السداد، وسيقسم النظام المبلغ تلقائيًا على الديون الأقدم.</p></div>
+<div class="page-heading-row"><div class="page-heading"><h1>إضافة دفع</h1><p>سجل السداد، وسيقسم النظام المبلغ تلقائيًا على الديون الأقدم.</p></div><a class="secondary-btn" href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><span>المزارعون</span></a></div>
 <form method="post" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 {% if current_user.has_role("manager") %}
-<label>الموظف المسؤول<select name="employee_id" required><option value="">اختر الموظف</option>{% for employee in employees %}<option value="{{employee.id}}">{{employee.display_name}}</option>{% endfor %}</select></label>
+<label>الموظف المسؤول<select name="employee_id" required><option value="">اختر الموظف</option>{% for employee in employees %}<option value="{{employee.id}}" {% if selected_employee_id|string==employee.id|string %}selected{% endif %}>{{employee.display_name}}</option>{% endfor %}</select></label>
 {% endif %}
-<label>المزارع<select name="farmer_id" id="payment_farmer" required><option value="">اختر المزارع</option>{% for farmer in farmers %}<option value="{{farmer.id}}">{{farmer.name}} · عليه {{accounts[farmer.id].outstanding_amount}}</option>{% endfor %}</select></label>
+<label>المزارع<select name="farmer_id" id="payment_farmer" required><option value="">اختر المزارع</option>{% for farmer in farmers %}<option value="{{farmer.id}}" {% if selected_farmer_id|string==farmer.id|string %}selected{% endif %}>{{farmer.name}} · عليه {{accounts[farmer.id].outstanding_amount}}</option>{% endfor %}</select></label>
 <div class="balance-card compact-balance" id="farmer-balance"><div><span>الدين الحالي</span><strong>0</strong><small>{{project_settings.currency}}</small></div><i class="bi bi-wallet2"></i></div>
 <label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required inputmode="decimal"></label>
 <label>طريقة الدفع<select name="payment_method"><option value="cash">نقد</option><option value="transfer">تحويل</option><option value="bank">بنك</option></select></label>
