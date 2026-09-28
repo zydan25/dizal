@@ -42,6 +42,8 @@ def build_navigation(user):
     for section in SECTIONS:
         items=[]
         for endpoint,label,icon,permission in section["items"]:
+            if endpoint=="reports.my_statement" and not user.is_employee:
+                continue
             if user_has_permission(user,permission):
                 items.append({"endpoint":endpoint,"label":label,"icon":icon})
         if items:
