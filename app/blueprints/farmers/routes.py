@@ -32,6 +32,11 @@ def index():
     if not user_has_permission(current_user,"farmers.view_all"):
         query=query.filter_by(assigned_employee_id=current_user.id)
     status=request.args.get("status")
+    search=(request.args.get("search") or "").strip()
+    sort=request.args.get("sort") or "name"
+    if search:
+        like="%"+search+"%"
+        query=query.filter((Farmer.name.ilike(like))|(Farmer.phone.ilike(like))|(Farmer.code.ilike(like)))
     if status:
         query=query.filter_by(status=status)
     else:
@@ -45,6 +50,8 @@ def index():
     if not user_has_permission(current_user,"farmers.view_all"):
         visible_query=visible_query.filter_by(assigned_employee_id=current_user.id)
     visible=visible_query.filter(Farmer.status!="deleted").all()
+    sorters={"name":lambda x:x["farmer"].name.casefold(),"consumed":lambda x:x["account"]["consumed_drums"],"remaining":lambda x:x["account"]["remaining_quota_drums"],"debt":lambda x:x["account"]["outstanding_amount"]}
+    cards.sort(key=sorters.get(sort,sorters["name"]),reverse=sort!="name")
     stats={
         "total":len(visible),
         "approved":sum(1 for row in visible if row.status=="approved"),
@@ -54,7 +61,7 @@ def index():
         "remaining":sum((item["account"]["remaining_quota_drums"] for item in cards),0),
         "debt":sum((item["account"]["outstanding_amount"] for item in cards),0),
     }
-    return render_template("farmers/index.html",cards=cards,farmers=farmers,status=status,stats=stats)
+    return render_template("farmers/index.html",cards=cards,farmers=farmers,status=status,search=search,sort=sort,stats=stats)
 
 @farmers_bp.route("/new",methods=["GET","POST"])
 @permission_required("farmers.create")
