@@ -23,14 +23,22 @@
 </div>
 
 <div class="farmer-tools" id="farmer-tools">
-  
-  <div class="farmer-search"><i class="bi bi-search"></i><input id="farmer-live-search" type="search" value="{{search or ''}}" placeholder="بحث فوري بالاسم أو الهاتف أو الكود" autocomplete="off"></div>
-  <label class="sort-select"><i class="bi bi-sort-down"></i><select name="sort" onchange="this.form.submit()">
-    <option value="name" {% if sort=="name" %}selected{% endif %}>الاسم</option>
-    <option value="consumed" {% if sort=="consumed" %}selected{% endif %}>الأكثر سحبًا</option>
-    <option value="remaining" {% if sort=="remaining" %}selected{% endif %}>الأعلى متبقيًا</option>
-    <option value="debt" {% if sort=="debt" %}selected{% endif %}>الأعلى مديونية</option>
-  </select></label>
+  <div class="farmer-search" role="search">
+    <span class="farmer-search-icon"><i class="bi bi-search"></i></span>
+    <input id="farmer-live-search" type="search" value="{{search or ''}}" placeholder="ابحث عن مزارع بالاسم أو الهاتف أو الكود" autocomplete="off" aria-label="البحث عن مزارع">
+    <button class="farmer-search-clear" id="farmer-search-clear" type="button" hidden aria-label="مسح البحث" title="مسح البحث"><i class="bi bi-x"></i></button>
+    <span class="farmer-search-meta" id="farmer-search-count"></span>
+  </div>
+  <label class="sort-select">
+    <span class="sort-select-icon"><i class="bi bi-sliders2-vertical"></i></span>
+    <span class="sort-select-label">ترتيب</span>
+    <select id="farmer-sort" name="sort" aria-label="ترتيب المزارعين">
+      <option value="name" {% if sort=="name" %}selected{% endif %}>الاسم</option>
+      <option value="consumed" {% if sort=="consumed" %}selected{% endif %}>الأكثر سحبًا</option>
+      <option value="remaining" {% if sort=="remaining" %}selected{% endif %}>الأعلى متبقيًا</option>
+      <option value="debt" {% if sort=="debt" %}selected{% endif %}>الأعلى مديونية</option>
+    </select>
+  </label>
 </div>
 
 <div class="filter-row farmer-status-filters">
@@ -105,10 +113,31 @@
 <script>
 (function(){
   const input=document.getElementById("farmer-live-search");
+  const clear=document.getElementById("farmer-search-clear");
+  const count=document.getElementById("farmer-search-count");
+  const sort=document.getElementById("farmer-sort");
   const items=[...document.querySelectorAll(".farmer-live-item")];
   const chips=[...document.querySelectorAll(".farmer-status-filters .filter-chip")];
-  function apply(){const q=(input?.value||"").trim().toLocaleLowerCase();let n=0;items.forEach(x=>{const show=!q||(x.dataset.search||"").includes(q);x.classList.toggle("d-none",!show);if(show)n++;});}
-  input?.addEventListener("input",apply);apply();
+  function apply(){
+    const q=(input?.value||"").trim().toLocaleLowerCase();
+    let n=0;
+    items.forEach(x=>{
+      const show=!q||(x.dataset.search||"").includes(q);
+      x.classList.toggle("d-none",!show);
+      if(show)n++;
+    });
+    if(clear)clear.hidden=!q;
+    if(count)count.textContent=n+" نتيجة";
+  }
+  input?.addEventListener("input",apply);
+  clear?.addEventListener("click",()=>{input.value="";apply();input.focus();});
+  sort?.addEventListener("change",()=>{
+    const params=new URLSearchParams(window.location.search);
+    params.set("sort",sort.value);
+    params.delete("search");
+    window.location.search=params.toString();
+  });
+  apply();
   chips.forEach(c=>c.addEventListener("click",()=>{chips.forEach(x=>x.classList.toggle("active",x===c));}));
 })();
 </script>
