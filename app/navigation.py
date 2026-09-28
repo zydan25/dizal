@@ -25,7 +25,8 @@ SECTIONS=[
     ("reports.farmers_debts","ديون المزارعين","bi-person-exclamation","reports.view"),
     ("reports.employees","أداء الموظفين","bi-person-badge","reports.view"),
     ("documents.index","السندات","bi-receipt-cutoff","documents.view"),
-    ("reports.my_statement","كشف حسابي","bi-file-earmark-text","employee.statement.view")
+    ("reports.my_statement","كشف حسابي","bi-file-earmark-text","employee.statement.view"),
+    ("reports.my_operations","تقريري التشغيلي","bi-clipboard-data","employee.statement.view")
 ]},
 {"key":"admin","title":"الإدارة","icon":"bi-sliders2","items":[
     ("employees.index","الموظفون","bi-person-gear","employees.view"),
