@@ -15,7 +15,7 @@ from . import dashboard_bp
 def index():
     manager=user_has_permission(current_user,"users.manage")
     employee_count=User.query.filter_by(is_employee=True).count()
-    recent_audits=AuditLog.query.filter(AuditLog.created_by_id==current_user.id).order_by(AuditLog.created_at.desc()).limit(8).all()
+    recent_audits=AuditLog.query.filter(AuditLog.actor_user_id==current_user.id).order_by(AuditLog.created_at.desc()).limit(8).all()
     pending_supplies=FuelPurchase.query.filter_by(status="submitted").count()
     pending_farmers=Farmer.query.filter(Farmer.status.in_(["submitted","changes_requested"])).count()
     unread_all=Notification.query.filter_by(read_at=None).count()
