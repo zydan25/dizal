@@ -92,3 +92,32 @@ def test_unauthenticated_protected_pages_redirect_to_login():
     response=client.get("/farmers/")
     assert response.status_code==302
     assert "/auth/login" in response.headers["Location"]
+
+
+def test_settings_palette_and_font_scale_persist():
+    app=make_app()
+    seed(app)
+    client=app.test_client()
+    login=client.post("/auth/login",data={"identifier":"manager","password":"secret"},follow_redirects=True)
+    assert login.status_code==200
+    response=client.post("/settings/",data={
+        "project_name":"Dizal",
+        "manager_name":"مدير",
+        "manager_phone":"700000000",
+        "currency":"ريال",
+        "drum_liters":"20",
+        "max_farmers_per_employee":"50",
+        "max_credit_drums_per_farmer":"7",
+        "max_dispense_liters_per_day":"4000",
+        "default_sale_price_per_liter":"650",
+        "color_preset":"violet",
+        "font_scale":"1.05",
+        "font_family":"Tajawal",
+        "radius":"14px",
+    },follow_redirects=True)
+    assert response.status_code==200
+    with app.app_context():
+        settings=ProjectSettings.get()
+        assert settings.primary_color=="#6d28d9"
+        assert settings.secondary_color=="#9333ea"
+        assert settings.font_scale=="1.05"
