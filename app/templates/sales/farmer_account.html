@@ -9,8 +9,8 @@
 </div>
 
 <form class="filter-row" method="get">
-  <label class="filter-chip">من <input name="start" type="date" value="{{start.isoformat()}}"></label>
-  <label class="filter-chip">إلى <input name="end" type="date" value="{{end.isoformat()}}"></label>
+  <label class="filter-chip">من <input name="start" type="date" value="{{start.isoformat() if start else ''}}"></label>
+  <label class="filter-chip">إلى <input name="end" type="date" value="{{end.isoformat() if end else ''}}"></label>
   <button class="filter-chip active" type="submit">تطبيق</button>
 </form>
 
@@ -30,7 +30,7 @@
 
 <div class="info-card mt-3">
   <strong>فترة الكشف</strong>
-  <p>{{start}} → {{end}} · يعرض السحب والتحصيل المعتمدين خلال الفترة، مع ربط كل حركة بسندها.</p>
+  <p>{% if start or end %}{{start or "البداية"}} → {{end or "اليوم"}}{% else %}كامل تاريخ الحساب{% endif %} · يعرض السحب والتحصيل المعتمدين، مع ربط كل حركة بسندها.</p>
 </div>
 
 <div class="section-title"><h2>كل الحركات</h2><span>{{ledger|length}} حركة</span></div>
