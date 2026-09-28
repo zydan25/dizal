@@ -1,14 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row"><div class="page-heading"><h1>تعديل المزارع</h1><p>{% if farmer.status=="changes_requested" %}أكمل المطلوب ثم أعد الإرسال للمراجعة.{% else %}تحديث بيانات الملف مع الحفاظ على سجل المراجعة.{% endif %}</p></div><span class="status-chip status-{{farmer.status}}">{{farmer.status}}</span></div>
+<div class="page-heading-row">
+  <div class="page-heading"><h1>تعديل المزارع</h1><p>{% if farmer.status=="changes_requested" %}أكمل المطلوب ثم أعد الإرسال للمراجعة.{% else %}تحديث الملف والمرفقات مع إبقاء السجل المالي محفوظًا.{% endif %}</p></div>
+  <span class="status-chip status-{{farmer.status}}">{{farmer.status}}</span>
+</div>
+
 <form method="post" enctype="multipart/form-data" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>اسم المزارع<input name="name" value="{{farmer.name}}" required></label>
 <div class="two-col"><label>رقم الهاتف<input name="phone" value="{{farmer.phone}}" inputmode="tel" required></label><label>العنوان<input name="address" value="{{farmer.address or ''}}"></label></div>
 <label>ملاحظات<textarea name="notes" rows="3">{{farmer.notes or ''}}</textarea></label>
-<div class="section-title"><h2>إضافة مرفقات</h2><span>يمكن رفع الملف الناقص</span></div>
+
+<div class="section-title"><h2>المرفقات الحالية</h2><span>{{farmer.documents|length}} ملف · عرض / استبدال / حذف</span></div>
+<div class="entity-list">
+{% for doc in farmer.documents %}
+<div class="entity-row attachment-edit-row">
+  <div class="avatar"><i class="bi bi-file-earmark"></i></div>
+  <div class="entity-main"><strong>{{doc.document_type}}</strong><span>{{doc.original_name}}</span><small>{{doc.mime_type or "file"}} · {{doc.size_bytes or 0}} bytes</small></div>
+  <div class="entity-actions">
+    <a class="small-icon-btn" href="{{url_for('farmers.farmer_document',farmer_id=farmer.id,document_id=doc.id)}}" target="_blank" title="عرض" aria-label="عرض"><i class="bi bi-eye"></i></a>
+    <a class="small-icon-btn" href="{{url_for('farmers.farmer_document',farmer_id=farmer.id,document_id=doc.id,download=1)}}" title="تنزيل" aria-label="تنزيل"><i class="bi bi-download"></i></a>
+    <button class="small-icon-btn text-danger" type="submit" form="delete-doc-{{doc.id}}" title="حذف" aria-label="حذف"><i class="bi bi-trash3"></i></button>
+  </div>
+  <label class="replace-file-field">استبدال الملف<input type="file" name="replace_{{doc.id}}" accept=".pdf,.png,.jpg,.jpeg,.webp"></label>
+</div>
+{% else %}<div class="empty-state">لا توجد مرفقات محفوظة حاليًا.</div>{% endfor %}
+</div>
+
+<div class="section-title"><h2>إضافة مرفق جديد</h2><span>لملف غير موجود</span></div>
 <div class="two-col"><label>البطاقة الأمامية<input type="file" name="id_front" accept=".pdf,.png,.jpg,.jpeg,.webp"></label><label>البطاقة الخلفية<input type="file" name="id_back" accept=".pdf,.png,.jpg,.jpeg,.webp"></label></div>
 <div class="two-col"><label>العقد/الالتزام<input type="file" name="contract" accept=".pdf,.png,.jpg,.jpeg,.webp"></label><label>ملف إضافي<input type="file" name="other_document" accept=".pdf,.png,.jpg,.jpeg,.webp"></label></div>
-<button class="primary-btn"><i class="bi bi-send-check"></i>{% if farmer.status=="changes_requested" %}حفظ وإعادة الإرسال{% else %}حفظ التعديلات{% endif %}</button>
+<button class="primary-btn"><i class="bi bi-check2"></i><span>{% if farmer.status=="changes_requested" %}حفظ وإعادة الإرسال{% else %}حفظ التعديلات{% endif %}</span></button>
 </form>
+
+{% for doc in farmer.documents %}
+<form id="delete-doc-{{doc.id}}" method="post" action="{{url_for('farmers.delete_document',farmer_id=farmer.id,document_id=doc.id)}}" onsubmit="return confirm('حذف هذا المرفق من ملف المزارع؟')" hidden>
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+</form>
+{% endfor %}
 {% endblock %}
