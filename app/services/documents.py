@@ -2,7 +2,7 @@ from datetime import date
 from ..extensions import db
 from ..models import Document,ProjectSequence
 
-PREFIXES={"CAP":"CAP","TRF":"TRF","AST":"AST","SUP":"SUP","DOC":"DOC"}
+PREFIXES={"CAP":"CAP","TRF":"TRF","AST":"AST","SUP":"SUP","DSP":"DSP","RCV":"RCV","SET":"SET","EXP":"EXP","FAR":"FAR","REV":"REV","DOC":"DOC"}
 
 def next_document_number(document_type):
     year=date.today().year

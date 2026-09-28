@@ -1,74 +1,25 @@
 # Dizal Status
 
-## Phase 0 — Specification
-مكتملة.
+## المرحلة المرجعية
+تم دمج الأساس والتشغيل المالي والوقود والمزارعين والمبيعات والتقارير وRBAC والإشعارات وWhatsApp على main.
 
-## Phase 1 — Foundation
-مكتملة على feature/phase1-foundation:
-- Flask Factory
-- SQLAlchemy
-- Flask-Migrate
-- Flask-Security-Too
-- RBAC
-- Audit
-- Theme
-- PWA
-- ERP Navigation
-- Login
-- Settings
+## 2026-09-28 — Integration/UI Completion
+العمل الحالي على:
+- ربط Blueprints الموجودة فعليًا داخل Application Factory.
+- مركز موحد للسندات.
+- طباعة وPDF ومشاركة ومرفقات.
+- العكس المحاسبي/المخزني الموثق بدل حذف العمليات المعتمدة.
+- استكمال Workflow المراجعة والاستكمال.
+- Dashboard تشغيلية.
+- اختبارات Regression وCI.
 
-## Phase 2 — Finance Core
-مكتملة:
-- Employees
-- Employee Profile
-- Central and employee cashboxes
-- Cashbox transactions
-- Capital contribution
-- Employee capital allocation
-- Documents and sequences
-- Assets
-- Tests
+## تعريف اكتمال العملية
+القائمة → التفاصيل → الإنشاء/التعديل أو المراجعة → الاعتماد → السند → المعاينة → الطباعة/PDF → المشاركة → Audit → العكس/التصحيح عند السماح.
 
-## Phase 3 — Fuel Operations
-مكتملة:
-- Fuel tanks
-- Fuel purchases
-- Supply attachments
-- Manager approval
-- Fuel stock movements
-- Stock calculation
-- Landed cost per liter
-- Tests
-
-## Phase 4 — Farmers
-مكتملة:
-- Farmer profiles
-- Employee assignment
-- Farmer limits
-- Debt ceiling
-- Identity and contract attachments
-- Pending review
-- Approve / changes requested / reject
-- Quota history and manager changes
-- Tests
-
-## المرحلة التالية
-Phase 5:
-- صرف الديزل.
-- التسعير.
-- الدين.
-- التحصيل.
-- سند الصرف.
-- سند القبض.
-- كشف حساب المزارع.
-- حساب المتبقي من السقف.
-- منع الصرف للمزارع غير المعتمد.
-
-## الجودة
-GitHub Actions workflow موجود ويشغل:
+## CI
+يجب أن يكون GitHub Actions أخضرًا بعد:
 - compileall
-- migration generation
-- migration upgrade
-- pytest
+- flask db upgrade
+- pytest -q
 
-لم يتم الإعلان عن CI أخضر حتى يتم الحصول على نتيجة تشغيل موثقة من Actions.
+لا يتم اعتبار الفرع جاهزًا للدمج قبل التحقق من تشغيل CI الخاص به.

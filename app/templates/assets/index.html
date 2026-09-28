@@ -1,5 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-heading-row"><div class="page-heading"><h1>الأصول</h1><p>الخزانات والتجهيزات وكل أصل يملكه المشروع.</p></div><a class="primary-btn" href="{{url_for('assets.new')}}"><i class="bi bi-plus-lg"></i> أصل جديد</a></div>
-<div class="entity-list">{% for asset in assets %}<div class="entity-row"><div class="avatar"><i class="bi bi-building"></i></div><div class="entity-main"><strong>{{asset.name}}</strong><span>{{asset.asset_code}} · {{asset.category}}</span><small>{{asset.location or "بدون موقع"}}</small></div><div class="money-value">{{asset.acquisition_cost}}</div></div>{% else %}<div class="empty-state">لا توجد أصول بعد.</div>{% endfor %}</div>
+<div class="entity-list">{% for asset in assets %}<div class="entity-row"><div class="avatar"><i class="bi bi-building"></i></div><div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=asset.document_id)}}">{{asset.name}}</a></strong><span>{{asset.asset_code}} · {{asset.category}}</span><small>{{asset.location or "بدون موقع"}} · {{asset.status}}</small></div><div class="money-value">{{asset.acquisition_cost}}</div></div>{% else %}<div class="empty-state">لا توجد أصول بعد.</div>{% endfor %}</div>
 {% endblock %}
