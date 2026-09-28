@@ -16,11 +16,11 @@
 <div class="info-card"><strong>عكس السند</strong><p><a href="{{url_for('documents.view',document_id=source.id)}}">{{source.number}} · {{source.title}}</a></p></div>
 {% elif source %}
 <div class="entity-list">
-{% if source.amount is defined %}<div class="entity-row"><div class="entity-main"><strong>المبلغ</strong><span>{{source.amount}} {{project_settings.currency}}</span></div></div>{% endif %}
-{% if source.total_amount is defined %}<div class="entity-row"><div class="entity-main"><strong>الإجمالي</strong><span>{{source.total_amount}} {{project_settings.currency}}</span></div></div>{% endif %}
-{% if source.landed_cost is defined %}<div class="entity-row"><div class="entity-main"><strong>التكلفة الكاملة</strong><span>{{source.landed_cost}} {{project_settings.currency}}</span></div></div>{% endif %}
-{% if source.acquisition_cost is defined %}<div class="entity-row"><div class="entity-main"><strong>قيمة الأصل</strong><span>{{source.acquisition_cost}} {{project_settings.currency}}</span></div></div>{% endif %}
-{% if source.liters is defined %}<div class="entity-row"><div class="entity-main"><strong>الكمية</strong><span>{{source.liters}} لتر{% if source.drums is defined %} · {{source.drums}} دبة{% endif %}</span></div></div>{% endif %}
+{% if source.amount is defined %}<div class="entity-row"><div class="entity-main"><strong>المبلغ</strong><span>{{source.amount|clean_number}} {{project_settings.currency}}</span></div></div>{% endif %}
+{% if source.total_amount is defined %}<div class="entity-row"><div class="entity-main"><strong>الإجمالي</strong><span>{{source.total_amount|clean_number}} {{project_settings.currency}}</span></div></div>{% endif %}
+{% if source.landed_cost is defined %}<div class="entity-row"><div class="entity-main"><strong>التكلفة الكاملة</strong><span>{{source.landed_cost|clean_number}} {{project_settings.currency}}</span></div></div>{% endif %}
+{% if source.acquisition_cost is defined %}<div class="entity-row"><div class="entity-main"><strong>قيمة الأصل</strong><span>{{source.acquisition_cost|clean_number}} {{project_settings.currency}}</span></div></div>{% endif %}
+{% if source.liters is defined %}<div class="entity-row"><div class="entity-main"><strong>الكمية</strong><span>{{source.liters|clean_number}} لتر{% if source.drums is defined %} · {{source.drums|clean_number}} دبة{% endif %}</span></div></div>{% endif %}
 {% if source.employee is defined %}<div class="entity-row"><div class="entity-main"><strong>الموظف</strong><span>{{source.employee.display_name}}</span></div></div>{% endif %}
 {% if source.farmer is defined %}<div class="entity-row"><div class="entity-main"><strong>المزارع</strong><span>{{source.farmer.name}}</span></div></div>{% endif %}
 {% if source.name is defined and document.document_type=="AST" %}<div class="entity-row"><div class="entity-main"><strong>الأصل</strong><span>{{source.name}} · {{source.asset_code}}</span></div></div>{% endif %}
