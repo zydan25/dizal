@@ -3,7 +3,7 @@ from flask import current_app,flash,redirect,render_template,request,url_for,abo
 from flask_login import current_user
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import EmployeeProfile,Farmer,FarmerDocument,User
+from ...models import Document,EmployeeProfile,Farmer,FarmerDocument,FarmerPayment,FuelDispense,User
 from ...permissions import user_has_permission
 from ...services.audit import audit
 from ...services.files import save_attachment
@@ -118,7 +118,15 @@ def pending():
 def detail(farmer_id):
     farmer=Farmer.query.get_or_404(farmer_id)
     if not visible_farmer(farmer): abort(403)
-    return render_template("farmers/detail.html",farmer=farmer)
+    account=farmer_account(farmer)
+    dispenses=FuelDispense.query.filter_by(farmer_id=farmer.id).order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc()).limit(8).all()
+    payments=(FarmerPayment.query.join(Document,FarmerPayment.document_id==Document.id)
+              .filter(FarmerPayment.farmer_id==farmer.id,Document.status!="reversed")
+              .order_by(FarmerPayment.created_at.desc(),FarmerPayment.id.desc()).limit(8).all())
+    operations=[{"kind":"dispense","date":row.created_at,"row":row} for row in dispenses if row.status=="approved"]
+    operations += [{"kind":"payment","date":row.created_at,"row":row} for row in payments]
+    operations.sort(key=lambda item:item["date"],reverse=True)
+    return render_template("farmers/detail.html",farmer=farmer,account=account,operations=operations)
 
 @farmers_bp.get("/<int:farmer_id>/documents/<int:document_id>")
 @permission_required("farmers.view")
