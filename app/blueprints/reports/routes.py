@@ -1,5 +1,5 @@
 from datetime import date,time,datetime,timezone
-from flask import abort,render_template,request
+from flask import abort,redirect,render_template,request,url_for
 from flask_login import current_user
 from sqlalchemy import func
 from ...decorators import permission_required
@@ -21,6 +21,11 @@ def farmers_debts():
 @permission_required("reports.view")
 def employees():
     return render_template("reports/employees.html",rows=employee_performance())
+
+@reports_bp.get("/my-statement")
+@permission_required("employee.statement.view")
+def my_statement():
+    return redirect(url_for("reports.employee_statement",employee_id=current_user.id))
 
 @reports_bp.get("/employee/<int:employee_id>")
 @permission_required("reports.view")
