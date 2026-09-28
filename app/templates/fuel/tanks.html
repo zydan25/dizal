@@ -28,9 +28,9 @@
 </a>
 <div class="entity-card-actions">
   <a class="small-icon-btn" href="{{url_for('fuel.tank_detail',tank_id=tank.id)}}" title="التقرير" aria-label="التقرير"><i class="bi bi-bar-chart"></i></a>
-  <a class="small-icon-btn" href="{{url_for('fuel.edit_tank',tank_id=tank.id)}}" title="تعديل" aria-label="تعديل"><i class="bi bi-pencil-square"></i></a>
+  {% if current_user.has_role("manager") %}<a class="small-icon-btn" href="{{url_for('fuel.edit_tank',tank_id=tank.id)}}" title="تعديل" aria-label="تعديل"><i class="bi bi-pencil-square"></i></a>{% endif %}
   <div class="dropdown"><button class="small-icon-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="المزيد"><i class="bi bi-three-dots"></i></button>
-    <ul class="dropdown-menu dropdown-menu-end shadow-sm"><li><a class="dropdown-item" href="{{url_for('fuel.tank_detail',tank_id=tank.id)}}"><i class="bi bi-eye me-2"></i>التفاصيل والتقرير</a></li><li><a class="dropdown-item" href="{{url_for('fuel.edit_tank',tank_id=tank.id)}}"><i class="bi bi-pencil me-2"></i>تعديل الخزان</a></li></ul>
+    <ul class="dropdown-menu dropdown-menu-end shadow-sm"><li><a class="dropdown-item" href="{{url_for('fuel.tank_detail',tank_id=tank.id)}}"><i class="bi bi-eye me-2"></i>التفاصيل والتقرير</a></li>{% if current_user.has_role("manager") %}<li><a class="dropdown-item" href="{{url_for('fuel.edit_tank',tank_id=tank.id)}}"><i class="bi bi-pencil me-2"></i>تعديل الخزان</a></li>{% endif %}</ul>
   </div>
 </div>
 </article>
