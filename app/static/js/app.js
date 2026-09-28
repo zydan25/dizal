@@ -150,6 +150,7 @@ const installHelp=document.getElementById("install-help");
 const installReadyCard=document.getElementById("install-ready-card");
 const installReadyTitle=document.getElementById("install-ready-title");
 const installReadyText=document.getElementById("install-ready-text");
+const installConfirmText=document.getElementById("install-confirm-text");
 const isStandalone=()=>window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone===true;
 const isIos=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
 const isAndroid=()=>/android/i.test(navigator.userAgent);
@@ -167,10 +168,12 @@ function refreshInstallButtons(){
     if(deferredInstallPrompt){
       installReadyTitle.textContent="التثبيت جاهز";
       installReadyText.textContent="اضغط «تثبيت الآن» لفتح نافذة التثبيت الرسمية.";
+      if(installConfirmText)installConfirmText.textContent="تثبيت الآن";
     }
   }
 }
 function renderInstallHelp(){
+  if(installConfirmText)installConfirmText.textContent=deferredInstallPrompt?"تثبيت الآن":"عرض التعليمات";
   if(!installHelp)return;
   if(deferredInstallPrompt){
     installHelp.innerHTML='<div class="install-help-ready"><i class="bi bi-check-circle-fill"></i><span>المتصفح جهّز التثبيت لهذا الجهاز. يمكنك تثبيت Dizal مباشرة.</span></div>';
