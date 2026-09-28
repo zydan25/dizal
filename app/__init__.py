@@ -1,4 +1,5 @@
 from decimal import Decimal,InvalidOperation
+import math
 from flask import Flask,render_template,redirect,request,url_for
 from .config import Config
 from .extensions import db,migrate,csrf,security
@@ -14,13 +15,24 @@ def create_app(config_object=None):
         if value is None or value == "": return ""
         try:
             number=Decimal(str(value).replace(",",""))
+            if not number.is_finite(): return value
             text=format(number,"f")
             if "." in text:
                 text=text.rstrip("0").rstrip(".")
             return text or "0"
         except (InvalidOperation,ValueError,TypeError):
             return value
+
+    # Apply number cleanup globally at render time so pages that output
+    # Decimal/float values directly do not expose trailing decimal zeroes.
+    def display_finalize(value):
+        if isinstance(value,(Decimal,float)) and not isinstance(value,bool):
+            if isinstance(value,float) and not math.isfinite(value): return value
+            return clean_number(value)
+        return value
+
     app.jinja_env.filters["clean_number"]=clean_number
+    app.jinja_env.finalize=display_finalize
 
     db.init_app(app)
     migrate.init_app(app,db)
