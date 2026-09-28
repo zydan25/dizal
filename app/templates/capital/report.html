@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row report-no-print"><div class="page-heading"><h1>تقرير رأس المال</h1><p>{% if period=="week" %}هذا الأسبوع{% elif period=="month" %}هذا الشهر{% else %}كامل الحركات{% endif %}{% if start %} · {{start}} إلى {{end}}{% endif %}</p></div><button class="primary-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i><span>طباعة التقرير</span></button></div>
+<div class="formal-report finance-report"><div class="formal-report-head"><div><small>تقرير مالي</small><h1>{{project_settings.project_name}}</h1><strong>حركة رأس المال</strong></div><div class="report-number">الفترة<br>{% if start %}<b>{{start}}</b><br>{{end}}{% else %}<b>كل الفترات</b>{% endif %}</div></div>
+<div class="report-summary-grid"><div><span>الصندوق الرئيسي</span><b>{{central_balance|clean_number}}</b><small>{{project_settings.currency}}</small></div><div><span>إضافات رأس المال</span><b>{{total_in|clean_number}}</b><small>{{project_settings.currency}}</small></div><div><span>تسليم للموظفين</span><b>{{total_out|clean_number}}</b><small>{{project_settings.currency}}</small></div><div><span>صافي الفترة</span><b>{{(total_in-total_out)|clean_number}}</b><small>{{project_settings.currency}}</small></div></div>
+<table class="formal-table"><thead><tr><th>التاريخ</th><th>السند</th><th>الحركة</th><th>البيان</th><th>المبلغ</th></tr></thead><tbody>
+{% for row in contributions %}<tr><td>{{row.contribution_date}}</td><td>{{row.document.number if row.document else "CAP"}}</td><td>إضافة رأس مال</td><td>{{row.source or "بدون مصدر"}}</td><td>{{row.amount|clean_number}}</td></tr>{% endfor %}
+{% for row in allocations %}<tr><td>{{row.allocation_date}}</td><td>{{row.document.number if row.document else "TRF"}}</td><td>تسليم رأس مال</td><td>{{row.employee.display_name}}{% if row.notes %} · {{row.notes}}{% endif %}</td><td>{{row.amount|clean_number}}</td></tr>{% endfor %}
+{% if not contributions and not allocations %}<tr><td colspan="5">لا توجد حركات.</td></tr>{% endif %}
+</tbody></table><div class="formal-signatures"><span>إعداد التقرير<br>________________</span><span>اعتماد المدير<br>________________</span></div></div>
+{% endblock %}

@@ -1,55 +1,76 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-heading-row">
-  <div class="page-heading"><h1>رأس المال</h1><p>الإضافة والتسليم من أزرار واضحة، أما العمليات فتظهر كبطاقات وسندات قابلة للمراجعة.</p></div>
+  <div class="page-heading"><h1>رأس المال</h1><p>الإضافة والتسليم والحركات مع تقرير الفترة، مع بقاء التصحيح المالي عبر عكس السند.</p></div>
   <div class="header-actions">
+    {% if current_user.has_role("manager") %}
     <button class="primary-btn" type="button" data-bs-toggle="modal" data-bs-target="#capitalAdd"><i class="bi bi-plus-lg"></i><span>إضافة رأس مال</span></button>
     <button class="secondary-btn" type="button" data-bs-toggle="modal" data-bs-target="#capitalAllocate"><i class="bi bi-send"></i><span>تسليم لموظف</span></button>
+    {% endif %}
+    <a class="secondary-btn" href="{{url_for('capital.report',period=period)}}"><i class="bi bi-printer"></i><span>تقرير وطباعة</span></a>
   </div>
 </div>
 
-<div class="balance-card"><div><span>الصندوق الرئيسي</span><strong>{{central_balance|clean_number}}</strong><small>{{project_settings.currency}}</small></div><i class="bi bi-bank"></i></div>
+<div class="balance-card compact-balance finance-balance"><div><span>الصندوق الرئيسي</span><strong>{{central_balance|clean_number}}</strong><small>{{project_settings.currency}}</small></div><i class="bi bi-bank"></i></div>
 <div class="stats-grid page-stats-compact">
-<div class="stat-card"><i class="bi bi-piggy-bank"></i><div><small>إجمالي رأس المال</small><strong>{{totals.contributed|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-<div class="stat-card"><i class="bi bi-send"></i><div><small>المسلم للموظفين</small><strong>{{totals.allocated|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-<div class="stat-card"><i class="bi bi-wallet2"></i><div><small>في صناديق الموظفين</small><strong>{{totals.employee_cash|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-<div class="stat-card"><i class="bi bi-bank"></i><div><small>غير مخصص</small><strong>{{totals.unallocated|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>إجمالي رأس المال</small><strong>{{totals.contributed|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>المسلّم للموظفين</small><strong>{{totals.allocated|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>داخل الفترة</small><strong>{{totals.period_contributed|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>مسلّم الفترة</small><strong>{{totals.period_allocated|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
 </div>
 
-<div class="section-title"><h2>عمليات رأس المال</h2><span>فتح السند للتفاصيل أو العكس</span></div>
-<div class="entity-list">
+<div class="finance-tools">
+  <div class="operation-search"><i class="bi bi-search"></i><input id="capital-search" type="search" placeholder="بحث فوري في المصدر أو الموظف أو السند..." autocomplete="off"></div>
+  <div class="filter-row compact-filter-row">
+    <a class="filter-chip {% if period=='all' %}active{% endif %}" href="{{url_for('capital.index',period='all')}}">الكل</a>
+    <a class="filter-chip {% if period=='week' %}active{% endif %}" href="{{url_for('capital.index',period='week')}}">هذا الأسبوع</a>
+    <a class="filter-chip {% if period=='month' %}active{% endif %}" href="{{url_for('capital.index',period='month')}}">هذا الشهر</a>
+  </div>
+</div>
+
+<div class="section-title"><h2>حركات رأس المال</h2><span id="capital-count">{{(contributions|length + allocations|length)|clean_number}} حركة</span></div>
+<div class="entity-list" id="capital-items">
 {% for row in contributions %}
-<div class="entity-row"><div class="avatar"><i class="bi bi-bank"></i></div><div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number if row.document else "CAP"}}</a></strong><span>{{row.source or "رأس مال"}}</span><small>{{row.contribution_date}} · {{row.status}}</small></div><div class="money-value">{{row.amount|clean_number}}</div></div>
+<div class="entity-row finance-transaction capital-item" data-search="{{(row.source or '') ~ ' رأس مال ' ~ (row.document.number if row.document else '') ~ ' ' ~ (row.amount|string)|lower}}">
+  <div class="avatar finance-in"><i class="bi bi-bank"></i></div>
+  <div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number if row.document else "CAP"}}</a> · إضافة رأس مال</strong><span>{{row.source or "بدون مصدر"}}</span><small>{{row.contribution_date}} · {{row.status}}</small></div>
+  <div class="money-value">{{row.amount|clean_number}}</div>
+  <div class="entity-actions">
+    {% if current_user.has_role("manager") %}<a class="small-icon-btn" href="{{url_for('capital.edit_contribution',contribution_id=row.id)}}" title="تعديل البيانات" aria-label="تعديل البيانات"><i class="bi bi-pencil-square"></i></a>{% endif %}
+    {% if row.document_id %}<a class="small-icon-btn" href="{{url_for('documents.print_document',document_id=row.document_id)}}" target="_blank" title="طباعة السند" aria-label="طباعة السند"><i class="bi bi-printer"></i></a>{% endif %}
+  </div>
+</div>
 {% endfor %}
 {% for row in allocations %}
-<div class="entity-row"><div class="avatar"><i class="bi bi-arrow-left-right"></i></div><div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number if row.document else "TRF"}}</a></strong><span>{{row.employee.display_name}} · تسليم رأس مال</span><small>{{row.allocation_date}} · افتح السند للمراجعة أو العكس</small></div><div class="money-value">{{row.amount}}</div></div>
+<div class="entity-row finance-transaction capital-item" data-search="{{(row.employee.display_name ~ ' تسليم رأس مال ' ~ (row.document.number if row.document else '') ~ ' ' ~ (row.amount|string))|lower}}">
+  <div class="avatar finance-out"><i class="bi bi-arrow-left-right"></i></div>
+  <div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number if row.document else "TRF"}}</a> · تسليم رأس مال</strong><span>{{row.employee.display_name}} · {{row.notes or "بدون بيان"}}</span><small>{{row.allocation_date}}</small></div>
+  <div class="money-value">{{row.amount|clean_number}}</div>
+  <div class="entity-actions">
+    {% if current_user.has_role("manager") %}<a class="small-icon-btn" href="{{url_for('capital.edit_allocation',allocation_id=row.id)}}" title="تعديل البيان" aria-label="تعديل البيان"><i class="bi bi-pencil-square"></i></a>{% endif %}
+    {% if row.document_id %}<a class="small-icon-btn" href="{{url_for('documents.print_document',document_id=row.document_id)}}" target="_blank" title="طباعة السند" aria-label="طباعة السند"><i class="bi bi-printer"></i></a>{% endif %}
+  </div>
+</div>
 {% endfor %}
-{% if not contributions and not allocations %}<div class="empty-state"><i class="bi bi-bank"></i><strong>لا توجد عمليات</strong><span>أضف رأس مال أو سلّمه لموظف من الأزرار أعلاه.</span></div>{% endif %}
+{% if not contributions and not allocations %}<div class="empty-state"><i class="bi bi-bank"></i><strong>لا توجد عمليات</strong><span>غيّر الفترة أو أضف أول حركة لرأس المال.</span></div>{% endif %}
 </div>
 
-<div class="modal fade" id="capitalAdd" tabindex="-1" aria-hidden="true">
-<div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+{% if current_user.has_role("manager") %}
+<div class="modal fade" id="capitalAdd" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
 <div class="modal-header"><h5 class="modal-title">إضافة رأس مال</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button></div>
-<form method="post" action="{{url_for('capital.add')}}" class="mobile-form card-form">
-<div class="modal-body">
-<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-<label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required autofocus></label>
-<label>المصدر<input name="source" placeholder="رأس مال المستثمر"></label>
-<label>البيان<textarea name="notes" rows="2"></textarea></label>
-</div><div class="modal-footer"><button type="button" class="secondary-btn" data-bs-dismiss="modal">إلغاء</button><button class="primary-btn"><i class="bi bi-check2"></i><span>تسجيل</span></button></div>
-</form>
+<form method="post" action="{{url_for('capital.add')}}" class="mobile-form card-form"><div class="modal-body"><input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required></label><label>المصدر<input name="source" placeholder="رأس مال المستثمر"></label><label>البيان<textarea name="notes" rows="2"></textarea></label>
+</div><div class="modal-footer"><button type="button" class="secondary-btn" data-bs-dismiss="modal">إلغاء</button><button class="primary-btn"><i class="bi bi-check2"></i><span>تسجيل</span></button></div></form>
 </div></div></div>
-
-<div class="modal fade" id="capitalAllocate" tabindex="-1" aria-hidden="true">
-<div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+<div class="modal fade" id="capitalAllocate" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
 <div class="modal-header"><h5 class="modal-title">تسليم رأس مال للموظف</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button></div>
-<form method="post" action="{{url_for('capital.allocate')}}" class="mobile-form card-form">
-<div class="modal-body">
-<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-<label>الموظف<select name="employee_id" required><option value="">اختر موظفًا</option>{% for e in employees_for_capital %}<option value="{{e.id}}">{{e.display_name}}</option>{% endfor %}</select></label>
-<label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required></label>
-<label>البيان<textarea name="notes" rows="2"></textarea></label>
-</div><div class="modal-footer"><button type="button" class="secondary-btn" data-bs-dismiss="modal">إلغاء</button><button class="primary-btn"><i class="bi bi-send"></i><span>تسجيل التسليم</span></button></div>
-</form>
+<form method="post" action="{{url_for('capital.allocate')}}" class="mobile-form card-form"><div class="modal-body"><input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<label>الموظف<select name="employee_id" required><option value="">اختر موظفًا</option>{% for e in employees_for_capital %}<option value="{{e.id}}">{{e.display_name}}</option>{% endfor %}</select></label><label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required></label><label>البيان<textarea name="notes" rows="2"></textarea></label>
+</div><div class="modal-footer"><button type="button" class="secondary-btn" data-bs-dismiss="modal">إلغاء</button><button class="primary-btn"><i class="bi bi-send"></i><span>تسجيل التسليم</span></button></div></form>
 </div></div></div>
+{% endif %}
+
+<script>
+(function(){const input=document.getElementById("capital-search"),items=[...document.querySelectorAll(".capital-item")],count=document.getElementById("capital-count");function apply(){const q=(input?.value||"").trim().toLocaleLowerCase();let n=0;items.forEach(x=>{const show=!q||(x.dataset.search||"").toLocaleLowerCase().includes(q);x.classList.toggle("d-none",!show);if(show)n++;});if(count)count.textContent=n+" حركة";}input?.addEventListener("input",apply);apply();})();
+</script>
 {% endblock %}

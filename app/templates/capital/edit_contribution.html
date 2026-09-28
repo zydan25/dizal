@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row"><div class="page-heading"><h1>تعديل رأس المال</h1><p>تعديل المصدر والبيان فقط؛ تعديل المبلغ يتم عبر عكس السند وتصحيح العملية.</p></div><a class="secondary-btn" href="{{url_for('capital.index')}}"><i class="bi bi-arrow-right"></i><span>رأس المال</span></a></div>
+<div class="info-card finance-edit-summary"><div class="detail-line"><strong>السند</strong><span>{{row.document.number if row.document else "CAP"}}</span></div><div class="detail-line"><strong>المبلغ</strong><span>{{row.amount|clean_number}} {{project_settings.currency}}</span></div><div class="detail-line"><strong>التاريخ</strong><span>{{row.contribution_date}}</span></div></div>
+<form method="post" class="mobile-form card-form"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><label>المصدر<input name="source" value="{{row.source or ''}}"></label><label>البيان<textarea name="notes" rows="4">{{row.notes or ''}}</textarea></label><button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ التعديل</span></button></form>
+{% endblock %}

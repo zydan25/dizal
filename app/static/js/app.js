@@ -123,7 +123,70 @@ function installNumberWords(){
 window.DizalNumberWords={installNumberWords,arNumberWords,unitWords};
 installNumberWords();
 
+function dizalToast(message,type){
+  const old=document.querySelector(".dizal-toast"); old?.remove();
+  const toast=document.createElement("div");
+  toast.className="dizal-toast "+(type||"info");
+  toast.innerHTML='<i class="bi '+(type==="success"?"bi-check-circle":"bi-wifi-off")+'"></i><span></span>';
+  toast.querySelector("span").textContent=message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(()=>toast.classList.add("show"));
+  setTimeout(()=>{toast.classList.remove("show");setTimeout(()=>toast.remove(),220);},4200);
+}
+const offlineBanner=document.getElementById("offline-banner");
+function updateNetworkState(){
+  const offline=!navigator.onLine;
+  if(offlineBanner)offlineBanner.hidden=!offline;
+  document.documentElement.classList.toggle("is-offline",offline);
+}
+window.addEventListener("online",()=>{updateNetworkState();dizalToast("عاد الاتصال بالإنترنت ويمكن تنفيذ العمليات الآن.","success");});
+window.addEventListener("offline",()=>{updateNetworkState();dizalToast("انقطع الاتصال بالإنترنت. لن يتم إرسال أي عملية حتى يعود الاتصال.","info");});
+updateNetworkState();
+
+let deferredInstallPrompt=null;
+const installButtons=[...document.querySelectorAll("[data-install-app]")];
+const isStandalone=()=>window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone===true;
+const isIos=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
+function refreshInstallButtons(){
+  const installed=isStandalone();
+  installButtons.forEach(btn=>{btn.hidden=installed && !isIos();});
+}
+window.addEventListener("beforeinstallprompt",event=>{
+  event.preventDefault();
+  deferredInstallPrompt=event;
+  refreshInstallButtons();
+});
+window.addEventListener("appinstalled",()=>{
+  deferredInstallPrompt=null;
+  installButtons.forEach(btn=>btn.hidden=true);
+  dizalToast("تم تثبيت Dizal كتطبيق على الشاشة.","success");
+});
+installButtons.forEach(btn=>btn.addEventListener("click",async()=>{
+  if(isStandalone()){dizalToast("Dizal مثبت كتطبيق بالفعل.");return;}
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    try{await deferredInstallPrompt.userChoice;}catch(_){}
+    deferredInstallPrompt=null;
+    refreshInstallButtons();
+    return;
+  }
+  if(isIos()){
+    dizalToast("في iPhone/iPad: افتح مشاركة Safari ثم اختر إضافة إلى الشاشة الرئيسية.");
+    return;
+  }
+  dizalToast("التثبيت غير متاح من المتصفح الحالي الآن. افتح قائمة المتصفح وابحث عن «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».");
+});
+refreshInstallButtons();
+
+document.addEventListener("submit",event=>{
+  if(navigator.onLine!==false)return;
+  const form=event.target;
+  if(form.matches('form[action*="/auth/logout"]'))return;
+  event.preventDefault();
+  dizalToast("لا يوجد اتصال بالإنترنت. أعد المحاولة بعد عودة الاتصال.");
+});
+
 if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js?v=20260928-8",{updateViaCache:"none"}));
+  window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js?v=20260928-10",{updateViaCache:"none"}));
 }
 })();

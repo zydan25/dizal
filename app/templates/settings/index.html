@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>إعدادات المشروع</h1><p>إدارة القواعد والثيم وهوية السندات من شاشة واحدة.</p></div>
+<div class="page-heading-row"><div class="page-heading"><h1>إعدادات المشروع</h1><p>إدارة القواعد والثيم وهوية السندات من شاشة واحدة.</p></div><button class="secondary-btn install-app-btn" type="button" data-install-app><i class="bi bi-phone"></i><span>تثبيت التطبيق</span></button></div>
 <form method="post" enctype="multipart/form-data" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <div class="section-title"><h2>هوية المشروع</h2><span>الاسم والمعلومات</span></div>
@@ -37,6 +37,8 @@ const select=document.getElementById("color_preset");
 document.querySelectorAll("[data-palette]").forEach(btn=>btn.addEventListener("click",()=>{select.value=btn.dataset.palette;select.dispatchEvent(new Event("change"));}));
 })();
 </script>
+<div class="section-title"><h2>التطبيق</h2><span>تثبيت واستخدام دون اتصال</span></div>
+<div class="info-card install-card"><div><strong>ثبّت Dizal على الشاشة الرئيسية</strong><p>يعمل كتطبيق مستقل بواجهة أنظف. وعند انقطاع الإنترنت سيظهر تنبيه بدل إرسال عمليات الحفظ.</p></div><button class="secondary-btn" type="button" data-install-app><i class="bi bi-download"></i><span>تثبيت الآن</span></button></div>
 <div class="section-title"><h2>السندات</h2><span>ترويسة وتذييل</span></div>
 <label>ترويسة السند<textarea name="document_header" rows="2">{{settings.document_header or ''}}</textarea></label>
 <label>تذييل السند<textarea name="document_footer" rows="2">{{settings.document_footer or ''}}</textarea></label>

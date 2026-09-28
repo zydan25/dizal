@@ -1,7 +1,64 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row"><div class="page-heading"><h1>{{box.name}}</h1><p>الرصيد الناتج من الحركات.</p></div><a class="secondary-btn" href="{{url_for('cashbox.index')}}"><i class="bi bi-arrow-right"></i> كل الصناديق</a></div>
-<div class="balance-card"><span>الرصيد الحالي</span><strong>{{balance}}</strong><small>{{project_settings.currency}}</small></div>
-<div class="section-title"><h2>آخر 100 حركة</h2><span>كل حركة مرتبطة بسندها عند وجوده</span></div>
-<div class="entity-list">{% for tx in transactions %}<div class="entity-row"><div class="avatar"><i class="bi {% if tx.direction=='IN' %}bi-arrow-down-left{% else %}bi-arrow-up-right{% endif %}"></i></div><div class="entity-main"><strong>{% if tx.document_id %}<a href="{{url_for('documents.view',document_id=tx.document_id)}}">{{tx.transaction_type}}</a>{% else %}{{tx.transaction_type}}{% endif %}</strong><span>{{tx.description or "—"}}</span><small>{{tx.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div><div class="money-value {% if tx.direction=='OUT' %}negative{% endif %}">{% if tx.direction=='OUT' %}-{% endif %}{{tx.amount}}</div></div>{% else %}<div class="empty-state">لا توجد حركات.</div>{% endfor %}</div>
+<div class="page-heading-row">
+  <div class="page-heading"><h1>{{box.name}}</h1><p>الرصيد الحالي محسوب من جميع الحركات المعتمدة.</p></div>
+  <div class="header-actions">
+    <a class="secondary-btn" href="{{url_for('cashbox.index')}}"><i class="bi bi-arrow-right"></i><span>الصناديق</span></a>
+    <a class="secondary-btn" href="{{url_for('cashbox.report',cashbox_id=box.id,period=period)}}"><i class="bi bi-printer"></i><span>تقرير وطباعة</span></a>
+  </div>
+</div>
+
+<div class="balance-card compact-balance finance-balance">
+  <div><span>الرصيد الحالي</span><strong>{{balance|clean_number}}</strong><small>{{project_settings.currency}}</small></div>
+  <i class="bi bi-wallet2"></i>
+</div>
+
+<div class="stats-grid page-stats-compact">
+  <div class="stat-card"><div><small>داخل الفترة</small><strong>{{total_in|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>خارج الفترة</small><strong>{{total_out|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>صافي الفترة</small><strong>{{(total_in-total_out)|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>عدد الحركات</small><strong>{{transactions|length|clean_number}}</strong><span>حركة</span></div></div>
+</div>
+
+<div class="finance-tools">
+  <div class="operation-search"><i class="bi bi-search"></i><input id="cashbox-search" type="search" placeholder="بحث فوري في رقم السند أو البيان..." autocomplete="off"></div>
+  <div class="filter-row compact-filter-row">
+    <a class="filter-chip {% if period=='all' %}active{% endif %}" href="{{url_for('cashbox.detail',cashbox_id=box.id,period='all')}}">الكل</a>
+    <a class="filter-chip {% if period=='week' %}active{% endif %}" href="{{url_for('cashbox.detail',cashbox_id=box.id,period='week')}}">هذا الأسبوع</a>
+    <a class="filter-chip {% if period=='month' %}active{% endif %}" href="{{url_for('cashbox.detail',cashbox_id=box.id,period='month')}}">هذا الشهر</a>
+  </div>
+</div>
+
+<div class="section-title"><h2>الحركات</h2><span id="cashbox-count">{{transactions|length|clean_number}} حركة</span></div>
+<div class="entity-list" id="cashbox-transactions">
+{% for tx in transactions %}
+<div class="entity-row finance-transaction" data-search="{{(tx.transaction_type ~ ' ' ~ (tx.description or '') ~ ' ' ~ (tx.document.number if tx.document else '') ~ ' ' ~ tx.amount|string)|lower}}">
+  <div class="avatar {% if tx.direction=='IN' %}finance-in{% else %}finance-out{% endif %}"><i class="bi {% if tx.direction=='IN' %}bi-arrow-down-left{% else %}bi-arrow-up-right{% endif %}"></i></div>
+  <div class="entity-main">
+    <strong>{% if tx.document_id %}<a href="{{url_for('documents.view',document_id=tx.document_id)}}">{{tx.document.number}}</a>{% endif %} {{tx.transaction_type}}</strong>
+    <span>{{tx.description or "بدون بيان"}}</span>
+    <small>{{tx.created_at.strftime("%Y-%m-%d %H:%M")}}{% if tx.posted_by %} · {{tx.posted_by.display_name}}{% endif %}</small>
+  </div>
+  <div class="money-value {% if tx.direction=='OUT' %}negative{% endif %}">{% if tx.direction=='OUT' %}-{% endif %}{{tx.amount|clean_number}}</div>
+  {% if current_user.has_role("manager") %}
+  <div class="entity-actions">
+    <a class="small-icon-btn" href="{{url_for('cashbox.edit_transaction',cashbox_id=box.id,transaction_id=tx.id,period=period)}}" title="تعديل البيان" aria-label="تعديل البيان"><i class="bi bi-pencil-square"></i></a>
+    {% if tx.document_id %}<a class="small-icon-btn" href="{{url_for('documents.print_document',document_id=tx.document_id)}}" target="_blank" title="طباعة السند" aria-label="طباعة السند"><i class="bi bi-printer"></i></a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% else %}<div class="empty-state"><i class="bi bi-wallet2"></i><strong>لا توجد حركات</strong><span>جرّب فترة أخرى أو ابحث ببيان مختلف.</span></div>{% endfor %}
+</div>
+
+{% if current_user.has_role("manager") %}
+<div class="info-card finance-note"><i class="bi bi-info-circle"></i> المبلغ واتجاه الحركة لا يُعدلان مباشرة حفاظًا على السجل المحاسبي؛ عند الخطأ استخدم عكس السند ثم أنشئ الحركة الصحيحة.</div>
+{% endif %}
+
+<script>
+(function(){
+ const input=document.getElementById("cashbox-search"),items=[...document.querySelectorAll(".finance-transaction")],count=document.getElementById("cashbox-count");
+ function apply(){const q=(input?.value||"").trim().toLocaleLowerCase();let n=0;items.forEach(x=>{const show=!q||(x.dataset.search||"").includes(q);x.classList.toggle("d-none",!show);if(show)n++;});if(count)count.textContent=n+" حركة";}
+ input?.addEventListener("input",apply);apply();
+})();
+</script>
 {% endblock %}

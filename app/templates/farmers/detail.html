@@ -19,32 +19,38 @@
   </div>
 </div>
 
-<div class="farmer-detail-hero">
-  <div><small>الموظف المسؤول</small><strong>{{farmer.assigned_employee.display_name}}</strong><span>{{farmer.assigned_employee.phone or ""}}</span></div>
-  <div class="farmer-detail-avatar"><i class="bi bi-person-fill"></i></div>
-</div>
-
-<div class="stats-grid farmer-overview page-stats-compact">
+<div class="stats-grid farmer-overview page-stats-compact farmer-detail-compact-stats">
   <div class="stat-card"><div><small>السقف</small><strong>{{farmer.quota_drums|clean_number}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><div><small>صرف الديزل</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><div><small>المتبقي للسحب</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>المسحوب</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>المتبقي</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div></div>
   <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الدين</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><div><small>حد الدين المتبقي</small><strong>{{account.remaining_credit_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>حد الدين</small><strong>{{account.remaining_credit_drums|clean_number}}</strong><span>دبة</span></div></div>
   <div class="stat-card"><div><small>عمر الدين</small><strong>{{account.debt_age_days|clean_number}}</strong><span>يوم</span></div></div>
 </div>
 
-<div class="action-row">
+<div class="action-row farmer-detail-actions">
   {% if farmer.status in ["approved","suspended"] %}<a class="primary-btn" href="{{url_for('sales.dispense')}}?farmer_id={{farmer.id}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>{% endif %}
-  {% if farmer.status in ["approved","suspended"] %}<a class="secondary-btn" href="{{url_for('sales.payment')}}?farmer_id={{farmer.id}}"><i class="bi bi-cash-coin"></i><span>دفع</span></a>{% endif %}
+  {% if farmer.status in ["approved","suspended"] %}<a class="secondary-btn farmer-pay-btn" href="{{url_for('sales.payment')}}?farmer_id={{farmer.id}}"><i class="bi bi-cash-coin"></i><span>سداد</span></a>{% endif %}
   <a class="secondary-btn" href="{{url_for('sales.farmer_account_view',farmer_id=farmer.id)}}"><i class="bi bi-file-earmark-text"></i><span>كشف الحساب</span></a>
+  <button class="secondary-btn print-action" type="button" onclick="window.print()"><i class="bi bi-printer"></i><span>طباعة</span></button>
+  {% if current_user.has_role("manager") %}<a class="secondary-btn quota-action" href="#quota-edit"><i class="bi bi-sliders"></i><span>تعديل الحد الأعلى</span></a>{% endif %}
   {% if current_user.has_role("manager") %}<a class="secondary-btn" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil"></i><span>تعديل الملف</span></a>{% endif %}
 </div>
 
-<div class="section-title"><h2>آخر المعاملات</h2><span>{{operations|length|clean_number}} حركة</span></div>
-<div class="operation-card-list">
+<div class="section-title"><h2>آخر العمليات</h2><span id="farmer-operations-count">{{operations|length|clean_number}} حركة</span></div>
+<div class="operation-tools" id="farmer-operation-tools">
+  <div class="operation-search"><i class="bi bi-search"></i><input id="farmer-operation-search" type="search" placeholder="بحث فوري في العمليات..." autocomplete="off"></div>
+  <div class="filter-row compact-filter-row">
+    <button type="button" class="filter-chip active" data-operation-filter="all">الكل</button>
+    <button type="button" class="filter-chip" data-operation-filter="week">هذا الأسبوع</button>
+    <button type="button" class="filter-chip" data-operation-filter="month">هذا الشهر</button>
+  </div>
+</div>
+<div class="operation-card-list" id="farmer-operations-list">
 {% for item in operations %}
 {% set row=item.row %}
-<a class="operation-card" href="{{url_for('documents.view',document_id=row.document_id)}}">
+<a class="operation-card farmer-operation-item" href="{{url_for('documents.view',document_id=row.document_id)}}"
+   data-kind="{{item.kind}}" data-date="{{row.created_at.isoformat()}}" data-search="{{(row.document.number ~ ' ' ~ ('سداد' if item.kind=='payment' else 'صرف ديزل') ~ ' ' ~ (row.amount|string if item.kind=='payment' else row.drums|string) ~ ' ' ~ row.created_at.strftime('%Y-%m-%d'))|lower}}">
   <div class="operation-icon {% if item.kind=="payment" %}operation-payment{% else %}operation-dispense{% endif %}"><i class="bi {% if item.kind=="payment" %}bi-cash-coin{% else %}bi-droplet-fill{% endif %}"></i></div>
   <div class="operation-main">
     <strong>{% if item.kind=="payment" %}سداد{% else %}صرف ديزل{% endif %} · {{row.document.number}}</strong>
@@ -54,7 +60,7 @@
   <div class="operation-value">{% if item.kind=="payment" %}<b>{{row.amount|clean_number}}</b><small>تحصيل</small>{% else %}<b>{{row.drums|clean_number}}</b><small>دبة</small>{% endif %}</div>
   <i class="bi bi-chevron-left"></i>
 </a>
-{% else %}<div class="empty-state"><i class="bi bi-journal-x"></i><strong>لا توجد معاملات</strong><span>ستظهر السحبيات والتحصيلات هنا.</span></div>{% endfor %}
+{% else %}<div class="empty-state" id="farmer-no-operations"><i class="bi bi-journal-x"></i><strong>لا توجد معاملات</strong><span>ستظهر السحبيات والتحصيلات هنا.</span></div>{% endfor %}
 </div>
 
 <div class="section-title"><h2>بيانات المزارع</h2><span>الملف</span></div>
@@ -65,16 +71,13 @@
 </div>
 
 {% if current_user.has_role("manager") %}
-<div class="section-title"><h2>السقف وحد الدين</h2><span>التعديل عند الطلب</span></div>
-<button class="secondary-btn quota-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#quota-edit" aria-expanded="false" aria-controls="quota-edit"><i class="bi bi-pencil"></i><span>تعديل السقف</span></button>
-<div class="collapse" id="quota-edit">
-<form method="post" action="{{url_for('farmers.quota',farmer_id=farmer.id)}}" class="mobile-form card-form">
+<div class="section-title" id="quota-edit"><h2>السقف وحد الدين</h2><span>تعديل مباشر مع تسجيل السبب</span></div>
+<form method="post" action="{{url_for('farmers.quota',farmer_id=farmer.id)}}" class="mobile-form card-form farmer-quota-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-<div class="two-col"><label>السقف بالدبة<input name="quota_drums" type="number" step="0.1" value="{{farmer.quota_drums|clean_number}}"></label><label>حد الدين بالدبة<input name="credit_limit_drums" type="number" step="0.1" value="{{farmer.credit_limit_drums}}"></label></div>
-<label>سبب التعديل<textarea name="reason" rows="2" required></textarea></label>
-<button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ السقف</span></button>
+<div class="two-col"><label>السقف بالدبة<input name="quota_drums" type="number" step="0.1" value="{{farmer.quota_drums|clean_number}}"></label><label>حد الدين بالدبة<input name="credit_limit_drums" type="number" step="0.1" value="{{farmer.credit_limit_drums|clean_number}}"></label></div>
+<label>سبب التعديل<textarea name="reason" rows="2" required placeholder="سبب رفع أو خفض الحد"></textarea></label>
+<button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ الحد الأعلى</span></button>
 </form>
-</div>
 {% endif %}
 
 <div class="section-title"><h2>المرفقات</h2><span>{{farmer.documents|length}} ملف</span></div>
@@ -93,4 +96,41 @@
 <button class="secondary-danger" name="action" value="reject">رفض الطلب</button>
 </form>
 {% endif %}
+
+<script>
+(function(){
+  const search=document.getElementById("farmer-operation-search");
+  const items=[...document.querySelectorAll(".farmer-operation-item")];
+  const chips=[...document.querySelectorAll("[data-operation-filter]")];
+  const count=document.getElementById("farmer-operations-count");
+  let period="all";
+  function startFor(p){
+    const now=new Date();
+    if(p==="week"){const d=new Date(now);d.setHours(0,0,0,0);const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d;}
+    if(p==="month"){return new Date(now.getFullYear(),now.getMonth(),1);}
+    return null;
+  }
+  function apply(){
+    const q=(search?.value||"").trim().toLocaleLowerCase();
+    const start=startFor(period);
+    let visible=0;
+    items.forEach(item=>{
+      const date=new Date(item.dataset.date);
+      const matchesQ=!q || (item.dataset.search||"").includes(q);
+      const matchesP=!start || date>=start;
+      const show=matchesQ && matchesP;
+      item.classList.toggle("d-none",!show);
+      if(show) visible++;
+    });
+    if(count) count.textContent=visible+" حركة";
+  }
+  search?.addEventListener("input",apply);
+  chips.forEach(chip=>chip.addEventListener("click",()=>{
+    period=chip.dataset.operationFilter||"all";
+    chips.forEach(x=>x.classList.toggle("active",x===chip));
+    apply();
+  }));
+  apply();
+})();
+</script>
 {% endblock %}
