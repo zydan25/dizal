@@ -109,3 +109,68 @@ def register_payment(employee,farmer,amount,payment_method="cash",reference=None
     from .accounting import post_payment
     post_payment(row,employee.id)
     return row
+
+
+def farmer_unpaid_oldest_date(farmer_id):
+    from datetime import datetime,timezone
+    sales=FuelDispense.query.filter_by(
+        farmer_id=farmer_id,status="approved"
+    ).order_by(FuelDispense.created_at.asc(),FuelDispense.id.asc()).all()
+    for sale in sales:
+        allocated=(
+            db.session.query(func.coalesce(func.sum(FarmerPaymentAllocation.amount),0))
+            .join(FarmerPayment,FarmerPaymentAllocation.payment_id==FarmerPayment.id)
+            .join(Document,FarmerPayment.document_id==Document.id)
+            .filter(FarmerPaymentAllocation.dispense_id==sale.id,Document.status!="reversed")
+            .scalar() or 0
+        )
+        remaining=max(
+            Decimal(str(sale.credit_amount))-Decimal(str(allocated)),
+            Decimal("0")
+        )
+        if remaining>Decimal("0.0005"):
+            return sale.created_at
+    return None
+
+def farmer_account_metrics(farmer,start=None):
+    from datetime import datetime,timezone,time
+    account=farmer_account(farmer)
+    prior_balance=Decimal("0")
+    if start:
+        start_dt=datetime.combine(start,time.min).replace(tzinfo=timezone.utc)
+        prior_credit=(
+            db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0))
+            .filter(FuelDispense.farmer_id==farmer.id,
+                    FuelDispense.status=="approved",
+                    FuelDispense.created_at<start_dt)
+            .scalar() or 0
+        )
+        prior_paid=(
+            db.session.query(func.coalesce(func.sum(FarmerPayment.amount),0))
+            .join(Document,FarmerPayment.document_id==Document.id)
+            .filter(FarmerPayment.farmer_id==farmer.id,
+                    FarmerPayment.created_at<start_dt,
+                    Document.status!="reversed")
+            .scalar() or 0
+        )
+        prior_balance=max(
+            Decimal(str(prior_credit))-Decimal(str(prior_paid)),
+            Decimal("0")
+        )
+
+    oldest=farmer_unpaid_oldest_date(farmer.id)
+    today=datetime.now(timezone.utc).date()
+    debt_age_days=(today-oldest.date()).days if oldest else 0
+    last_payment=(
+        FarmerPayment.query
+        .join(Document,FarmerPayment.document_id==Document.id)
+        .filter(FarmerPayment.farmer_id==farmer.id,Document.status!="reversed")
+        .order_by(FarmerPayment.created_at.desc(),FarmerPayment.id.desc())
+        .first()
+    )
+    return {
+        **account,
+        "prior_balance":prior_balance,
+        "last_payment":last_payment,
+        "debt_age_days":max(debt_age_days,0),
+    }
