@@ -27,7 +27,7 @@
 <div class="sidebar-head">
 {% if project_settings.logo_path %}<img class="app-logo" src="{{url_for('media.branding',path=project_settings.logo_path)}}" alt="{{project_settings.project_name}}">{% else %}<div class="brand-mark"><i class="bi bi-fuel-pump-fill"></i></div>{% endif %}
 <div class="brand-copy"><strong>{{project_settings.project_name}}</strong><small>Dizal</small></div>
-<button class="icon-btn d-lg-none" data-sidebar-close aria-label="إغلاق"><i class="bi bi-x-lg"></i></button>
+<button class="icon-btn d-lg-none" data-sidebar-close aria-label="إغلاق القائمة"><i class="bi bi-x-lg"></i></button>
 </div>
 <div class="sidebar-scroll" id="sidebarScroll">
 {% for section in navigation %}
@@ -50,7 +50,7 @@
 </aside>
 <main class="main-area">
 <header class="topbar">
-<button class="icon-btn" data-sidebar-open aria-label="القائمة"><i class="bi bi-list"></i></button>
+<button class="icon-btn" data-sidebar-open aria-label="فتح القائمة" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
 <div class="top-user"><small>{% if current_user.has_role('manager') %}المدير{% else %}الموظف{% endif %}</small><strong>{{current_user.display_name or current_user.username}}</strong></div>
 <a class="icon-btn notification-btn" href="{{url_for('notifications.index')}}" aria-label="الإشعارات"><i class="bi bi-bell"></i>{% if unread_notifications %}<span class="notification-badge">{{unread_notifications}}</span>{% endif %}</a>
 <a class="icon-btn" href="{{url_for('dashboard.index')}}" aria-label="الرئيسية"><i class="bi bi-house"></i></a>
@@ -78,7 +78,7 @@
 <a href="{{url_for('dashboard.index')}}"><i class="bi bi-grid"></i><span>الرئيسية</span></a>
 <a href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><span>المزارعون</span></a>
 <a href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet"></i><span>صرف</span></a>
-<button data-sidebar-open><i class="bi bi-list"></i><span>القائمة</span></button>
+<button data-sidebar-open aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i><span>القائمة</span></button>
 </nav>
 <div class="scrim d-none" data-sidebar-close></div>
 {% else %}
