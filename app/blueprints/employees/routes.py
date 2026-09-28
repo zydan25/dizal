@@ -11,7 +11,6 @@ from ...services.reports import employee_operations
 from ...services.audit import audit
 from . import employees_bp
 import uuid
-from ..models import Farmer
 
 def employee_operations_cards(employees):
     cards=[]
@@ -134,6 +133,7 @@ def detail(user_id):
 
 
 @employees_bp.route("/password",methods=["GET","POST"])
+@permission_required("employee.statement.view")
 def my_password():
     if request.method=="POST":
         current=request.form.get("current_password") or ""
