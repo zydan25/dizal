@@ -8,6 +8,7 @@ from ...permissions import user_has_permission
 from ...services.audit import audit
 from ...services.files import save_attachment
 from ...services.farmers import change_quota,create_farmer,review_farmer
+from ...services.sales import farmer_account
 from . import farmers_bp
 
 def visible_farmer(farmer):
@@ -31,8 +32,29 @@ def index():
     if not user_has_permission(current_user,"farmers.view_all"):
         query=query.filter_by(assigned_employee_id=current_user.id)
     status=request.args.get("status")
-    if status: query=query.filter_by(status=status)
-    return render_template("farmers/index.html",farmers=query.limit(100).all(),status=status)
+    if status:
+        query=query.filter_by(status=status)
+    else:
+        query=query.filter(Farmer.status!="deleted")
+    farmers=query.limit(100).all()
+    cards=[]
+    for farmer in farmers:
+        account=farmer_account(farmer)
+        cards.append({"farmer":farmer,"account":account})
+    visible_query=Farmer.query
+    if not user_has_permission(current_user,"farmers.view_all"):
+        visible_query=visible_query.filter_by(assigned_employee_id=current_user.id)
+    visible=visible_query.filter(Farmer.status!="deleted").all()
+    stats={
+        "total":len(visible),
+        "approved":sum(1 for row in visible if row.status=="approved"),
+        "suspended":sum(1 for row in visible if row.status=="suspended"),
+        "pending":sum(1 for row in visible if row.status in {"submitted","changes_requested"}),
+        "consumed":sum((item["account"]["consumed_drums"] for item in cards),0),
+        "remaining":sum((item["account"]["remaining_quota_drums"] for item in cards),0),
+        "debt":sum((item["account"]["outstanding_amount"] for item in cards),0),
+    }
+    return render_template("farmers/index.html",cards=cards,farmers=farmers,status=status,stats=stats)
 
 @farmers_bp.route("/new",methods=["GET","POST"])
 @permission_required("farmers.create")
@@ -133,3 +155,21 @@ def quota(farmer_id):
 
 def user_has_role_manager():
     return current_user.has_role("manager")
+@farmers_bp.post("/<int:farmer_id>/status")
+@permission_required("farmers.approve")
+def status_change(farmer_id):
+    farmer=Farmer.query.get_or_404(farmer_id)
+    action=request.form.get("action")
+    if action=="suspend":
+        farmer.status="suspended"; message="تم إيقاف المزارع مع إبقاء سجله وحركاته المالية."
+    elif action=="activate":
+        farmer.status="approved"; message="تم إعادة تفعيل المزارع."
+    elif action=="delete":
+        farmer.status="deleted"; message="تمت أرشفة المزارع وإخفاؤه من القوائم التشغيلية مع الحفاظ على السجلات."
+    else:
+        abort(400,description="إجراء غير معروف.")
+    audit(`farmer.${action}`,"farmer",farmer.id,after={"status":farmer.status})
+    db.session.commit()
+    flash(message,"success")
+    return redirect(url_for("farmers.index"))
+
