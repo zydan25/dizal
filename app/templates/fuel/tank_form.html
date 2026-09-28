@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row"><div class="page-heading"><h1>تعديل الخزان</h1><p>تعديل البيانات التشغيلية فقط مع إبقاء السجل والحركات كما هي.</p></div><span class="status-chip">{{tank.code}}</span></div>
+<form method="post" class="mobile-form card-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<label>اسم الخزان<input name="name" value="{{tank.name}}" required></label>
+<div class="two-col"><label>السعة باللتر<input name="capacity_liters" type="number" step="0.001" min="0" value="{{tank.capacity_liters or ''}}"></label><label>الموقع<input name="location" value="{{tank.location or ''}}"></label></div>
+<label class="check-row"><input type="checkbox" name="is_active" value="1" {% if tank.is_active %}checked{% endif %}> <span>الخزان فعال للتشغيل</span></label>
+<label>ملاحظات<textarea name="notes" rows="3">{{tank.notes or ''}}</textarea></label>
+<button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ التعديلات</span></button>
+</form>
+{% endblock %}
