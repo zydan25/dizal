@@ -3,7 +3,7 @@
 <div class="page-heading-row"><div class="page-heading"><h1>الموظفون</h1><p>حسابات الموظفين وصناديقهم.</p></div><a class="primary-btn" href="{{url_for('employees.new')}}"><i class="bi bi-plus-lg"></i> موظف جديد</a></div>
 <div class="entity-list">
 {% for employee in employees %}
-<div class="entity-row"><div class="avatar"><i class="bi bi-person-badge"></i></div><div class="entity-main"><strong>{{employee.display_name}}</strong><span>{{employee.phone or employee.username}}</span><small>{{employee.employee_profile.employee_code if employee.employee_profile else "بدون كود"}}</small></div><div class="status-chip">فعال</div></div>
+<div class="entity-row"><div class="avatar"><i class="bi bi-person-badge"></i></div><div class="entity-main"><strong>{{employee.display_name}}</strong><span>{{employee.phone or employee.username}}</span><small>{{employee.employee_profile.employee_code if employee.employee_profile else "بدون كود"}} · {{ "فعال" if employee.active else "متوقف" }}</small></div><div class="entity-actions"><a class="icon-btn" href="{{url_for('employees.edit',user_id=employee.id)}}" aria-label="تعديل"><i class="bi bi-pencil"></i></a><a class="icon-btn" href="{{url_for('employees.permissions',user_id=employee.id)}}" aria-label="الصلاحيات"><i class="bi bi-shield-lock"></i></a><a class="icon-btn" href="{{url_for('reports.employee_statement',employee_id=employee.id)}}" aria-label="كشف الحساب"><i class="bi bi-file-earmark-text"></i></a></div></div>
 {% else %}<div class="empty-state"><i class="bi bi-people"></i><strong>لا يوجد موظفون</strong><span>أنشئ أول موظف لبدء التشغيل.</span></div>{% endfor %}
 </div>
 {% endblock %}
