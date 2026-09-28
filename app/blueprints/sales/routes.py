@@ -43,7 +43,7 @@ def dispense():
             else:
                 price=settings.default_sale_price_per_liter
             row=create_dispense(employee,farmer,tank.id,request.form.get("drums"),price,request.form.get("paid_amount") or 0,request.form.get("notes"))
-            audit("fuel.dispense.created","fuel_dispense",row.id,after={"farmer_id":farmer.id,"employee_id":employee.id,"drums":str(row.drums),"liters":str(row.liters),"total":str(row.total_amount),"credit":str(row.credit_amount),"cost":str(row.cost_amount)})
+            audit("fuel.dispense.created","fuel_dispense",row.id,after={"farmer_id":farmer.id,"employee_id":employee.id,"drums":str(row.drums),"liters":str(row.liters),"total":str(row.total_amount),"credit":str(row.credit_amount),"cost":str(row.cost_amount),"document_id":row.document_id})
             db.session.commit()
             flash("تم تسجيل صرف الديزل وإصدار سند الصرف.","success")
             return redirect(url_for("sales.dispense"))
