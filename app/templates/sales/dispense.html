@@ -47,13 +47,14 @@
 const farmerInfo={{farmer_info|tojson}};
 const farmerSelect=document.getElementById("farmer_id");
 
+function fmt(v,digits){const n=Number(v||0);return n.toFixed(digits||3).replace(/\\.?0+$/,"");}
 function refreshFarmerInfo(){
   const data=farmerInfo[farmerSelect?.value] || {};
-  document.getElementById("farmer_quota").textContent=Number(data.quota_drums ?? 0).toFixed(1);
-  document.getElementById("farmer_consumed").textContent=Number(data.consumed_drums ?? 0).toFixed(1);
-  document.getElementById("farmer_remaining_quota").textContent=Number(data.remaining_quota_drums ?? 0).toFixed(1);
-  document.getElementById("farmer_outstanding").textContent=Number(data.outstanding_amount ?? 0).toFixed(2);
-  document.getElementById("farmer_remaining_credit").textContent=Number(data.remaining_credit_drums ?? 0).toFixed(2);
+  document.getElementById("farmer_quota").textContent=fmt(data.quota_drums,1);
+  document.getElementById("farmer_consumed").textContent=fmt(data.consumed_drums,1);
+  document.getElementById("farmer_remaining_quota").textContent=fmt(data.remaining_quota_drums,1);
+  document.getElementById("farmer_outstanding").textContent=fmt(data.outstanding_amount,2);
+  document.getElementById("farmer_remaining_credit").textContent=fmt(data.remaining_credit_drums,2);
 }
 farmerSelect?.addEventListener("change",refreshFarmerInfo);
 refreshFarmerInfo();
@@ -61,7 +62,7 @@ refreshFarmerInfo();
 const drumLiters={{project_settings.drum_liters|float}};
 const drums=document.getElementById("drums"),price=document.getElementById("sale_price"),paid=document.getElementById("paid_amount");
 const liters=document.getElementById("liters_preview"),total=document.getElementById("total_preview"),credit=document.getElementById("credit_preview");
-function recalc(){const d=parseFloat(drums?.value||0),p=parseFloat(price?.value||0),a=parseFloat(paid?.value||0),l=d*drumLiters,t=l*p,c=Math.max(t-a,0);liters.textContent=l.toFixed(1);total.textContent=t.toFixed(2);credit.textContent=c.toFixed(2);}
+function recalc(){const d=parseFloat(drums?.value||0),p=parseFloat(price?.value||0),a=parseFloat(paid?.value||0),l=d*drumLiters,t=l*p,c=Math.max(t-a,0);liters.textContent=fmt(l,1);total.textContent=fmt(t,2);credit.textContent=fmt(c,2);}
 ["input","change"].forEach(evt=>[drums,price,paid].forEach(x=>x?.addEventListener(evt,recalc)));recalc();
 })();
 </script>
