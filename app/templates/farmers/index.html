@@ -6,13 +6,13 @@
     <p>بطاقات تشغيلية سريعة: السحب، المتبقي، الدين، والإجراءات.</p>
   </div>
   <div class="header-actions">
-    <a class="secondary-btn" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet-fill"></i><span>صرف</span></a>
+    <a class="primary-btn" href="{{url_for('sales.dispense')}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>
     <a class="secondary-btn" href="{{url_for('sales.payment')}}"><i class="bi bi-cash-coin"></i><span>دفع</span></a>
     {% if current_user.has_role("manager") %}<a class="primary-btn" href="{{url_for('farmers.new')}}"><i class="bi bi-plus-lg"></i><span>مزارع</span></a>{% endif %}
   </div>
 </div>
 
-<div class="stats-grid farmer-overview">
+<div class="stats-grid farmer-overview page-stats-compact">
   <div class="stat-card stat-accent"><i class="bi bi-people"></i><div><small>إجمالي المزارعين</small><strong>{{stats.total}}</strong><span>حساب</span></div></div>
   <div class="stat-card"><i class="bi bi-droplet-fill"></i><div><small>السحب الكلي</small><strong>{{stats.consumed}}</strong><span>دبة</span></div></div>
   <div class="stat-card"><i class="bi bi-hourglass-split"></i><div><small>المتبقي من السقوف</small><strong>{{stats.remaining}}</strong><span>دبة</span></div></div>
