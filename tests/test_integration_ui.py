@@ -124,6 +124,7 @@ def test_settings_palette_and_font_scale_persist():
 
 def test_template_numeric_output_removes_trailing_decimal_zeroes():
     app=make_app()
+    seed(app)
     with app.app_context():
         from flask import render_template_string
         rendered=render_template_string("{{ amount }}|{{ count }}", amount=Decimal("1250.00"), count=7.0)
