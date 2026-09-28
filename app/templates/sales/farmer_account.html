@@ -1,85 +1,119 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row">
+<div class="page-heading-row farmer-account-heading">
   <div class="page-heading"><h1>{{farmer.name}}</h1><p>{{farmer.code}} · {{farmer.phone}}</p></div>
-  <div class="d-flex flex-wrap gap-1">
-    <button class="secondary-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i> طباعة</button>
-    <a class="primary-btn" href="{{url_for('sales.payment')}}?farmer_id={{farmer.id}}"><i class="bi bi-cash-coin"></i> سداد</a>
+  <div class="header-actions farmer-account-actions">
+    <a class="primary-btn farmer-account-pay" href="{{url_for('sales.payment')}}?farmer_id={{farmer.id}}"><i class="bi bi-cash-coin"></i><span>سداد</span></a>
+    <button class="secondary-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i><span>طباعة</span></button>
   </div>
 </div>
 
-<form class="filter-row" method="get">
-  <label class="filter-chip">من <input name="start" type="date" value="{{start.isoformat() if start else ''}}"></label>
-  <label class="filter-chip">إلى <input name="end" type="date" value="{{end.isoformat() if end else ''}}"></label>
-  <button class="filter-chip active" type="submit">تطبيق</button>
-</form>
-
-<div class="stats-grid">
-  <div class="stat-card"><i class="bi bi-droplet"></i><div><small>السحب الكلي</small><strong>{{account.consumed_drums}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><i class="bi bi-hourglass"></i><div><small>المتبقي من السقف</small><strong>{{account.remaining_quota_drums}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><i class="bi bi-wallet2"></i><div><small>الدين الحالي</small><strong>{{account.outstanding_amount}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><i class="bi bi-shield-check"></i><div><small>المتبقي من حد الدين</small><strong>{{account.remaining_credit_drums}}</strong><span>دبة</span></div></div>
-</div>
-
-<div class="stats-grid">
-  <div class="stat-card"><i class="bi bi-clock-history"></i><div><small>عمر أقدم دين</small><strong>{{account.debt_age_days}}</strong><span>يوم</span></div></div>
-  <div class="stat-card"><i class="bi bi-calendar3"></i><div><small>الرصيد قبل الفترة</small><strong>{{account.prior_balance}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><i class="bi bi-cash-stack"></i><div><small>آخر سداد</small><strong>{% if account.last_payment %}{{account.last_payment.amount}}{% else %}—{% endif %}</strong><span>{% if account.last_payment %}{{account.last_payment.created_at.strftime("%Y-%m-%d")}}{% else %}لا يوجد{% endif %}</span></div></div>
-  <div class="stat-card"><i class="bi bi-person-badge"></i><div><small>الموظف المسؤول</small><strong>{{farmer.assigned_employee.display_name}}</strong><span>المسؤول</span></div></div>
-</div>
-
-<div class="info-card mt-3">
-  <strong>فترة الكشف</strong>
-  <p>{% if start or end %}{{start or "البداية"}} → {{end or "اليوم"}}{% else %}كامل تاريخ الحساب{% endif %} · يعرض السحب والتحصيل المعتمدين، مع ربط كل حركة بسندها.</p>
-</div>
-
-<div class="section-title"><h2>كل الحركات</h2><span>{{ledger|length}} حركة</span></div>
-<div class="entity-list">
-{% for item in ledger %}
-{% if item.kind=="dispense" %}
-{% set row=item.row %}
-<a class="entity-row" href="{{url_for('documents.view',document_id=row.document_id)}}">
-  <div class="avatar"><i class="bi bi-droplet-fill"></i></div>
-  <div class="entity-main">
-    <strong>{{row.document.number}} · سحب ديزل</strong>
-    <span>{{row.drums}} دبة · {{row.liters}} لتر · {{row.total_amount}} {{project_settings.currency}}</span>
-    <small>مدفوع {{row.paid_amount}} · دين {{row.credit_amount}} · تكلفة {{row.cost_amount}} · ربح {{row.gross_profit}} · {{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small>
+<div class="farmer-account-periods">
+  <div class="filter-row compact-filter-row">
+    <button class="filter-chip active" type="button" data-account-period="all">كل العمليات</button>
+    <button class="filter-chip" type="button" data-account-period="week">هذا الأسبوع</button>
+    <button class="filter-chip" type="button" data-account-period="month">هذا الشهر</button>
   </div>
-  <i class="bi bi-chevron-left"></i>
-</a>
-{% else %}
-{% set row=item.row %}
-<a class="entity-row" href="{{url_for('documents.view',document_id=row.document_id)}}">
-  <div class="avatar"><i class="bi bi-cash-coin"></i></div>
-  <div class="entity-main">
-    <strong>{{row.document.number}} · سداد</strong>
-    <span>{{row.amount}} {{project_settings.currency}} · {{row.payment_method}}{% if row.reference %} · {{row.reference}}{% endif %}</span>
-    <small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}} · يغطي {{row.allocations|length}} عملية سحب</small>
-  </div>
-  <i class="bi bi-chevron-left"></i>
-</a>
+  <form class="farmer-date-filter" method="get">
+    <label>من<input name="start" type="date" value="{{start.isoformat() if start else ''}}"></label>
+    <span>إلى</span>
+    <label><input name="end" type="date" value="{{end.isoformat() if end else ''}}"></label>
+    <button class="small-icon-btn" type="submit" title="تطبيق الفترة" aria-label="تطبيق الفترة"><i class="bi bi-check2"></i></button>
+  </form>
+</div>
+
+<div class="stats-grid page-stats-compact farmer-account-stats">
+  <div class="stat-card"><div><small>السحب</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>متبقي السقف</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الدين</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>حد الدين</small><strong>{{account.remaining_credit_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>أقدم دين</small><strong>{{account.debt_age_days|clean_number}}</strong><span>يوم</span></div></div>
+  <div class="stat-card"><div><small>قبل الفترة</small><strong>{{account.prior_balance|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>آخر سداد</small><strong>{% if account.last_payment %}{{account.last_payment.amount|clean_number}}{% else %}—{% endif %}</strong><span>{% if account.last_payment %}{{account.last_payment.created_at.strftime("%Y-%m-%d")}}{% else %}لا يوجد{% endif %}</span></div></div>
+</div>
+
+{% if current_user.has_role("manager") %}
+<div class="farmer-account-manage">
+  <a class="secondary-btn" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil"></i><span>تعديل الملف</span></a>
+  <a class="secondary-btn" href="{{url_for('farmers.detail',farmer_id=farmer.id)}}"><i class="bi bi-person-vcard"></i><span>ملف المزارع</span></a>
+  <a class="secondary-btn" href="#quota-edit"><i class="bi bi-sliders"></i><span>تعديل الحد الأعلى</span></a>
+</div>
 {% endif %}
-{% else %}<div class="empty-state"><i class="bi bi-journal-x"></i><strong>لا توجد حركات</strong><span>غيّر الفترة أو ابدأ عملية جديدة.</span></div>{% endfor %}
+
+<div class="section-title"><h2>العمليات</h2><span id="account-visible-count">{{ledger|length|clean_number}} حركة</span></div>
+<div class="operation-tools farmer-account-tools">
+  <div class="operation-search"><i class="bi bi-search"></i><input id="account-search" type="search" placeholder="بحث فوري في العمليات والسندات..." autocomplete="off"></div>
 </div>
 
-<div class="section-title"><h2>تاريخ السقف</h2><span>{{quota_movements|length}} تعديل</span></div>
+<div class="entity-list farmer-account-ledger" id="account-ledger">
+{% for item in ledger %}
+{% set row=item.row %}
+<a class="entity-row farmer-ledger-row" href="{{url_for('documents.view',document_id=row.document_id)}}"
+   data-kind="{{item.kind}}" data-date="{{row.created_at.isoformat()}}" data-search="{{(row.document.number ~ ' ' ~ ('سداد' if item.kind=='payment' else 'سحب ديزل') ~ ' ' ~ (row.amount|string if item.kind=='payment' else row.drums|string) ~ ' ' ~ (row.liters|string if item.kind=='dispense' else '') ~ ' ' ~ row.created_at.strftime('%Y-%m-%d'))|lower}}">
+  <div class="avatar {% if item.kind=='payment' %}finance-in{% endif %}"><i class="bi {% if item.kind=='payment' %}bi-cash-coin{% else %}bi-droplet-fill{% endif %}"></i></div>
+  <div class="entity-main">
+    <strong>{{row.document.number}} · {% if item.kind=="payment" %}سداد{% else %}سحب ديزل{% endif %}</strong>
+    <span>{% if item.kind=="payment" %}{{row.amount|clean_number}} {{project_settings.currency}} · {{row.payment_method}}{% else %}{{row.drums|clean_number}} دبة · {{row.liters|clean_number}} لتر · {{row.total_amount|clean_number}} {{project_settings.currency}}{% endif %}</span>
+    <small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}}{% if item.kind=="payment" and row.reference %} · مرجع {{row.reference}}{% endif %}</small>
+  </div>
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% else %}<div class="empty-state" id="account-empty"><i class="bi bi-journal-x"></i><strong>لا توجد عمليات</strong><span>جرّب فترة أخرى أو غيّر كلمة البحث.</span></div>{% endfor %}
+</div>
+
+<div class="section-title"><h2>تاريخ السقف</h2><span>{{quota_movements|length|clean_number}} تعديل</span></div>
 <div class="entity-list">
 {% for row in quota_movements %}
-<div class="entity-row"><div class="avatar"><i class="bi bi-sliders"></i></div><div class="entity-main"><strong>{{row.old_quota_drums}} → {{row.new_quota_drums}} دبة</strong><span>حد الدين {{row.old_credit_limit_drums}} → {{row.new_credit_limit_drums}} دبة</span><small>{{row.reason or "بدون سبب" }} · {{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div></div>
+<div class="entity-row"><div class="avatar"><i class="bi bi-sliders"></i></div><div class="entity-main"><strong>{{row.old_quota_drums|clean_number}} → {{row.new_quota_drums|clean_number}} دبة</strong><span>حد الدين {{row.old_credit_limit_drums|clean_number}} → {{row.new_credit_limit_drums|clean_number}} دبة</span><small>{{row.reason or "بدون سبب"}} · {{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div></div>
 {% else %}<div class="empty-state">لا توجد تعديلات على السقف.</div>{% endfor %}
 </div>
 
-<div class="section-title"><h2>السحبيات في الفترة</h2><span>{{dispenses|length}} عملية</span></div>
-<div class="entity-list">
-{% for row in dispenses %}
-<a class="entity-row" href="{{url_for('documents.view',document_id=row.document_id)}}"><div class="avatar"><i class="bi bi-droplet"></i></div><div class="entity-main"><strong>{{row.document.number}} · {{row.drums}} دبة</strong><span>{{row.liters}} لتر · {{row.total_amount}} {{project_settings.currency}}</span><small>الدين {{row.credit_amount}} · الربح {{row.gross_profit}}</small></div><i class="bi bi-chevron-left"></i></a>
-{% else %}<div class="empty-state">لا توجد سحبيات خلال الفترة.</div>{% endfor %}
+{% if current_user.has_role("manager") %}
+<div class="section-title" id="quota-edit"><h2>الحد الأعلى والسقف</h2><span>تعديل موثق</span></div>
+<form method="post" action="{{url_for('farmers.quota',farmer_id=farmer.id)}}" class="mobile-form card-form farmer-quota-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<div class="two-col">
+<label>السقف بالدبة<input name="quota_drums" type="number" step="0.1" value="{{farmer.quota_drums|clean_number}}"></label>
+<label>حد الدين بالدبة<input name="credit_limit_drums" type="number" step="0.1" value="{{farmer.credit_limit_drums|clean_number}}"></label>
 </div>
+<label>سبب التعديل<textarea name="reason" rows="2" required placeholder="سبب رفع أو خفض الحد"></textarea></label>
+<button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ الحد</span></button>
+</form>
+{% endif %}
 
-<div class="section-title"><h2>التحصيلات في الفترة</h2><span>{{payments|length}} سند</span></div>
-<div class="entity-list">
-{% for row in payments %}
-<a class="entity-row" href="{{url_for('documents.view',document_id=row.document_id)}}"><div class="avatar"><i class="bi bi-cash-coin"></i></div><div class="entity-main"><strong>{{row.document.number}} · {{row.amount}} {{project_settings.currency}}</strong><span>{{row.payment_method}}{% if row.reference %} · {{row.reference}}{% endif %}</span><small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}} · يغطي {{row.allocations|length}} سحب</small></div><i class="bi bi-chevron-left"></i></a>
-{% else %}<div class="empty-state">لا توجد تحصيلات خلال الفترة.</div>{% endfor %}
-</div>
+<script>
+(function(){
+  const search=document.getElementById("account-search");
+  const rows=[...document.querySelectorAll(".farmer-ledger-row")];
+  const chips=[...document.querySelectorAll("[data-account-period]")];
+  const count=document.getElementById("account-visible-count");
+  let period="all";
+  function startFor(value){
+    const now=new Date();
+    if(value==="week"){
+      const d=new Date(now);d.setHours(0,0,0,0);
+      const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);
+      return d;
+    }
+    if(value==="month")return new Date(now.getFullYear(),now.getMonth(),1);
+    return null;
+  }
+  function apply(){
+    const q=(search?.value||"").trim().toLocaleLowerCase(),start=startFor(period);
+    let visible=0;
+    rows.forEach(row=>{
+      const rowDate=new Date(row.dataset.date);
+      const okText=!q||(row.dataset.search||"").includes(q);
+      const okPeriod=!start||rowDate>=start;
+      const show=okText&&okPeriod;
+      row.classList.toggle("d-none",!show);
+      if(show)visible++;
+    });
+    if(count)count.textContent=visible+" حركة";
+  }
+  search?.addEventListener("input",apply);
+  chips.forEach(chip=>chip.addEventListener("click",()=>{period=chip.dataset.accountPeriod||"all";chips.forEach(x=>x.classList.toggle("active",x===chip));apply();}));
+  apply();
+})();
+</script>
 {% endblock %}
