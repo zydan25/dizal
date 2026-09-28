@@ -13,9 +13,9 @@
   <div class="stat-card"><i class="bi bi-people"></i><div><small>مزارعون</small><strong>{{farmers|length}}</strong><span>مرتبطون</span></div></div>
   <div class="stat-card"><i class="bi bi-droplet-fill"></i><div><small>السحب</small><strong>{{operations.drums}}</strong><span>دبة · {{operations.liters}} لتر</span></div></div>
   <div class="stat-card"><i class="bi bi-cash-stack"></i><div><small>المبيعات</small><strong>{{operations.sales}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><i class="bi bi-graph-up-arrow"></i><div><small>الربح الإجمالي</small><strong>{{profit}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><i class="bi bi-graph-up-arrow"></i><div><small>الربح الإجمالي</small><strong>{{profit|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
   <div class="stat-card"><i class="bi bi-cash-coin"></i><div><small>التحصيل</small><strong>{{operations.collected}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><i class="bi bi-wallet2"></i><div><small>رصيد الصندوق</small><strong>{{cashbox_balance}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><i class="bi bi-wallet2"></i><div><small>رصيد الصندوق</small><strong>{{cashbox_balance|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
   <div class="stat-card"><i class="bi bi-truck"></i><div><small>التوريد</small><strong>{{operations.supplied_liters}}</strong><span>لتر</span></div></div>
 </div>
 
