@@ -52,3 +52,30 @@ def inventory_commitment():
     remaining_drums=max(Decimal(str(committed))-Decimal(str(consumed)),Decimal("0"))
     stock=current_stock_liters();committed_liters=remaining_drums*drum
     return {"stock_liters":stock,"committed_liters":committed_liters,"free_liters":max(stock-committed_liters,Decimal("0")),"shortage_liters":max(committed_liters-stock,Decimal("0"))}
+
+
+def employee_operations(employee_id,start=None,end=None):
+    from datetime import datetime,timezone,time
+    from ..models import FuelPurchase
+    result={"dispenses":[],"payments":[],"supplies":[],"sales":Decimal("0"),"liters":Decimal("0"),"drums":Decimal("0"),"collected":Decimal("0"),"credit":Decimal("0"),"supplied_liters":Decimal("0")}
+    dq=FuelDispense.query.filter_by(employee_id=employee_id).order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc())
+    pq=FarmerPayment.query.join(Document,FarmerPayment.document_id==Document.id).filter(FarmerPayment.employee_id==employee_id).order_by(FarmerPayment.created_at.desc(),FarmerPayment.id.desc())
+    sq=FuelPurchase.query.filter_by(employee_id=employee_id).order_by(FuelPurchase.submitted_at.desc(),FuelPurchase.id.desc())
+    if start:
+        dt=datetime.combine(start,time.min).replace(tzinfo=timezone.utc)
+        dq=dq.filter(FuelDispense.created_at>=dt);pq=pq.filter(FarmerPayment.created_at>=dt);sq=sq.filter(FuelPurchase.submitted_at>=dt)
+    if end:
+        dt=datetime.combine(end,time.max).replace(tzinfo=timezone.utc)
+        dq=dq.filter(FuelDispense.created_at<=dt);pq=pq.filter(FarmerPayment.created_at<=dt);sq=sq.filter(FuelPurchase.submitted_at<=dt)
+    result["dispenses"]=dq.limit(300).all()
+    result["payments"]=pq.limit(300).all()
+    result["supplies"]=sq.limit(300).all()
+    approved=[row for row in result["dispenses"] if row.status=="approved"]
+    approved_supplies=[row for row in result["supplies"] if row.status=="approved"]
+    result["sales"]=sum((Decimal(str(row.total_amount)) for row in approved),Decimal("0"))
+    result["liters"]=sum((Decimal(str(row.liters)) for row in approved),Decimal("0"))
+    result["drums"]=sum((Decimal(str(row.drums)) for row in approved),Decimal("0"))
+    result["credit"]=sum((Decimal(str(row.credit_amount)) for row in approved),Decimal("0"))
+    result["collected"]=sum((Decimal(str(row.amount)) for row in result["payments"] if row.document.status!="reversed"),Decimal("0"))
+    result["supplied_liters"]=sum((Decimal(str(row.liters)) for row in approved_supplies),Decimal("0"))
+    return result
