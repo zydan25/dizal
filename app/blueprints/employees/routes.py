@@ -1,9 +1,13 @@
-from flask import flash,redirect,render_template,request,url_for
-from flask_security.utils import hash_password
+from flask import abort,flash,redirect,render_template,request,url_for
+from flask_login import current_user
+from flask_security.utils import hash_password,verify_password
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import EmployeeProfile,Role,User,Cashbox,Permission,UserPermissionOverride
+from ...models import Cashbox,CashboxTransaction,EmployeeProfile,Role,User,Permission,UserPermissionOverride
+from ...models import Farmer
 from ...permissions import PERMISSIONS
+from ...services.cashbox import balance
+from ...services.reports import employee_operations
 from ...services.audit import audit
 from . import employees_bp
 import uuid
@@ -95,3 +99,57 @@ def permissions(user_id):
         else: effective.discard(key)
     return render_template("employees/permissions.html",employee=employee,permissions=PERMISSIONS,effective=effective)
 
+
+
+@employees_bp.get("/<int:user_id>")
+@permission_required("users.view")
+def detail(user_id):
+    employee=User.query.filter_by(id=user_id,is_employee=True).first_or_404()
+    if not current_user.has_role("manager") and current_user.id!=employee.id:
+        abort(403)
+    operations=employee_operations(employee.id)
+    farmers=Farmer.query.filter_by(assigned_employee_id=employee.id).filter(Farmer.status!="deleted").order_by(Farmer.name).limit(100).all()
+    box=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
+    sales=operations["sales"]; cost=sum((getattr(row,"cost_amount",0) for row in operations["dispenses"] if row.status=="approved"),0)
+    return render_template("employees/detail.html",employee=employee,operations=operations,farmers=farmers,box=box,cashbox_balance=balance(box.id) if box else 0,profit=sales-cost)
+
+
+@employees_bp.route("/password",methods=["GET","POST"])
+def my_password():
+    if request.method=="POST":
+        current=request.form.get("current_password") or ""
+        new=request.form.get("new_password") or ""
+        confirm=request.form.get("confirm_password") or ""
+        if not verify_password(current,current_user.password):
+            flash("كلمة المرور الحالية غير صحيحة.","danger")
+        elif len(new)<6:
+            flash("كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف.","danger")
+        elif new!=confirm:
+            flash("تأكيد كلمة المرور غير مطابق.","danger")
+        else:
+            current_user.password=hash_password(new)
+            audit("employee.password.changed","user",current_user.id)
+            db.session.commit()
+            flash("تم تحديث كلمة المرور بنجاح.","success")
+            return redirect(url_for("dashboard.index"))
+    return render_template("employees/password.html",manager_reset=False,employee=current_user)
+
+
+@employees_bp.route("/<int:user_id>/password",methods=["GET","POST"])
+@permission_required("users.manage")
+def reset_password(user_id):
+    employee=User.query.filter_by(id=user_id,is_employee=True).first_or_404()
+    if request.method=="POST":
+        new=request.form.get("new_password") or ""
+        confirm=request.form.get("confirm_password") or ""
+        if len(new)<6:
+            flash("كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف.","danger")
+        elif new!=confirm:
+            flash("تأكيد كلمة المرور غير مطابق.","danger")
+        else:
+            employee.password=hash_password(new)
+            audit("employee.password.reset","user",employee.id)
+            db.session.commit()
+            flash("تمت إعادة تعيين كلمة مرور الموظف.","success")
+            return redirect(url_for("employees.detail",user_id=employee.id))
+    return render_template("employees/password.html",manager_reset=True,employee=employee)
