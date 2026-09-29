@@ -49,7 +49,7 @@ def test_root_and_manifest_pwa_endpoints_are_install_ready():
     assert "/auth/login" in root.headers["Location"]
     assert manifest.status_code==200
     assert "manifest+json" in (manifest.headers.get("Content-Type") or "")
-    assert manifest.get_json()["id"]=="/dashboard/"
+    assert manifest.get_json()["id"]=="/"
     assert manifest.get_json()["start_url"]=="/pwa/launch"
     assert manifest.get_json()["scope"]=="/"
     assert sw.status_code==200
@@ -71,7 +71,7 @@ def test_pwa_assets_use_one_consistent_registration_and_cache_version():
     assert 'register("/sw.js?v=20260930-4"' in js
     assert 'const VERSION="20260930-4";' in sw
     assert "/static/js/app.js?v=20260930-4" in sw
-    assert '"id": "/dashboard/"' in manifest
+    assert '"id": "/"' in manifest
     assert '"start_url": "/pwa/launch"' in manifest
 
 
@@ -101,7 +101,7 @@ def test_pwa_launch_route_is_public_and_is_start_url():
 def test_pwa_manifest_uses_public_bootstrap_start_url():
     app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite://","WTF_CSRF_ENABLED":False,"SECRET_KEY":"test","SECURITY_PASSWORD_SALT":"test"})
     manifest=app.test_client().get("/manifest.webmanifest").get_json()
-    assert manifest["id"]=="/dashboard/"
+    assert manifest["id"]=="/"
     assert manifest["start_url"]=="/pwa/launch"
     assert manifest["scope"]=="/"
     assert manifest["display"]=="standalone"
