@@ -39,21 +39,24 @@ def index():
 @employees_bp.route("/new",methods=["GET","POST"])
 @permission_required("users.manage")
 def new():
+    roles=Role.query.order_by(Role.name).all()
     if request.method=="POST":
         username=(request.form.get("username") or "").strip()
         phone=(request.form.get("phone") or "").strip()
         password=request.form.get("password") or ""
         name=(request.form.get("display_name") or "").strip()
+        role_name=(request.form.get("role") or "employee").strip()
         if not username or not password or not name:
             flash("الاسم واسم المستخدم وكلمة المرور مطلوبة.","danger")
-            return render_template("employees/form.html")
+            return render_template("employees/form.html",roles=roles)
         if User.query.filter((User.username==username)|(User.phone==phone if phone else User.phone==None)).first():
             flash("اسم المستخدم أو الهاتف مستخدم بالفعل.","danger")
-            return render_template("employees/form.html")
-        user=User(username=username,phone=phone or None,email=(request.form.get("email") or None),display_name=name,is_employee=True,active=True,password=hash_password(password),fs_uniquifier=uuid.uuid4().hex)
-        role=Role.query.filter_by(name="employee").first()
+            return render_template("employees/form.html",roles=roles)
+        role=Role.query.filter_by(name=role_name).first()
         if not role:
-            raise ValueError("دور الموظف غير موجود. نفذ seed أولًا.")
+            flash("الدور المحدد غير موجود.","danger")
+            return render_template("employees/form.html",roles=roles)
+        user=User(username=username,phone=phone or None,email=(request.form.get("email") or None),display_name=name,is_employee=True,active=True,password=hash_password(password),fs_uniquifier=uuid.uuid4().hex)
         user.roles.append(role)
         db.session.add(user)
         db.session.flush()
@@ -69,12 +72,13 @@ def new():
         db.session.commit()
         flash("تم إنشاء الموظف والصندوق المرتبط به.","success")
         return redirect(url_for("employees.index"))
-    return render_template("employees/form.html")
+    return render_template("employees/form.html",roles=roles)
 
 @employees_bp.route("/<int:user_id>/edit",methods=["GET","POST"])
 @permission_required("users.manage")
 def edit(user_id):
     employee=User.query.filter_by(id=user_id,is_employee=True).first_or_404()
+    roles=Role.query.order_by(Role.name).all()
     profile=EmployeeProfile.query.filter_by(user_id=employee.id).first()
     if request.method=="POST":
         before={"display_name":employee.display_name,"phone":employee.phone,"active":employee.active,"salary_type":profile.salary_type if profile else None,"salary_value":str(profile.salary_value if profile else 0)}
@@ -82,6 +86,13 @@ def edit(user_id):
         employee.phone=(request.form.get("phone") or employee.phone or "").strip() or None
         employee.email=(request.form.get("email") or employee.email or "").strip() or None
         employee.active=request.form.get("active")=="1"
+        role_name=(request.form.get("role") or "").strip()
+        if role_name:
+            role=Role.query.filter_by(name=role_name).first()
+            if not role: raise ValueError("الدور المحدد غير موجود.")
+            if employee.id==current_user.id and employee.has_role("manager") and role.name!="manager":
+                raise ValueError("لا يمكنك إزالة صلاحية المدير من حسابك الحالي.")
+            employee.roles[:]=[role]
         if profile:
             salary_type=request.form.get("salary_type") or profile.salary_type
             if salary_type not in {"fixed","per_liter","per_drum","percent_profit","commission"}: salary_type=profile.salary_type
@@ -95,7 +106,7 @@ def edit(user_id):
         db.session.commit()
         flash("تم تحديث بيانات الموظف.","success")
         return redirect(url_for("employees.index"))
-    return render_template("employees/edit.html",employee=employee,profile=profile)
+    return render_template("employees/edit.html",employee=employee,profile=profile,roles=roles)
 
 @employees_bp.route("/<int:user_id>/permissions",methods=["GET","POST"])
 @permission_required("users.manage")
