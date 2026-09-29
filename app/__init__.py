@@ -77,6 +77,10 @@ def create_app(config_object=None):
     def root():
         return redirect(url_for("dashboard.index" if current_user.is_authenticated else "auth.login"))
 
+    @app.get("/pwa/launch")
+    def pwa_launch():
+        return render_template("pwa/launch.html")
+
     @app.get("/manifest.webmanifest")
     def web_manifest():
         response=send_from_directory(app.static_folder,"manifest.webmanifest",mimetype="application/manifest+json")
