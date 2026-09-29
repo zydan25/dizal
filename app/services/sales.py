@@ -66,6 +66,8 @@ def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amou
     db.session.add(row);db.session.flush();document.source_id=str(row.id)
     cost_amount=consume_fifo(tank_id,liters,row.id,employee.id);row.cost_amount=cost_amount;row.gross_profit=total-cost_amount
     db.session.add(FuelStockMovement(tank_id=tank_id,direction="OUT",movement_type="dispense",liters=liters,unit_cost=(cost_amount/liters if liters else 0),source_type="fuel_dispense",source_id=str(row.id),document_id=document.id,created_by_id=employee.id))
+    from .compensation import apply_employee_compensation_snapshot
+    apply_employee_compensation_snapshot(row,employee.employee_profile)
     from .accounting import post_sale
     post_sale(row,employee.id)
     if paid>0:
@@ -103,6 +105,8 @@ def create_general_sale(employee,tank_id,drums,sale_price_per_liter,customer_nam
         unit_cost=(cost_amount/liters if liters else 0),source_type="general_sale",
         source_id=str(row.id),document_id=document.id,created_by_id=employee.id,
     ))
+    from .compensation import apply_employee_compensation_snapshot
+    apply_employee_compensation_snapshot(row,employee.employee_profile)
     from .accounting import post_sale
     post_sale(row,employee.id)
     cashbox=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
