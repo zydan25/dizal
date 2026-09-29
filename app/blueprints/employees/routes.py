@@ -44,6 +44,8 @@ def account():
         duplicate=User.query.filter(User.id!=employee.id,User.username==username).first()
         if not duplicate and phone:
             duplicate=User.query.filter(User.id!=employee.id,User.phone==phone).first()
+        if not duplicate and email:
+            duplicate=User.query.filter(User.id!=employee.id,User.email==email).first()
         if duplicate:
             flash("اسم المستخدم أو رقم الهاتف مستخدم لحساب آخر.","danger")
             return render_template("employees/account.html",employee=employee,settings=settings,is_manager=employee.has_role("manager"))
@@ -94,6 +96,8 @@ def new():
         duplicate=User.query.filter(User.username==username).first()
         if not duplicate and phone:
             duplicate=User.query.filter(User.phone==phone).first()
+        if not duplicate and email:
+            duplicate=User.query.filter(User.email==email).first()
         if duplicate:
             flash("اسم المستخدم أو الهاتف مستخدم بالفعل.","danger")
             return render_template("employees/form.html")
