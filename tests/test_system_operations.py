@@ -50,7 +50,7 @@ def test_root_and_manifest_pwa_endpoints_are_install_ready():
     assert manifest.status_code==200
     assert "manifest+json" in (manifest.headers.get("Content-Type") or "")
     assert manifest.get_json()["id"]=="/dashboard/"
-    assert manifest.get_json()["start_url"]=="/dashboard/"
+    assert manifest.get_json()["start_url"]=="/pwa/launch"
     assert manifest.get_json()["scope"]=="/"
     assert sw.status_code==200
     assert sw.headers.get("Service-Worker-Allowed")=="/"
@@ -71,7 +71,7 @@ def test_pwa_assets_use_one_consistent_registration_and_cache_version():
     assert 'const VERSION="20260930-3";' in sw
     assert "/static/js/app.js?v=20260930-3" in sw
     assert '"id": "/dashboard/"' in manifest
-    assert '"start_url": "/dashboard/"' in manifest
+    assert '"start_url": "/pwa/launch"' in manifest
 
 
 def test_pwa_icon_files_are_valid_pngs_with_declared_dimensions():
