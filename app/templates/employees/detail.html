@@ -1,29 +1,72 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row">
-  <div class="page-heading"><h1>{{employee.display_name}}</h1><p>{{employee.employee_profile.employee_code if employee.employee_profile else "بدون كود"}} · {{employee.phone or employee.username}}</p></div>
+<div class="page-heading-row employee-dashboard-heading">
+  <div class="page-heading"><h1>{{employee.display_name}}</h1><p>{{employee.employee_profile.employee_code if employee.employee_profile else "بدون كود"}} · {{employee.phone or employee.username}} · {% if employee.active %}حساب فعال{% else %}حساب متوقف{% endif %}</p></div>
   <div class="header-actions">
+    <a class="primary-btn" href="{{url_for('sales.point_of_sale')}}"><i class="bi bi-shop"></i><span>بيع عام</span></a>
     <a class="secondary-btn" href="{{url_for('reports.employee_statement',employee_id=employee.id)}}"><i class="bi bi-file-earmark-text"></i><span>كشف</span></a>
-    {% if current_user.has_role("manager") %}<a class="secondary-btn" href="{{url_for('employees.edit',user_id=employee.id)}}"><i class="bi bi-pencil"></i><span>تعديل</span></a><a class="secondary-btn" href="{{url_for('employees.reset_password',user_id=employee.id)}}"><i class="bi bi-key"></i><span>كلمة المرور</span></a>{% endif %}
-    {% if current_user.id==employee.id %}<a class="secondary-btn" href="{{url_for('employees.my_password')}}"><i class="bi bi-key"></i><span>كلمتي</span></a>{% endif %}
+    {% if current_user.has_role("manager") %}<a class="secondary-btn" href="{{url_for('employees.edit',user_id=employee.id)}}"><i class="bi bi-pencil"></i><span>تعديل</span></a>{% endif %}
   </div>
 </div>
 
+<div class="employee-finance-grid">
+  <div class="employee-finance-card cash">
+    <span><i class="bi bi-wallet2"></i> رصيد الصندوق الفعلي</span>
+    <strong>{{finance.cashbox_balance|clean_number}}</strong><small>{{project_settings.currency}}</small>
+  </div>
+  <div class="employee-finance-card capital">
+    <span><i class="bi bi-bank"></i> رأس المال المُسلَّم</span>
+    <strong>{{finance.capital_delivered|clean_number}}</strong><small>{{project_settings.currency}}</small>
+  </div>
+  <div class="employee-finance-card profit">
+    <span><i class="bi bi-graph-up-arrow"></i> الربح المحقق</span>
+    <strong>{{finance.gross_profit|clean_number}}</strong><small>{{project_settings.currency}}</small>
+  </div>
+  <div class="employee-finance-card commission">
+    <span><i class="bi bi-person-check"></i> استحقاق الموظف</span>
+    <strong>{{finance.employee_commission|clean_number}}</strong><small>{{finance.commission_label}}</small>
+  </div>
+  <div class="employee-finance-card owner">
+    <span><i class="bi bi-building"></i> حصة المشروع التقديرية</span>
+    <strong>{{finance.project_profit_estimate|clean_number}}</strong><small>{{project_settings.currency}} قبل المصروفات الأخرى</small>
+  </div>
+  <div class="employee-finance-card forecast">
+    <span><i class="bi bi-stars"></i> قيمة المخزون المتوقعة للبيع</span>
+    <strong>{{finance.forecast_sales_value|clean_number}}</strong><small>حسب سعر البيع الحالي</small>
+  </div>
+</div>
+
+<div class="info-card employee-finance-note"><i class="bi bi-info-circle"></i><span>{{finance.note}}</span></div>
+
 <div class="stats-grid employee-detail-stats">
-  <div class="stat-card"><i class="bi bi-people"></i><div><small>مزارعون</small><strong>{{farmers|length}}</strong><span>مرتبطون</span></div></div>
-  <div class="stat-card"><i class="bi bi-droplet-fill"></i><div><small>السحب</small><strong>{{operations.drums}}</strong><span>دبة · {{operations.liters}} لتر</span></div></div>
-  <div class="stat-card"><i class="bi bi-cash-stack"></i><div><small>المبيعات</small><strong>{{operations.sales}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><i class="bi bi-graph-up-arrow"></i><div><small>الربح الإجمالي</small><strong>{{profit|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><i class="bi bi-cash-coin"></i><div><small>التحصيل</small><strong>{{operations.collected}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><i class="bi bi-wallet2"></i><div><small>رصيد الصندوق</small><strong>{{cashbox_balance|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><i class="bi bi-truck"></i><div><small>التوريد</small><strong>{{operations.supplied_liters}}</strong><span>لتر</span></div></div>
+  <div class="stat-card"><i class="bi bi-people"></i><div><small>المزارعون</small><strong>{{farmers|length}}</strong><span>مرتبطون</span></div></div>
+  <div class="stat-card"><i class="bi bi-droplet-fill"></i><div><small>المباع</small><strong>{{finance.sold_drums|clean_number}}</strong><span>دبة · {{finance.sold_liters|clean_number}} لتر</span></div></div>
+  <div class="stat-card"><i class="bi bi-cash-stack"></i><div><small>المبيعات</small><strong>{{operations.sales|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><i class="bi bi-cash-coin"></i><div><small>المقبوض</small><strong>{{operations.collected|clean_number}}</strong><span>فوري + تحصيل</span></div></div>
+  <div class="stat-card"><i class="bi bi-truck"></i><div><small>التوريد</small><strong>{{finance.purchased_cost|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><i class="bi bi-box-seam"></i><div><small>الديزل المتاح</small><strong>{{finance.stock_drums|round(1)|clean_number}}</strong><span>دبة · {{finance.stock_liters|clean_number}} لتر</span></div></div>
+</div>
+
+<div class="section-title"><h2>تفصيل صندوق الموظف</h2><span>المبالغ ليست كلها أرباحًا</span></div>
+<div class="employee-cash-breakdown">
+  <div><span>رأس المال المُسلَّم</span><strong>{{finance.capital_delivered|clean_number}}</strong></div>
+  <div><span>ربح الموظف</span><strong>{{finance.employee_commission|clean_number}}</strong></div>
+  <div><span>ربح المشروع التقديري</span><strong>{{finance.project_profit_estimate|clean_number}}</strong></div>
+  <div><span>الرصيد النقدي الفعلي</span><strong>{{finance.cashbox_balance|clean_number}}</strong></div>
+</div>
+
+<div class="section-title"><h2>الديزل</h2><span>كل الخزانات</span></div>
+<div class="employee-stock-card">
+  <div class="stock-overview"><i class="bi bi-fuel-pump-fill"></i><div><strong>{{finance.stock_drums|round(1)|clean_number}} دبة</strong><small>{{finance.stock_liters|clean_number}} لتر متبقية في الخزانات</small></div></div>
+  <div class="stock-overview"><i class="bi bi-droplet"></i><div><strong>{{finance.sold_drums|clean_number}} دبة</strong><small>{{finance.sold_liters|clean_number}} لتر مباعة بواسطة الموظف</small></div></div>
+  <a class="secondary-btn" href="{{url_for('fuel.tanks')}}"><i class="bi bi-bar-chart"></i><span>تفاصيل الخزانات</span></a>
 </div>
 
 <div class="quick-grid compact-quick-grid">
-  <a class="quick-card" href="{{url_for('reports.employee_statement',employee_id=employee.id)}}"><i class="bi bi-file-earmark-text"></i><strong>كشف الحساب</strong><small>الصندوق والتسويات والحركات</small></a>
-  <a class="quick-card" href="{{url_for('reports.my_operations') if current_user.id==employee.id else url_for('reports.employee_statement',employee_id=employee.id)}}"><i class="bi bi-clipboard-data"></i><strong>التقرير التشغيلي</strong><small>السحب والتحصيل والتوريدات</small></a>
-  <a class="quick-card" href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><strong>مزارعوه</strong><small>قائمة المزارعين المرتبطين</small></a>
-  {% if current_user.has_role("manager") %}<a class="quick-card" href="{{url_for('employees.permissions',user_id=employee.id)}}"><i class="bi bi-shield-lock"></i><strong>الصلاحيات</strong><small>الدور والاستثناءات</small></a>{% endif %}
+  <a class="quick-card" href="{{url_for('sales.point_of_sale')}}"><i class="bi bi-shop"></i><strong>نقطة بيع عامة</strong><small>بيع فوري وقبض مباشر</small></a>
+  <a class="quick-card" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet"></i><strong>صرف لمزارع</strong><small>سحب على حساب المزارع</small></a>
+  <a class="quick-card" href="{{url_for('reports.employee_statement',employee_id=employee.id)}}"><i class="bi bi-file-earmark-text"></i><strong>كشف الصندوق</strong><small>الداخل والخارج والتسويات</small></a>
+  <a class="quick-card" href="{{url_for('reports.employee_operations_report',employee_id=employee.id) if current_user.has_role("manager") else url_for('reports.my_operations')}}"><i class="bi bi-clipboard-data"></i><strong>التقرير التشغيلي</strong><small>بيع وصرف وتحصيل وتوريد</small></a>
 </div>
 
 <div class="section-title"><h2>المزارعون المرتبطون</h2><span>{{farmers|length}} حساب</span></div>
@@ -37,13 +80,13 @@
 {% else %}<div class="empty-state"><strong>لا يوجد مزارعون</strong></div>{% endfor %}
 </div>
 
-<div class="section-title"><h2>كل عمليات الموظف</h2><span>آخر {{operations.dispenses|length + operations.payments|length + operations.supplies|length}} عملية محملة</span></div>
+<div class="section-title"><h2>آخر العمليات</h2><span>السندات والحركات</span></div>
 <div class="operation-card-list">
 {% for row in operations.dispenses %}
 <a class="operation-card" href="{{url_for('documents.view',document_id=row.document_id)}}">
   <div class="operation-icon operation-dispense"><i class="bi bi-droplet-fill"></i></div>
-  <div class="operation-main"><strong>صرف ديزل · {{row.document.number}}</strong><span>{{row.farmer.name}} · {{row.drums}} دبة · {{row.liters}} لتر</span><small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}} · {{row.status}}</small></div>
-  <div class="operation-value"><b>{{row.total_amount}}</b><small>{{project_settings.currency}}</small></div><i class="bi bi-chevron-left"></i>
+  <div class="operation-main"><strong>{% if row.sale_type=="general" %}بيع عام{% else %}صرف ديزل{% endif %} · {{row.document.number}}</strong><span>{% if row.farmer %}{{row.farmer.name}}{% elif row.customer_name %}{{row.customer_name}}{% else %}عميل نقدي{% endif %} · {{row.drums|clean_number}} دبة · {{row.liters|clean_number}} لتر</span><small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div>
+  <div class="operation-value"><b>{{row.total_amount|clean_number}}</b><small>{{project_settings.currency}}</small></div><i class="bi bi-chevron-left"></i>
 </a>
 {% endfor %}
 {% for row in operations.payments %}
@@ -51,16 +94,9 @@
 <a class="operation-card" href="{{url_for('documents.view',document_id=row.document_id)}}">
   <div class="operation-icon operation-payment"><i class="bi bi-cash-coin"></i></div>
   <div class="operation-main"><strong>تحصيل · {{row.document.number}}</strong><span>{{row.farmer.name}} · {{row.payment_method}}</span><small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div>
-  <div class="operation-value"><b>{{row.amount}}</b><small>{{project_settings.currency}}</small></div><i class="bi bi-chevron-left"></i>
+  <div class="operation-value"><b>{{row.amount|clean_number}}</b><small>{{project_settings.currency}}</small></div><i class="bi bi-chevron-left"></i>
 </a>
 {% endif %}
-{% endfor %}
-{% for row in operations.supplies %}
-<a class="operation-card" href="{{url_for('documents.view',document_id=row.document_id)}}">
-  <div class="operation-icon operation-supply"><i class="bi bi-truck"></i></div>
-  <div class="operation-main"><strong>توريد ديزل · {% if row.document %}{{row.document.number}}{% else %}توريد #{{row.id}}{% endif %}</strong><span>{{row.liters}} لتر</span><small>{{row.submitted_at.strftime("%Y-%m-%d %H:%M") if row.submitted_at else ""}} · {{row.status}}</small></div>
-  <div class="operation-value"><b>{{row.liters}}</b><small>لتر</small></div><i class="bi bi-chevron-left"></i>
-</a>
 {% endfor %}
 </div>
 {% endblock %}
