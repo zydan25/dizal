@@ -98,3 +98,19 @@ def test_percent_profit_snapshot_uses_actual_sale_profit():
     )
     apply_employee_compensation_snapshot(sale,profile("percent_profit",10))
     assert sale.employee_commission_amount==Decimal("40000")
+
+
+def test_snapshot_does_not_change_when_profile_changes():
+    sale=SimpleNamespace(
+        liters=Decimal("2000"),
+        drums=Decimal("100"),
+        gross_profit=Decimal("400000"),
+        employee_compensation_type=None,
+        employee_compensation_value=None,
+        employee_commission_amount=Decimal("0"),
+    )
+    apply_employee_compensation_snapshot(sale,profile("per_drum",500))
+    before=sale.employee_commission_amount
+    changed_profile=profile("per_drum",600)
+    assert changed_profile.salary_value==Decimal("600")
+    assert sale.employee_commission_amount==before==Decimal("50000")
