@@ -93,7 +93,7 @@ def _employee_dispense_aggregate(employee_id=None,start=None,end=None):
     }
 
 
-def _approved_settlement_total(employee_ids=None,start=None,end=None):
+def _approved_settlement_total(employee_ids=None,start=None,end=None,compensation_types=None):
     query=db.session.query(func.coalesce(func.sum(EmployeeSettlement.employee_salary),0)).filter(
         EmployeeSettlement.status=="approved"
     )
@@ -106,6 +106,8 @@ def _approved_settlement_total(employee_ids=None,start=None,end=None):
         query=query.filter(EmployeeSettlement.period_end>=start)
     if end:
         query=query.filter(EmployeeSettlement.period_start<=end)
+    if compensation_types:
+        query=query.filter(EmployeeSettlement.compensation_type_snapshot.in_(list(compensation_types)))
     return _decimal(query.scalar())
 
 
@@ -197,7 +199,7 @@ def project_summary():
     # Fixed salaries are recognized from approved settlements. Variable
     # compensation is accrued from approved sales, so paying a commission does
     # not create a second expense in this management report.
-    fixed_salary_recognized=_approved_settlement_total(fixed_ids)
+    fixed_salary_recognized=_approved_settlement_total(fixed_ids,compensation_types={"fixed"})
     employee_compensation_expense=variable_commission_earned+fixed_salary_recognized
     net_profit=gross_profit-expenses-employee_compensation_expense
 
@@ -327,12 +329,16 @@ def employee_performance():
         profile=employee.employee_profile
         salary_type=(profile.salary_type if profile else "fixed") or "fixed"
         value=_decimal(profile.salary_value if profile else 0)
+        variable_types={"per_liter","per_drum","percent_profit","commission"}
         earned=totals["commission_earned"] if salary_type!="fixed" else value
         label=compensation_label(salary_type,value,ProjectSettings.get().currency)
         box=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
-        paid=_approved_settlement_total([employee.id])
+        paid=_approved_settlement_total(
+            [employee.id],
+            compensation_types=variable_types if salary_type!="fixed" else {"fixed"},
+        )
         farmer_count=Farmer.query.filter_by(assigned_employee_id=employee.id,status="approved").count()
-        outstanding=max(totals["commission_earned"]-paid,ZERO)
+        outstanding=max(totals["commission_earned"]-paid,ZERO) if salary_type!="fixed" else ZERO
         rows.append({
             "employee":employee,
             "sales":totals["sales"],
