@@ -27,6 +27,48 @@ def employee_operations_cards(employees):
     return cards
 
 
+@employees_bp.route("/account",methods=["GET","POST"])
+@permission_required("employee.statement.view")
+def account():
+    from flask_security.utils import hash_password
+    employee=current_user
+    settings=__import__("app.models",fromlist=["ProjectSettings"]).ProjectSettings.get()
+    if request.method=="POST":
+        username=(request.form.get("username") or "").strip()
+        phone=(request.form.get("phone") or "").strip() or None
+        email=(request.form.get("email") or "").strip() or None
+        display_name=(request.form.get("display_name") or "").strip()
+        if not username or not display_name:
+            flash("اسم المستخدم والاسم الظاهر مطلوبان.","danger")
+            return render_template("employees/account.html",employee=employee,settings=settings,is_manager=employee.has_role("manager"))
+        duplicate=User.query.filter(User.id!=employee.id).filter((User.username==username)|(User.phone==phone if phone else User.phone==None)).first()
+        if duplicate:
+            flash("اسم المستخدم أو رقم الهاتف مستخدم لحساب آخر.","danger")
+            return render_template("employees/account.html",employee=employee,settings=settings,is_manager=employee.has_role("manager"))
+        before={"username":employee.username,"phone":employee.phone,"email":employee.email,"display_name":employee.display_name}
+        employee.username=username; employee.phone=phone; employee.email=email; employee.display_name=display_name
+        new_password=request.form.get("new_password") or ""
+        confirm=request.form.get("confirm_password") or ""
+        if new_password:
+            current_password=request.form.get("current_password") or ""
+            if not verify_password(current_password,employee.password):
+                db.session.rollback()
+                flash("كلمة المرور الحالية غير صحيحة.","danger")
+                return render_template("employees/account.html",employee=employee,settings=settings,is_manager=employee.has_role("manager"))
+            if len(new_password)<6 or new_password!=confirm:
+                db.session.rollback()
+                flash("كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل ومطابقة للتأكيد.","danger")
+                return render_template("employees/account.html",employee=employee,settings=settings,is_manager=employee.has_role("manager"))
+            employee.password=hash_password(new_password)
+        if employee.has_role("manager"):
+            settings.manager_name=(request.form.get("manager_name") or employee.display_name).strip() or employee.display_name
+            settings.manager_phone=(request.form.get("manager_phone") or employee.phone or "").strip() or None
+        audit("employee.account.updated","user",employee.id,before=before,after={"username":employee.username,"phone":employee.phone,"email":employee.email,"display_name":employee.display_name})
+        db.session.commit()
+        flash("تم تحديث حسابك وبياناتك المعتمدة في السندات.","success")
+        return redirect(url_for("employees.account"))
+    return render_template("employees/account.html",employee=employee,settings=settings,is_manager=employee.has_role("manager"))
+
 @employees_bp.get("/")
 @permission_required("users.view")
 def index():
