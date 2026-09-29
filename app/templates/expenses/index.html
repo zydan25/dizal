@@ -9,7 +9,7 @@
 <label>الموظف المسؤول<select name="employee_id"><option value="">بدون موظف</option>{% for employee in employees %}<option value="{{employee.id}}">{{employee.display_name}}</option>{% endfor %}</select></label>
 <label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required></label>
 <label>البيان<textarea name="description" rows="3"></textarea></label>
-<button class="primary-btn"><i class="bi bi-receipt"></i> تسجيل المصروف</button>
+<button class="primary-btn submit-loading" type="submit" data-loading-text="جارٍ تسجيل المصروف…"><i class="bi bi-receipt"></i> تسجيل المصروف</button>
 </form>
 </div>
 <div class="section-title"><h2>آخر المصروفات</h2><span>السند والمراجعة من هنا</span></div>
