@@ -25,10 +25,9 @@ async function run(){
   let manifest=null,jsonError="";
   if(m.ok){try{manifest=JSON.parse(m.body)}catch(e){jsonError=String(e)}}
   const sw=await get("/sw.js?_debug="+Date.now());
-  let regs=[],regError="",reg=null;
+  let regs=[],regError="";
   if("serviceWorker" in n){
     try{regs=await n.serviceWorker.getRegistrations()}catch(e){regError=String(e)}
-    try{reg=await n.serviceWorker.register("/sw.js?_debug="+Date.now(),{scope:"/",updateViaCache:"none"});await reg.update().catch(function(){})}catch(e){regError=regError||String(e)}
   }
   const imgs=[];
   for(const icon of (manifest&&manifest.icons||[])) imgs.push({src:icon.src,want:icon.sizes,result:await image(icon.src)});
@@ -77,7 +76,19 @@ async function install(){
     renderButton();
   }catch(e){$("details").textContent+="\n\nInstall error: "+String(e)}
 }
+async function cleanupServiceWorkers(){
+  if(!("serviceWorker" in navigator))return;
+  const regs=await navigator.serviceWorker.getRegistrations().catch(()=>[]);
+  await Promise.all(regs.map(r=>r.unregister()));
+  if("caches" in window){
+    const keys=await caches.keys().catch(()=>[]);
+    await Promise.all(keys.filter(k=>k.startsWith("dizal-")).map(k=>caches.delete(k)));
+  }
+  alert("تم تنظيف تسجيلات Dizal وذاكرة الكاش. أعد فتح الموقع العادي ثم جرّب التثبيت.");
+  location.reload();
+}
 function renderButton(){$("install").textContent=deferredPrompt?"تجربة التثبيت الآن":"تجربة التثبيت (الحدث غير جاهز)"}
+const cleanupBtn=document.createElement("button");cleanupBtn.className="secondary";cleanupBtn.textContent="تنظيف PWA القديمة";cleanupBtn.addEventListener("click",cleanupServiceWorkers);$("install").parentElement.appendChild(cleanupBtn);
 $("refresh").addEventListener("click",run);
 $("install").addEventListener("click",install);
 renderButton();
