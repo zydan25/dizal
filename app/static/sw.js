@@ -1,6 +1,8 @@
-const VERSION="20260930-4";
+const VERSION="20260930-5";
 const CACHE="dizal-static-"+VERSION;
+
 const STATIC_SHELL=[
+  "/pwa/launch",
   "/static/css/app.css?v=20260930-4",
   "/static/js/app.js?v=20260930-4",
   "/static/manifest.webmanifest?v=20260930-4",
@@ -47,6 +49,15 @@ self.addEventListener("fetch",(event)=>{
   if(event.request.mode==="navigate"){
     event.respondWith(
       fetch(event.request,{cache:"no-store"})
+        .catch(()=>caches.match("/pwa/launch") || caches.match("/static/offline.html"))
+    );
+    return;
+  }
+
+  if(url.pathname==="/pwa/launch"){
+    event.respondWith(
+      caches.match("/pwa/launch")
+        .then((cached)=>cached || fetch(event.request,{cache:"no-store"}))
         .catch(()=>caches.match("/static/offline.html"))
     );
     return;
