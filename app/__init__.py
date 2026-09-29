@@ -76,21 +76,25 @@ def create_app(config_object=None):
 
     @app.get("/")
     def root():
-        # Keep the origin root as a cacheable 200 response, like the working
-        # Alkas PWA. The dashboard route remains responsible for auth/permissions.
-        response=Response("""<!doctype html>
+        # The manifest start_url is the origin root, so serve it as a real 200
+        # document like Alkas. Authenticated users get the dashboard directly.
+        if current_user.is_authenticated:
+            from .blueprints.dashboard.routes import index as dashboard_index
+            return dashboard_index()
+        return Response("""<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="refresh" content="0;url=/dashboard/">
-<title>Dizal</title>
+<title>Dizal - إدارة توزيع الديزل</title>
 </head>
 <body>
-<script>window.location.replace("/dashboard/");</script>
+<main>
+<h1>Dizal - إدارة توزيع الديزل</h1>
+<a href="/auth/login">تسجيل الدخول</a>
+</main>
 </body>
 </html>""",mimetype="text/html")
-        return response
 
     @app.get("/manifest.webmanifest")
     def web_manifest():
@@ -107,15 +111,15 @@ def create_app(config_object=None):
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "/static/icons/dizal-192.png",
+      "src": "/static/icons/dizal-192.svg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/static/icons/dizal-512.png",
+      "src": "/static/icons/dizal-512.svg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
