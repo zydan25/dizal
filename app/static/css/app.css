@@ -337,7 +337,11 @@ main.login-screen-shell .auth-page.login-page{
   display:block!important;
 }
 main.login-screen-shell .login-page .login-card{
-  margin:30px 0 0!important;
+  margin:60px 0 0!important;
+}
+/* Login should use the phone viewport with no extra blank area below the footer credit. */
+body:has(main.login-screen-shell) .app-footer{
+  padding-bottom:0!important;
 }
 @media(max-width:600px){
   main.login-screen-shell{padding:5px 8px!important}
