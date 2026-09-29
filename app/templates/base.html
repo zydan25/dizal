@@ -68,12 +68,6 @@
 {% with messages=get_flashed_messages(with_categories=true) %}{% for c,m in messages %}<div class="alert alert-{{c}} compact-alert">{{m}}</div>{% endfor %}{% endwith %}
 {% endif %}
 
-<div class="global-install-bar" id="global-install-bar">
-  <button class="primary-btn global-install-btn" type="button" data-install-app>
-    <i class="bi bi-download"></i><span id="global-install-text">تثبيت Dizal كتطبيق</span>
-  </button>
-  <small id="global-install-state">يتم التثبيت من المتصفح الرسمي.</small>
-</div>
 {% block content %}{% endblock %}
 
 {% if current_user.is_authenticated %}
