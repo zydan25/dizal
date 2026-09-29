@@ -11,7 +11,13 @@
 <div class="info-card settings-help"><i class="bi bi-info-circle"></i><span>لترات الدبة تحدد التحويل بين الدبة واللتر. سعر البيع الافتراضي يُستخدم في عمليات البيع التي لا تغيّر السعر. الحدود هنا تمنع تجاوز السقوف التشغيلية للمزارعين والموظفين.</span></div>
 <div class="two-col"><label>لترات الدبة<input name="drum_liters" type="number" step="0.001" min="1" value="{{settings.drum_liters}}"></label><label>أقصى مزارعين للموظف<input name="max_farmers_per_employee" type="number" min="1" value="{{settings.max_farmers_per_employee}}"></label></div>
 <div class="two-col"><label>أقصى دين بالدبة<input name="max_credit_drums_per_farmer" type="number" step="0.1" min="0" value="{{settings.max_credit_drums_per_farmer}}"></label><label>أقصى صرف يومي باللتر<input name="max_dispense_liters_per_day" type="number" step="0.001" min="0" value="{{settings.max_dispense_liters_per_day}}"></label></div>
-<label>سعر البيع الافتراضي للتر<input name="default_sale_price_per_liter" type="number" step="0.001" min="0" value="{{settings.default_sale_price_per_liter}}"></label>
+<div class="pricing-policy-card">
+  <div class="pricing-policy-head"><div class="settings-section-icon"><i class="bi bi-tag"></i></div><div><strong>سياسة سعر البيع للموظف</strong><small>حدد هل يظهر سعر اللتر ثابتًا للموظف أم يمكنه تغييره عند البيع.</small></div></div>
+  <div class="two-col pricing-policy-fields">
+    <label>السعر الافتراضي للتر<input name="default_sale_price_per_liter" type="number" step="0.001" min="0" value="{{settings.default_sale_price_per_liter}}"></label>
+    <label class="switch-field"><span>السماح للموظف بتغيير السعر</span><input type="checkbox" name="allow_employee_sale_price_override" value="1" {% if settings.allow_employee_sale_price_override %}checked{% endif %}><small>{% if settings.allow_employee_sale_price_override %}مسموح في الصرف ونقطة البيع{% else %}السعر ثابت حسب الإعدادات{% endif %}</small></label>
+  </div>
+</div>
 <div class="section-title"><h2>مظهر النظام</h2><span>اختيار جاهز بدل إدخال أكواد الألوان</span></div>
 <label>مجموعة الألوان
 <select name="color_preset" id="color_preset">
@@ -36,6 +42,24 @@
 (function(){
 const select=document.getElementById("color_preset");
 document.querySelectorAll("[data-palette]").forEach(btn=>btn.addEventListener("click",()=>{select.value=btn.dataset.palette;select.dispatchEvent(new Event("change"));}));
+})();
+</script>
+<script>
+(function(){
+  const fields=[["document-header-input","document-header-count","document-preview-header"],["document-footer-input","document-footer-count","document-preview-footer"]];
+  fields.forEach(([inputId,countId,previewId])=>{
+    const input=document.getElementById(inputId),count=document.getElementById(countId),preview=document.getElementById(previewId);
+    const update=()=>{
+      const value=input?.value||"";
+      if(count)count.textContent=value.length+"/500";
+      if(preview)preview.textContent=value||"يظهر النص هنا...";
+    };
+    input?.addEventListener("input",update);
+    update();
+  });
+  const policy=document.querySelector('input[name="allow_employee_sale_price_override"]');
+  const policyNote=document.querySelector(".pricing-policy-fields .switch-field small");
+  policy?.addEventListener("change",()=>{if(policyNote)policyNote.textContent=policy.checked?"مسموح في الصرف ونقطة البيع":"السعر ثابت حسب الإعدادات";});
 })();
 </script>
 <div class="section-title"><h2>التطبيق</h2><span>تثبيت واستخدام دون اتصال</span></div>
@@ -69,11 +93,28 @@ document.querySelectorAll("[data-palette]").forEach(btn=>btn.addEventListener("c
     </form>
   </div>
 </div>
-<div class="section-title"><h2>السندات والطباعة</h2><span>هوية السند الرسمية</span></div>
-<div class="info-card settings-help"><i class="bi bi-receipt"></i><div><strong>ترويسة السند</strong><small>النص الذي يظهر أعلى السند، مثل اسم المؤسسة والعنوان والهاتف أو رقم السجل. اجعلها مختصرة وواضحة.</small></div></div>
-<label>ترويسة السند<textarea name="document_header" rows="3" placeholder="مثال: مؤسسة ... · توزيع الديزل · هاتف ...">{{settings.document_header or ''}}</textarea></label>
-<div class="info-card settings-help"><i class="bi bi-layout-text-window"></i><div><strong>تذييل السند</strong><small>النص الذي يظهر أسفل السند، مثل شروط مختصرة أو عبارة اعتماد أو بيانات التواصل.</small></div></div>
-<label>تذييل السند<textarea name="document_footer" rows="3" placeholder="مثال: مستند صادر من نظام Dizal · يحفظ للمراجعة">{{settings.document_footer or ''}}</textarea></label>
+<div class="section-title"><h2>السندات والطباعة</h2><span>هوية منظمة قبل الطباعة</span></div>
+<div class="document-settings-grid">
+  <div class="document-setting-card">
+    <div class="document-setting-head"><div class="settings-section-icon"><i class="bi bi-layout-text-window"></i></div><div><strong>ترويسة السند</strong><small>تظهر أسفل اسم المشروع مباشرة في أعلى السند.</small></div></div>
+    <textarea name="document_header" id="document-header-input" rows="4" maxlength="500" placeholder="مثال: مؤسسة العطاب · توزيع الديزل · هاتف 7xxxxxxx">{{settings.document_header or ''}}</textarea>
+    <div class="field-meta-row"><span>اسم الجهة والعنوان وبيانات التواصل.</span><b id="document-header-count">0/500</b></div>
+  </div>
+  <div class="document-setting-card">
+    <div class="document-setting-head"><div class="settings-section-icon"><i class="bi bi-file-earmark-text"></i></div><div><strong>تذييل السند</strong><small>يظهر في أسفل النسخة المطبوعة وPDF.</small></div></div>
+    <textarea name="document_footer" id="document-footer-input" rows="4" maxlength="500" placeholder="مثال: مستند صادر من نظام Dizal · يحفظ للمراجعة">{{settings.document_footer or ''}}</textarea>
+    <div class="field-meta-row"><span>الشروط المختصرة أو عبارة الاعتماد.</span><b id="document-footer-count">0/500</b></div>
+  </div>
+</div>
+<div class="document-live-preview">
+  <div class="document-preview-toolbar"><strong><i class="bi bi-eye"></i> معاينة هوية السند</strong><span>تحديث مباشر</span></div>
+  <div class="document-preview-sheet">
+    <div class="document-preview-top"><div class="preview-logo"><i class="bi bi-fuel-pump-fill"></i></div><div><strong>{{settings.project_name}}</strong><small id="document-preview-header">{{settings.document_header or "تظهر الترويسة هنا..."}}</small></div><div class="preview-meta">DIZAL</div></div>
+    <div class="document-preview-line"></div>
+    <div class="document-preview-body"><span>رقم السند: DSP-YYYY-000001</span><span>التاريخ: {{project_settings.created_at.date()}}</span><b>بيانات العملية</b></div>
+    <div class="document-preview-footer" id="document-preview-footer">{{settings.document_footer or "يظهر التذييل هنا..."}}</div>
+  </div>
+</div>
 <div class="two-col"><label>شعار المشروع<input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp"></label><label>توقيع المدير<input type="file" name="manager_signature" accept=".png,.jpg,.jpeg,.webp"></label></div>
 <button class="primary-btn" type="submit"><i class="bi bi-check2"></i> حفظ الإعدادات</button>
 </form>

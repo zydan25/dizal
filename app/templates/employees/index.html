@@ -26,7 +26,7 @@
         <strong>{{employee.display_name}}</strong>
         <span>{{employee.employee_profile.employee_code if employee.employee_profile else "بدون كود"}} · {{employee.phone or employee.username}}</span>
       </div>
-      <span class="status-chip {% if employee.active %}status-approved{% else %}status-suspended{% endif %}">{{"فعال" if employee.active else "متوقف"}}</span>
+      <div class="d-flex flex-column align-items-end gap-1"><span class="status-chip {% if employee.active %}status-approved{% else %}status-suspended{% endif %}">{{"فعال" if employee.active else "متوقف"}}</span>{% if employee.has_role("manager") %}<span class="status-chip status-changes_requested">مدير</span>{% endif %}</div>
     </div>
     <div class="employee-metrics">
       <div><small>المزارعون</small><strong>{{row.farmer_count|clean_number}}</strong><span>مزارع</span></div>

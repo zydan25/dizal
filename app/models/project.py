@@ -14,6 +14,7 @@ class ProjectSettings(db.Model):
     max_credit_drums_per_farmer=db.Column(db.Numeric(12,3),nullable=False,default=7)
     max_dispense_liters_per_day=db.Column(db.Numeric(18,3),nullable=False,default=4000)
     default_sale_price_per_liter=db.Column(db.Numeric(18,3),nullable=False,default=650)
+    allow_employee_sale_price_override=db.Column(db.Boolean,nullable=False,default=False)
     minimum_stock_liters=db.Column(db.Numeric(18,3),nullable=False,default=0)
     primary_color=db.Column(db.String(20),nullable=False,default="#1877F2")
     secondary_color=db.Column(db.String(20),nullable=False,default="#6c5ce7")

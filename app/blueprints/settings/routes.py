@@ -32,6 +32,7 @@ def index():
         settings.max_credit_drums_per_farmer=request.form.get("max_credit_drums_per_farmer") or settings.max_credit_drums_per_farmer
         settings.max_dispense_liters_per_day=request.form.get("max_dispense_liters_per_day") or settings.max_dispense_liters_per_day
         settings.default_sale_price_per_liter=request.form.get("default_sale_price_per_liter") or settings.default_sale_price_per_liter
+        settings.allow_employee_sale_price_override=request.form.get("allow_employee_sale_price_override")=="1"
         settings.primary_color=(request.form.get("primary_color") or settings.primary_color).strip()
         settings.secondary_color=(request.form.get("secondary_color") or settings.secondary_color).strip()
         settings.accent_color=(request.form.get("accent_color") or settings.accent_color).strip()

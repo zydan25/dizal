@@ -23,9 +23,17 @@ def supply():
                 employee=User.query.filter_by(id=employee_id,is_employee=True,active=True).first()
                 if not employee:
                     raise ValueError("الموظف المحدد غير صالح.")
+            selected_tank_id=request.form.get("tank_id")
+            if selected_tank_id:
+                tank_id=int(selected_tank_id)
+            else:
+                first_tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).first()
+                if not first_tank:
+                    raise ValueError("لا يوجد خزان فعال.")
+                tank_id=first_tank.id
             row=create_purchase(
                 employee_id=employee_id,
-                tank_id=int(request.form["tank_id"]),
+                tank_id=tank_id,
                 purchase_date=date.fromisoformat(request.form.get("purchase_date") or date.today().isoformat()),
                 supplier_name=request.form.get("supplier_name"),
                 liters=request.form.get("liters"),
@@ -57,9 +65,10 @@ def supply():
         if current_user.has_role("manager")
         else FuelPurchase.query.filter_by(employee_id=current_user.id).order_by(FuelPurchase.id.desc()).limit(50).all()
     )
-    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).all()
+    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).all()
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
-    return render_template("fuel/supply.html",purchases=purchases,tanks=tanks,employees=employees,today=date.today().isoformat())
+    selected_tank_id=request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
+    return render_template("fuel/supply.html",purchases=purchases,tanks=tanks,employees=employees,today=date.today().isoformat(),selected_tank_id=selected_tank_id)
 
 @fuel_bp.post("/supply/<int:purchase_id>/review")
 @permission_required("fuel.supply.approve")
