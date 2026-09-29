@@ -212,9 +212,9 @@ def test_clean_pwa_has_no_service_worker_or_offline_bootstrap():
         "SECRET_KEY": "test",
         "SECURITY_PASSWORD_SALT": "test",
     })
-    client = app.test_client()
-    assert client.get("/sw.js").status_code == 404
-    assert client.get("/pwa/launch").status_code == 404
+    routes = {rule.rule for rule in app.url_map.iter_rules()}
+    assert "/sw.js" not in routes
+    assert "/pwa/launch" not in routes
 
 
 def test_clean_pwa_install_client_has_one_prompt_and_no_service_worker():
