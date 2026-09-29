@@ -38,7 +38,7 @@ def dispense():
             employee=selected_employee(farmer)
             tank_id=int(request.form.get("tank_id") or 0)
             if not tank_id:
-                first_tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).first()
+                first_tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id).first()
                 if not first_tank:
                     raise ValueError("لا يوجد خزان فعال. أضف خزانًا أولًا.")
                 tank_id=first_tank.id
@@ -56,7 +56,7 @@ def dispense():
             db.session.rollback()
             flash(str(exc),"danger")
     farmers=visible_farmers()
-    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).all()
+    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id).all()
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
     settings=ProjectSettings.get()
     selected_tank_id=request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
@@ -114,7 +114,7 @@ def point_of_sale():
             can_change_price=current_user.has_role("manager") or settings.employee_can_change_sale_price
             tank_id=int(request.form.get("tank_id") or 0)
             if not tank_id:
-                first_tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).first()
+                first_tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id).first()
                 if not first_tank:
                     raise ValueError("لا يوجد خزان فعال. أضف خزانًا أولًا.")
                 tank_id=first_tank.id
@@ -138,7 +138,7 @@ def point_of_sale():
         except (ValueError,TypeError) as exc:
             db.session.rollback()
             flash(str(exc),"danger")
-    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).all()
+    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id).all()
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
     settings=ProjectSettings.get()
     selected_tank_id=request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
