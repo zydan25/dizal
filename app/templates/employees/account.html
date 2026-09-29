@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row">
+  <div class="page-heading"><h1>حسابي</h1><p>إدارة بيانات الدخول والبيانات التي تظهر في هوية المشروع والسندات.</p></div>
+  <a class="secondary-btn" href="{{url_for('dashboard.index')}}"><i class="bi bi-arrow-right"></i><span>العودة</span></a>
+</div>
+<form method="post" class="mobile-form card-form account-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<div class="account-hero">
+  <div class="account-avatar"><i class="bi bi-person-fill"></i></div>
+  <div><strong>{{employee.display_name}}</strong><span>{{"مدير" if is_manager else "موظف"}} · {{employee.username}}</span></div>
+</div>
+<div class="section-title"><h2>بيانات الحساب</h2><span>الدخول والاتصال</span></div>
+<div class="two-col"><label>الاسم الظاهر<input name="display_name" value="{{employee.display_name or ''}}" required></label><label>اسم المستخدم<input name="username" value="{{employee.username or ''}}" required autocomplete="username"></label></div>
+<div class="two-col"><label>رقم الهاتف<input name="phone" value="{{employee.phone or ''}}" inputmode="tel"></label><label>البريد الإلكتروني<input name="email" value="{{employee.email or ''}}" type="email"></label></div>
+<div class="section-title"><h2>تغيير كلمة المرور</h2><span>اختياري</span></div>
+<div class="info-card settings-help"><i class="bi bi-shield-lock"></i><div><strong>اترك الحقول فارغة</strong><small>عند عدم الرغبة في تغيير كلمة المرور. عند التغيير ستحتاج كلمة المرور الحالية.</small></div></div>
+<div class="two-col"><label>كلمة المرور الحالية<input name="current_password" type="password" autocomplete="current-password"></label><label>كلمة المرور الجديدة<input name="new_password" type="password" autocomplete="new-password"></label></div>
+<label>تأكيد كلمة المرور<input name="confirm_password" type="password" autocomplete="new-password"></label>
+{% if is_manager %}
+<div class="section-title"><h2>بيانات المدير في السندات</h2><span>تظهر في الهوية الرسمية</span></div>
+<div class="info-card settings-help"><i class="bi bi-receipt"></i><div><strong>اسم المدير ورقم الهاتف</strong><small>هذه البيانات منفصلة عن اسم المستخدم وتستخدم عند طباعة السندات والتذييل الرسمي للمشروع.</small></div></div>
+<div class="two-col"><label>اسم المدير في السندات<input name="manager_name" value="{{settings.manager_name or employee.display_name}}"></label><label>هاتف المدير في السندات<input name="manager_phone" value="{{settings.manager_phone or employee.phone or ''}}" inputmode="tel"></label></div>
+{% endif %}
+<button class="primary-btn"><i class="bi bi-check2-circle"></i><span>حفظ بياناتي</span></button>
+</form>
+{% endblock %}
