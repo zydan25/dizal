@@ -270,6 +270,6 @@ document.addEventListener("submit",event=>{
 });
 
 if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js?v=20260929-4",{scope:"/",updateViaCache:"none"}).catch(error=>console.error("Dizal service worker registration failed",error)));
+  window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js?v=20260929-5",{scope:"/",updateViaCache:"none"}).catch(error=>console.error("Dizal service worker registration failed",error)));
 }
 })();
