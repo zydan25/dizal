@@ -1,10 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-heading-row pos-heading-row">
-  <div class="page-heading"><span class="pos-eyebrow"><i class="bi bi-lightning-charge-fill"></i> بيع مباشر</span><h1>نقطة البيع العامة</h1><p>بيع سريع بدون ربط بمزارع، مع حساب اللترات والإجمالي والربح ثم القبض في صندوق الموظف.</p></div>
+  <div class="page-heading"><span class="pos-eyebrow"><i class="bi bi-lightning-charge-fill"></i> بيع مباشر</span><h1>نقطة البيع العامة</h1></div>
   <a class="secondary-btn" href="{{url_for('reports.sales_report_view')}}"><i class="bi bi-bar-chart"></i><span>تقرير المبيعات</span></a>
 </div>
-<div class="pos-rule-banner"><i class="bi bi-shield-check"></i><div><strong>{% if current_user.has_role("manager") or settings.allow_employee_sale_price_override %}سعر اللتر قابل للتغيير{% else %}سعر اللتر ثابت{% endif %}</strong><span>{% if current_user.has_role("manager") %}يمكنك تعديل السعر قبل التأكيد.{% elif settings.allow_employee_sale_price_override %}المشروع يسمح للموظف بتعديل السعر عند البيع.{% else %}يستخدم النظام السعر المحدد من إعدادات المدير.{% endif %}</span></div></div>
 <form method="post" class="mobile-form card-form pos-form" id="pos-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 {% if current_user.has_role("manager") %}
@@ -28,14 +27,39 @@
 </div>
 <div class="info-card pos-info"><i class="bi bi-info-circle"></i><div><strong>بيع نقدي مباشر</strong><span>لا ينشئ دينًا ولا يحتاج حساب مزارع. يتم الخصم من المخزون وقبض كامل القيمة في صندوق الموظف.</span></div></div>
 <label>ملاحظات<textarea name="notes" rows="2"></textarea></label>
-<button class="primary-btn"><i class="bi bi-cash-stack"></i><span>تأكيد البيع وقبض المبلغ</span></button>
+<button class="primary-btn pos-submit" id="pos-submit" type="submit">
+  <span class="pos-submit-icon"><i class="bi bi-cash-stack"></i></span>
+  <span class="pos-submit-label">تأكيد البيع وقبض المبلغ</span>
+</button>
 </form>
+<style>
+.pos-submit{position:relative;overflow:hidden;transition:opacity .18s ease,transform .18s ease}
+.pos-submit-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 18px}
+.pos-submit-label{display:inline-flex;align-items:center;justify-content:center}
+.pos-submit.is-loading{cursor:wait;pointer-events:none;opacity:.92}
+.pos-submit.is-loading .pos-submit-icon{width:18px;height:18px;border:2px solid rgba(255,255,255,.34);border-top-color:#fff;border-radius:50%;animation:pos-spin .72s linear infinite}
+.pos-submit.is-loading .pos-submit-icon i{display:none}
+@keyframes pos-spin{to{transform:rotate(360deg)}}
+</style>
 <script>
 (function(){
 const drumLiters={{project_settings.drum_liters|float}},d=document.getElementById("pos-drums"),p=document.getElementById("pos-price");
 function fmt(v,digits){const n=Number(v||0);return n.toFixed(digits||2).replace(/.?0+$/,"");}
 function recalc(){const liters=Number(d?.value||0)*drumLiters,total=liters*Number(p?.value||0);document.getElementById("pos-liters").textContent=fmt(liters,1);document.getElementById("pos-total").textContent=fmt(total,2);}
 ["input","change"].forEach(e=>[d,p].forEach(x=>x?.addEventListener(e,recalc)));recalc();
+
+const form=document.getElementById("pos-form");
+const button=document.getElementById("pos-submit");
+form?.addEventListener("submit",function(){
+  if(!button || button.classList.contains("is-loading")) return;
+  const iconWrap=button.querySelector(".pos-submit-icon");
+  const label=button.querySelector(".pos-submit-label");
+  button.classList.add("is-loading");
+  button.setAttribute("aria-busy","true");
+  button.disabled=true;
+  if(iconWrap) iconWrap.innerHTML="";
+  if(label) label.textContent="جارٍ تأكيد البيع…";
+});
 })();
 </script>
 {% endblock %}
