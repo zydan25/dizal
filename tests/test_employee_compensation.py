@@ -2,6 +2,7 @@ from decimal import Decimal
 from types import SimpleNamespace
 
 from app.services.reports import calculate_employee_compensation
+from app.services.compensation import apply_employee_compensation_snapshot
 
 
 def profile(salary_type, salary_value):
@@ -69,3 +70,31 @@ def test_fixed_salary_returns_configured_period_amount():
     )
     assert result["earned"] == Decimal("75000")
     assert result["label"] == "راتب ثابت 75000 ريال"
+
+
+def test_per_drum_snapshot_freezes_value_on_sale():
+    sale=SimpleNamespace(
+        liters=Decimal("2000"),
+        drums=Decimal("100"),
+        gross_profit=Decimal("400000"),
+        employee_compensation_type=None,
+        employee_compensation_value=None,
+        employee_commission_amount=Decimal("0"),
+    )
+    apply_employee_compensation_snapshot(sale,profile("per_drum",500))
+    assert sale.employee_compensation_type=="per_drum"
+    assert sale.employee_compensation_value==Decimal("500")
+    assert sale.employee_commission_amount==Decimal("50000")
+
+
+def test_percent_profit_snapshot_uses_actual_sale_profit():
+    sale=SimpleNamespace(
+        liters=Decimal("2000"),
+        drums=Decimal("100"),
+        gross_profit=Decimal("400000"),
+        employee_compensation_type=None,
+        employee_compensation_value=None,
+        employee_commission_amount=Decimal("0"),
+    )
+    apply_employee_compensation_snapshot(sale,profile("percent_profit",10))
+    assert sale.employee_commission_amount==Decimal("40000")
