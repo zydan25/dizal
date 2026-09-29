@@ -4,12 +4,24 @@
 <form method="post" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>اسم الأصل<input name="name" value="{{asset.name if asset else ''}}" required></label>
-<div class="two-col"><label>الفئة<input name="category" value="{{asset.category if asset else ''}}" placeholder="خزان / مضخة / تجهيز"></label>{% if not editing %}<label>القيمة<input name="cost" type="number" step="0.001" min="0.001" required></label>{% else %}<label>القيمة المسجلة<input value="{{asset.acquisition_cost}}" readonly></label>{% endif %}</div>
+<!-- category replaced above -->{% if not editing %}<label>القيمة<input name="cost" type="number" step="0.001" min="0.001" required></label>{% else %}<label>القيمة المسجلة<input value="{{asset.acquisition_cost}}" readonly></label>{% endif %}</div>
+<div id="tank-details" class="asset-tank-details" {% if not asset or "خزان" not in asset.category %}hidden{% endif %}>
+<label>سعة الخزان باللتر<input name="tank_capacity_liters" type="number" step="0.001" min="1" value="{{asset.tank.capacity_liters|clean_number if asset and asset.tank else ''}}" data-unit="liter"></label>
+<label class="check-row"><input type="checkbox" name="create_tank" value="1" {% if asset and asset.tank %}checked{% endif %} {% if editing %}disabled{% endif %}> <span>إنشاء/ربط الخزان تلقائيًا</span></label>
+</div>
 <label>التاريخ<input name="acquisition_date" type="date" value="{{today}}" required></label>
 {% if not editing %}<label>الصندوق الدافع<select name="payer_cashbox_id" required>{% for box in cashboxes %}<option value="{{box.id}}">{{box.name}}</option>{% endfor %}</select></label>{% endif %}
 <label>المسؤول<select name="custodian_user_id"><option value="">بدون</option>{% for e in employees %}<option value="{{e.id}}" {% if asset and asset.custodian_user_id==e.id %}selected{% endif %}>{{e.display_name}}</option>{% endfor %}</select></label>
 <div class="two-col"><label>الموقع<input name="location" value="{{asset.location if asset else ''}}"></label>{% if editing %}<label>الحالة<select name="status"><option value="active" {% if asset.status=="active" %}selected{% endif %}>فعال</option><option value="maintenance" {% if asset.status=="maintenance" %}selected{% endif %}>صيانة</option><option value="retired" {% if asset.status=="retired" %}selected{% endif %}>متقاعد</option></select></label>{% endif %}</div>
 <label>ملاحظات<textarea name="notes" rows="3">{{asset.notes if asset else ''}}</textarea></label>
+<div class="info-card"><i class="bi bi-link-45deg"></i><span>عند اختيار «خزان ديزل» وتفعيل الربط، يُسجل الشراء كأصل ويُنشأ له خزان تشغيلي مرتبط بنفس السجل ويُخصم من الصندوق المختار.</span></div>
+<script>
+(function(){
+ const s=document.getElementById("asset-category"),box=document.getElementById("tank-details");
+ function sync(){if(!s||!box)return;box.hidden=!s.value.includes("خزان");}
+ s?.addEventListener("change",sync);sync();
+})();
+</script>
 <button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ {% if editing %}التعديلات{% else %}الأصل{% endif %}</span></button>
 </form>
 {% endblock %}
