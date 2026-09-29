@@ -98,6 +98,25 @@
   </div>
 </footer>
 {% endif %}
+<style>
+.submit-loading{position:relative;overflow:hidden}
+.submit-loading.is-loading{cursor:wait;pointer-events:none;opacity:.92}
+.submit-loading .submit-loading-spinner{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 18px;border:2px solid rgba(255,255,255,.34);border-top-color:#fff;border-radius:50%;animation:submit-loading-spin .72s linear infinite}
+@keyframes submit-loading-spin{to{transform:rotate(360deg)}}
+</style>
+<script>
+document.querySelectorAll("form").forEach(function(form){
+  form.addEventListener("submit",function(){
+    var button=form.querySelector("button.submit-loading");
+    if(!button || button.classList.contains("is-loading")) return;
+    var text=button.getAttribute("data-loading-text")||"جارٍ التنفيذ…";
+    button.classList.add("is-loading");
+    button.setAttribute("aria-busy","true");
+    button.disabled=true;
+    button.innerHTML='<span class="submit-loading-spinner" aria-hidden="true"></span><span>'+text+'</span>';
+  });
+});
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{url_for('static',filename='js/app.js',v='20260930-7')}}" defer></script>
 </body>

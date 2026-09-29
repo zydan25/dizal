@@ -30,6 +30,6 @@
  s?.addEventListener("change",sync);sync();
 })();
 </script>{% endif %}
-<button class="primary-btn"><i class="bi bi-check2"></i><span>{% if editing %}حفظ التعديلات{% else %}حفظ الأصل والشراء{% endif %}</span></button>
+<button class="primary-btn{% if not editing %} submit-loading{% endif %}" type="submit" {% if not editing %}data-loading-text="جارٍ حفظ الأصل والشراء…"{% endif %}><i class="bi bi-check2"></i><span>{% if editing %}حفظ التعديلات{% else %}حفظ الأصل والشراء{% endif %}</span></button>
 </form>
 {% endblock %}

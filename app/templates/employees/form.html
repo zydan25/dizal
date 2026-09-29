@@ -14,6 +14,6 @@
 <label>كلمة المرور<input name="password" type="password" required></label>
 <div class="two-col"><label>طريقة الاستحقاق<select name="salary_type"><option value="fixed">ثابت</option><option value="per_liter">ربح لكل لتر</option><option value="per_drum">ربح لكل دبة</option><option value="percent_profit">نسبة من الربح %</option></select></label><label>القيمة (ريال / لتر / دبة / %)<input name="salary_value" type="number" step="0.001" value="0"></label></div>
 <label>ملاحظات<textarea name="notes" rows="3"></textarea></label>
-<button class="primary-btn" type="submit"><i class="bi bi-check2"></i> إنشاء الموظف والصندوق</button>
+<button class="primary-btn submit-loading" type="submit" data-loading-text="جارٍ إنشاء الموظف والصندوق…"><i class="bi bi-check2"></i> إنشاء الموظف والصندوق</button>
 </form>
 {% endblock %}

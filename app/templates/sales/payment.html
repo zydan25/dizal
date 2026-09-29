@@ -18,7 +18,10 @@
 <label>طريقة الدفع<select name="payment_method"><option value="cash">نقد</option><option value="transfer">تحويل</option><option value="bank">بنك</option></select></label>
 <label>رقم المرجع<input name="reference"></label>
 <label>ملاحظات<textarea name="notes" rows="2"></textarea></label>
-<button class="primary-btn"><i class="bi bi-cash-coin"></i> تسجيل السداد وإصدار السند</button>
+<button class="primary-btn form-submit-loading" type="submit">
+  <span class="form-submit-icon"><i class="bi bi-cash-coin"></i></span>
+  <span class="form-submit-label">تسجيل السداد وإصدار السند</span>
+</button>
 </form>
 <script>
 const accounts={{ accounts_json|tojson }};
@@ -47,6 +50,30 @@ document.addEventListener("DOMContentLoaded",function(){
   amount.addEventListener("input",refreshAmountWords);
   amount.addEventListener("change",refreshAmountWords);
   refreshAmountWords();
+});
+</script>
+<style>
+.form-submit-loading{position:relative;overflow:hidden;transition:opacity .18s ease,transform .18s ease}
+.form-submit-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 18px}
+.form-submit-label{display:inline-flex;align-items:center;justify-content:center}
+.form-submit-loading.is-loading{cursor:wait;pointer-events:none;opacity:.92}
+.form-submit-loading.is-loading .form-submit-icon{width:18px;height:18px;border:2px solid rgba(255,255,255,.34);border-top-color:#fff;border-radius:50%;animation:form-submit-spin .72s linear infinite}
+.form-submit-loading.is-loading .form-submit-icon i{display:none}
+@keyframes form-submit-spin{to{transform:rotate(360deg)}}
+</style>
+<script>
+document.querySelectorAll("form.mobile-form").forEach(function(form){
+  form.addEventListener("submit",function(){
+    var button=form.querySelector(".form-submit-loading");
+    if(!button || button.classList.contains("is-loading")) return;
+    var iconWrap=button.querySelector(".form-submit-icon");
+    var label=button.querySelector(".form-submit-label");
+    button.classList.add("is-loading");
+    button.setAttribute("aria-busy","true");
+    button.disabled=true;
+    if(iconWrap) iconWrap.innerHTML="";
+    if(label) label.textContent="جارٍ تسجيل السداد…";
+  });
 });
 </script>
 {% endblock %}
