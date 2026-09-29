@@ -263,27 +263,7 @@ window.addEventListener("appinstalled",()=>{
 installButton?.addEventListener("click",triggerInstall);
 refreshInstallButton();
 
-async function registerDizalServiceWorker(){
-  if(!("serviceWorker" in navigator))return;
-  try{
-    const registration=await navigator.serviceWorker.register("/sw.js?v=20260930-4",{
-      scope:"/",
-      updateViaCache:"none"
-    });
-    registration.update().catch(()=>{});
-    window.DizalPWA.registration=registration;
-    window.DizalPWA.state=pwaState;
-  }catch(error){
-    window.DizalPWA.error=String(error);
-    window.DizalPWA.state=pwaState;
-    console.error("Dizal service worker registration failed",error);
-  }
-}
-if(document.readyState==="loading"){
-  document.addEventListener("DOMContentLoaded",registerDizalServiceWorker,{once:true});
-}else{
-  registerDizalServiceWorker();
-}
+window.DizalPWA.state=pwaState;
 
 document.addEventListener("submit",event=>{
   if(navigator.onLine!==false)return;
