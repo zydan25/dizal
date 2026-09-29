@@ -115,12 +115,15 @@ def employee_compensation(employee,start=None,end=None):
     settings=ProjectSettings.get()
     salary_type=(profile.salary_type if profile else "fixed") or "fixed"
     value=_decimal(profile.salary_value if profile else 0)
-    if salary_type=="fixed":
+    if totals["commission_earned"]>ZERO:
+        earned=totals["commission_earned"]
+        label=f"استحقاق مثبت على العمليات · {compensation_label(salary_type,value,settings.currency)}"
+    elif salary_type=="fixed":
         earned=value
         label=compensation_label(salary_type,value,settings.currency)
     else:
-        earned=totals["commission_earned"]
-        label=f"استحقاق مثبت على العمليات · {compensation_label(salary_type,value,settings.currency)}"
+        earned=ZERO
+        label=compensation_label(salary_type,value,settings.currency)
     result={
         "salary_type":salary_type,
         "salary_value":value,
@@ -160,7 +163,6 @@ def project_summary():
     }
 
     employees=User.query.filter_by(is_employee=True).all()
-    variable_ids=[]
     fixed_ids=[]
     employee_compensation_rows=[]
     variable_commission_earned=ZERO
@@ -172,14 +174,12 @@ def project_summary():
         )
         salary_type=(profile.salary_type if profile else "fixed") or "fixed"
         value=_decimal(profile.salary_value if profile else 0)
+        earned=totals["commission_earned"]
+        variable_commission_earned+=earned
         if salary_type=="fixed":
             fixed_ids.append(employee.id)
-            earned=value
             label=compensation_label(salary_type,value,ProjectSettings.get().currency)
         else:
-            variable_ids.append(employee.id)
-            earned=totals["commission_earned"]
-            variable_commission_earned+=earned
             label=f"استحقاق مثبت على العمليات · {compensation_label(salary_type,value,ProjectSettings.get().currency)}"
         employee_compensation_rows.append({
             "employee":employee,
@@ -332,7 +332,7 @@ def employee_performance():
         box=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
         paid=_approved_settlement_total([employee.id])
         farmer_count=Farmer.query.filter_by(assigned_employee_id=employee.id,status="approved").count()
-        outstanding=max(earned-paid,ZERO) if salary_type!="fixed" else ZERO
+        outstanding=max(totals["commission_earned"]-paid,ZERO)
         rows.append({
             "employee":employee,
             "sales":totals["sales"],
@@ -341,9 +341,10 @@ def employee_performance():
             "gross_profit":totals["sales"]-totals["cogs"],
             "liters":totals["liters"],
             "drums":totals["drums"],
-            "employee_commission":earned if salary_type!="fixed" else ZERO,
-            "salary":earned if salary_type=="fixed" else ZERO,
-            "compensation_earned":earned,
+            "employee_commission":totals["commission_earned"],
+            "salary":paid if salary_type=="fixed" else ZERO,
+            "compensation_earned":totals["commission_earned"],
+
             "compensation_paid":paid,
             "compensation_outstanding":outstanding,
             "net_contribution":totals["sales"]-totals["cogs"]-comp["earned"],
