@@ -4,7 +4,7 @@ from flask_security.utils import verify_password
 from ...extensions import db
 from ...models import ProjectSettings
 from ...services.audit import audit
-from ...services.system_admin import create_backup,reset_project_data
+from ...services.system_admin import create_backup,list_backups,reset_project_data
 from ...services.files import save_image
 from . import settings_bp
 
@@ -63,7 +63,8 @@ def index():
         flash("تم حفظ إعدادات المشروع والثيم والسندات.","success")
         return redirect(url_for("settings.index"))
     current_palette=next((key for key,colors in PALETTES.items() if settings.primary_color==colors["primary"] and settings.secondary_color==colors["secondary"] and settings.accent_color==colors["accent"]), "")
-    return render_template("settings/index.html",settings=settings,palettes=PALETTES,font_scales=FONT_SCALES,current_palette=current_palette)
+    backup_rows=[{"name":row.name,"size_mb":row.stat().st_size/1024/1024,"modified":__import__("datetime").datetime.fromtimestamp(row.stat().st_mtime).strftime("%Y-%m-%d %H:%M")} for row in list_backups()[:10]]
+    return render_template("settings/index.html",settings=settings,palettes=PALETTES,font_scales=FONT_SCALES,current_palette=current_palette,backups=backup_rows)
 
 @settings_bp.post("/backup")
 @permission_required("settings.manage")
