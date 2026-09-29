@@ -26,6 +26,7 @@ def test_point_of_sale_and_sales_report_routes_exist():
     with app.test_request_context("/"):
         from flask import url_for
         assert url_for("sales.point_of_sale") == "/sales/point-of-sale"
+        assert url_for("sales.point_of_sale_short") == "/sales/pos"
         assert url_for("reports.sales_report_view") == "/reports/sales"
 
 def test_root_service_worker_route_has_origin_wide_scope():
