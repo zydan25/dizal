@@ -119,6 +119,14 @@ def test_reset_keeps_active_manager_and_removes_employee_data():
         assert ProjectSettings.query.count() == 1
 
 
+def test_project_settings_sale_price_policy_default_is_fixed():
+    app = make_app()
+    with app.app_context():
+        db.create_all()
+        settings = ProjectSettings.get()
+        assert settings.employee_can_change_sale_price is False
+
+
 def test_sales_report_backwards_compatible_endpoint():
     app = make_app()
     with app.app_context():
