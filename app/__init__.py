@@ -135,7 +135,7 @@ self.addEventListener('fetch',e=>{
 });"""
         return Response(js, mimetype="application/javascript")
 
-        @app.errorhandler(401)
+    @app.errorhandler(401)
     def unauthorized(_error):
         return redirect(url_for("auth.login", next=request.full_path))
 
