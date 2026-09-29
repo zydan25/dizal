@@ -119,7 +119,7 @@ def employee_compensation(employee,start=None,end=None):
     value=_decimal(profile.salary_value if profile else 0)
     if totals["commission_earned"]>ZERO:
         earned=totals["commission_earned"]
-        label=f"استحقاق مثبت على العمليات · {compensation_label(salary_type,value,settings.currency)}"
+        label="عمولة/استحقاق مثبت بقيمة كل عملية"
     elif salary_type=="fixed":
         earned=value
         label=compensation_label(salary_type,value,settings.currency)
@@ -182,7 +182,7 @@ def project_summary():
             fixed_ids.append(employee.id)
             label=compensation_label(salary_type,value,ProjectSettings.get().currency)
         else:
-            label=f"استحقاق مثبت على العمليات · {compensation_label(salary_type,value,ProjectSettings.get().currency)}"
+            label="عمولة/استحقاق مثبت بقيمة كل عملية"
         employee_compensation_rows.append({
             "employee":employee,
             "sales":totals["sales"],
