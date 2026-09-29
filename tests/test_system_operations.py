@@ -63,13 +63,14 @@ def test_pwa_assets_use_one_consistent_registration_and_cache_version():
     js=(root/"app/static/js/app.js").read_text(encoding="utf-8")
     sw=(root/"app/static/sw.js").read_text(encoding="utf-8")
     manifest=(root/"app/static/manifest.webmanifest").read_text(encoding="utf-8")
-    assert "app.js',v='20260930-3'" in base
+    assert "app.js',v='20260930-4'" in base
     assert "app.js',v='20260929-2'" not in base
     assert js.count("navigator.serviceWorker.register(")==1
+    assert base.count("data-install-app")==1
     assert "20260929-2" not in js
-    assert 'register("/sw.js?v=20260930-3"' in js
-    assert 'const VERSION="20260930-3";' in sw
-    assert "/static/js/app.js?v=20260930-3" in sw
+    assert 'register("/sw.js?v=20260930-4"' in js
+    assert 'const VERSION="20260930-4";' in sw
+    assert "/static/js/app.js?v=20260930-4" in sw
     assert '"id": "/dashboard/"' in manifest
     assert '"start_url": "/pwa/launch"' in manifest
 
@@ -106,7 +107,7 @@ def test_pwa_manifest_uses_public_bootstrap_start_url():
     assert manifest["display"]=="standalone"
     assert "display_override" not in manifest
     assert manifest["prefer_related_applications"] is False
-    assert "?v=20260930-3" in manifest["icons"][0]["src"]
+    assert "?v=20260930-4" in manifest["icons"][0]["src"]
 
 def test_reset_clears_operational_data_but_preserves_manager():
     app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite://","WTF_CSRF_ENABLED":False,"SECRET_KEY":"test","SECURITY_PASSWORD_SALT":"test"})
