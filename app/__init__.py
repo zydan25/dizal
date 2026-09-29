@@ -1,6 +1,6 @@
 from decimal import Decimal,InvalidOperation
 import math
-from flask import Flask,render_template,redirect,request,url_for
+from flask import Flask,render_template,redirect,request,url_for,send_from_directory
 from flask_login import current_user
 from .config import Config
 from .extensions import db,migrate,csrf,security
@@ -76,6 +76,13 @@ def create_app(config_object=None):
     @app.get("/")
     def root():
         return redirect(url_for("dashboard.index" if current_user.is_authenticated else "auth.login"))
+
+    @app.get("/manifest.webmanifest")
+    def web_manifest():
+        response=send_from_directory(app.static_folder,"manifest.webmanifest",mimetype="application/manifest+json")
+        response.headers["Cache-Control"]="no-cache, no-store, must-revalidate"
+        response.headers["X-Content-Type-Options"]="nosniff"
+        return response
 
     @app.errorhandler(401)
     def unauthorized(_error): return redirect(url_for("auth.login", next=request.full_path))
