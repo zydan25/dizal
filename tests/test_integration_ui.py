@@ -110,6 +110,7 @@ def test_settings_palette_and_font_scale_persist():
         "max_credit_drums_per_farmer":"7",
         "max_dispense_liters_per_day":"4000",
         "default_sale_price_per_liter":"650",
+        "allow_employee_sale_price_override":"1",
         "color_preset":"violet",
         "font_scale":"1.05",
         "font_family":"Tajawal",
@@ -121,6 +122,7 @@ def test_settings_palette_and_font_scale_persist():
         assert settings.primary_color=="#6d28d9"
         assert settings.secondary_color=="#9333ea"
         assert settings.font_scale=="1.05"
+        assert settings.allow_employee_sale_price_override is True
 
 def test_template_numeric_output_removes_trailing_decimal_zeroes():
     app=make_app()
