@@ -355,5 +355,5 @@ main.login-screen-shell .login-page .login-card{
 body:has(main.login-screen-shell) .app-footer{
   flex:0 0 auto!important;
   margin:0!important;
-  padding:38px 16px 20px!important;
+  padding:38px 16px calc(28px + env(safe-area-inset-bottom, 0px))!important;
 }
