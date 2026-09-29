@@ -8,7 +8,7 @@
   <div class="header-actions">
     <a class="primary-btn" href="{{url_for('sales.dispense')}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>
     <a class="secondary-btn" href="{{url_for('sales.payment')}}"><i class="bi bi-cash-coin"></i><span>دفع</span></a>
-    {% if current_user.has_role("manager") %}<a class="primary-btn" href="{{url_for('farmers.new')}}"><i class="bi bi-plus-lg"></i><span>مزارع</span></a>{% endif %}
+    {% if user_has_permission(current_user,"farmers.create") %}<a class="primary-btn" href="{{url_for('farmers.new')}}"><i class="bi bi-plus-lg"></i><span>إضافة مزارع</span></a>{% endif %}
   </div>
 </div>
 

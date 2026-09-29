@@ -8,6 +8,7 @@ from ...models import Cashbox,CashboxTransaction
 from ...permissions import user_has_permission
 from ...services.audit import audit
 from ...services.cashbox import balance
+from ...services.reports import employee_finance_summary
 from . import cashbox_bp
 
 def _period_window(value):
@@ -54,10 +55,17 @@ def detail(cashbox_id):
     transactions=_load_transactions(box.id,period)
     total_in=sum((row.amount for row in transactions if row.direction=="IN"),0)
     total_out=sum((row.amount for row in transactions if row.direction=="OUT"),0)
+    finance=None
+    owner=None
+    if box.owner_user_id:
+        from ...models import User
+        owner=User.query.get(box.owner_user_id)
+        if owner and owner.is_employee:
+            finance=employee_finance_summary(owner)
     return render_template(
         "cashbox/detail.html",
         box=box,balance=balance(box.id),transactions=transactions,period=period,
-        total_in=total_in,total_out=total_out,
+        total_in=total_in,total_out=total_out,finance=finance,owner=owner,
     )
 
 @cashbox_bp.get("/<int:cashbox_id>/report")

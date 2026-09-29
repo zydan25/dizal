@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row report-heading">
+  <div class="page-heading"><h1>تقرير المبيعات</h1><p>كل مبيعات الديزل في الفترة، بما فيها بيع المزارعين والبيع العام.</p></div>
+  <button class="secondary-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i><span>طباعة</span></button>
+</div>
+<form class="filter-row report-filters" method="get">
+<label class="filter-chip">من <input name="start" type="date" value="{{start.isoformat()}}"></label>
+<label class="filter-chip">إلى <input name="end" type="date" value="{{end.isoformat()}}"></label>
+<button class="filter-chip active" type="submit">تطبيق</button>
+</form>
+<div class="stats-grid page-stats-compact">
+<div class="stat-card"><div><small>المبيعات</small><strong>{{data.sales|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><div><small>تكلفة المباع</small><strong>{{data.cogs|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><div><small>مجمل الربح</small><strong>{{data.gross_profit|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><div><small>المقبوض الفوري</small><strong>{{data.collected|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+</div>
+<div class="section-title"><h2>المبيعات</h2><span>{{data.rows|length}} عملية</span></div>
+<div class="entity-list">
+{% for row in data.rows %}
+<a class="entity-row" href="{{url_for('documents.view',document_id=row.document_id)}}">
+<div class="avatar"><i class="bi {% if row.sale_type=="general" %}bi-shop{% else %}bi-person{% endif %}"></i></div>
+<div class="entity-main">
+<strong>{% if row.sale_type=="general" %}بيع عام{% else %}مزارع{% endif %} · {{row.document.number}}</strong>
+<span>{% if row.farmer %}{{row.farmer.name}}{% elif row.customer_name %}{{row.customer_name}}{% else %}عميل نقدي{% endif %} · {{row.drums|clean_number}} دبة · {{row.liters|clean_number}} لتر</span>
+<small>الموظف: {{row.employee.display_name}} · الربح {{row.gross_profit|clean_number}} · {{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small>
+</div>
+<div class="money-value">{{row.total_amount|clean_number}}</div>
+</a>
+{% else %}<div class="empty-state">لا توجد مبيعات في الفترة.</div>{% endfor %}
+</div>
+{% endblock %}

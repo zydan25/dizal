@@ -39,6 +39,35 @@ document.querySelectorAll("[data-palette]").forEach(btn=>btn.addEventListener("c
 </script>
 <div class="section-title"><h2>التطبيق</h2><span>تثبيت واستخدام دون اتصال</span></div>
 <div class="info-card install-card"><div><strong>ثبّت Dizal على الشاشة الرئيسية</strong><p>يعمل كتطبيق مستقل بواجهة أنظف. وعند انقطاع الإنترنت سيظهر تنبيه بدل إرسال عمليات الحفظ.</p></div><button class="secondary-btn" type="button" data-install-app><i class="bi bi-download"></i><span>تثبيت الآن</span></button></div>
+<div class="section-title"><h2>أدوات النظام</h2><span>نسخ احتياطي وتصفير</span></div>
+<div class="system-tools-grid">
+  <div class="system-tool-card backup-tool-card">
+    <div class="system-tool-icon"><i class="bi bi-database-check"></i></div>
+    <div class="system-tool-copy"><strong>نسخة احتياطية</strong><p>ينشئ ملفًا محفوظًا على الخادم يتضمن قاعدة البيانات وملفات المرفقات الموجودة.</p></div>
+    <form method="post" action="{{url_for('settings.backup')}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="primary-btn" type="submit"><i class="bi bi-cloud-arrow-down"></i><span>إنشاء نسخة</span></button></form>
+  </div>
+  {% if backups %}
+  <div class="backup-list">
+    {% for backup in backups %}
+    <a class="backup-row" href="{{url_for('settings.backup_download',filename=backup.name)}}"><i class="bi bi-file-earmark-zip"></i><div><strong>{{backup.name}}</strong><small>{{backup.size_mb|round(2)}} MB · {{backup.modified}}</small></div><i class="bi bi-download"></i></a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <div class="system-tool-card reset-tool-card">
+    <div class="system-tool-icon danger"><i class="bi bi-arrow-counterclockwise"></i></div>
+    <div class="system-tool-copy"><strong>تصفير النظام</strong><p>يمسح بيانات التشغيل والحسابات والمزارعين والصناديق والأصول والتقارير، ويحذف حسابات الموظفين. يبقي حساب المدير والإعدادات والأدوار والصلاحيات.</p></div>
+    <button class="danger-btn" type="button" data-bs-toggle="collapse" data-bs-target="#reset-system-form"><i class="bi bi-shield-lock"></i><span>فتح التصفير</span></button>
+  </div>
+  <div class="collapse" id="reset-system-form">
+    <form method="post" action="{{url_for('settings.reset')}}" class="mobile-form card-form danger-form">
+      <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+      <label>كلمة مرور المدير<input type="password" name="password" autocomplete="current-password" required></label>
+      <label>اكتب «تصفير» للتأكيد<input name="confirmation" required autocomplete="off"></label>
+      <div class="info-card danger-info"><i class="bi bi-exclamation-triangle"></i><span>هذه العملية لا يمكن التراجع عنها من داخل النظام. أنشئ نسخة احتياطية قبل التصفير.</span></div>
+      <button class="danger-btn" type="submit" onclick="return confirm('سيتم حذف بيانات المشروع وحسابات الموظفين. هل أنشأت نسخة احتياطية وتريد المتابعة؟')"><i class="bi bi-trash3"></i><span>تصفير النظام نهائيًا</span></button>
+    </form>
+  </div>
+</div>
 <div class="section-title"><h2>السندات</h2><span>ترويسة وتذييل</span></div>
 <label>ترويسة السند<textarea name="document_header" rows="2">{{settings.document_header or ''}}</textarea></label>
 <label>تذييل السند<textarea name="document_footer" rows="2">{{settings.document_footer or ''}}</textarea></label>

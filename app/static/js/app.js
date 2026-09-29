@@ -222,11 +222,25 @@ async function triggerInstall(){
     return;
   }
   if(deferredInstallPrompt){
-    deferredInstallPrompt.prompt();
-    try{await deferredInstallPrompt.userChoice;}catch(_){}
-    deferredInstallPrompt=null;
-    refreshInstallButtons();
-    closeInstallSheet();
+    const prompt=deferredInstallPrompt;
+    try{
+      prompt.prompt();
+      const choice=await prompt.userChoice;
+      deferredInstallPrompt=null;
+      refreshInstallButtons();
+      if(choice?.outcome==="accepted"){
+        closeInstallSheet();
+        dizalToast("تمت الموافقة على تثبيت Dizal. سيكتمل التثبيت من المتصفح.","success");
+      }else{
+        closeInstallSheet();
+        dizalToast("تم إلغاء تثبيت Dizal.");
+      }
+    }catch(_){
+      deferredInstallPrompt=null;
+      refreshInstallButtons();
+      openInstallSheet();
+      if(installHelp)installHelp.innerHTML='<div class="install-help-ready"><i class="bi bi-exclamation-circle"></i><span>انتهت صلاحية نافذة التثبيت المباشر. استخدم تعليمات المتصفح الظاهرة هنا.</span></div>'+installHelp.innerHTML;
+    }
     return;
   }
   if(isIos()){
@@ -264,6 +278,6 @@ document.addEventListener("submit",event=>{
 });
 
 if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js?v=20260928-12",{updateViaCache:"none"}));
+  window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js?v=20260929-1",{updateViaCache:"none"}));
 }
 })();

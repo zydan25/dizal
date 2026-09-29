@@ -1,15 +1,35 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row"><div class="page-heading"><h1>{% if editing %}تعديل الأصل{% else %}إضافة أصل{% endif %}</h1><p>{% if editing %}تعديل بيانات الأصل مع إبقاء القيمة والسند المالي الأصليين ثابتين.{% else %}سينشأ الكود والسند تلقائيًا عند الحفظ.{% endif %}</p></div>{% if asset %}<span class="status-chip">{{asset.asset_code}}</span>{% endif %}</div>
+<div class="page-heading-row"><div class="page-heading"><h1>{% if editing %}تعديل الأصل{% else %}شراء/إضافة أصل{% endif %}</h1><p>{% if editing %}تعديل البيانات التشغيلية مع إبقاء القيمة والسند المالي الأصليين ثابتين.{% else %}اختر الصندوق، وإذا كان الأصل خزانًا فعّل الربط ليُنشأ الخزان التشغيلي تلقائيًا.{% endif %}</p></div>{% if asset %}<span class="status-chip">{{asset.asset_code}}</span>{% endif %}</div>
 <form method="post" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>اسم الأصل<input name="name" value="{{asset.name if asset else ''}}" required></label>
-<div class="two-col"><label>الفئة<input name="category" value="{{asset.category if asset else ''}}" placeholder="خزان / مضخة / تجهيز"></label>{% if not editing %}<label>القيمة<input name="cost" type="number" step="0.001" min="0.001" required></label>{% else %}<label>القيمة المسجلة<input value="{{asset.acquisition_cost}}" readonly></label>{% endif %}</div>
-<label>التاريخ<input name="acquisition_date" type="date" value="{{today}}" required></label>
+<div class="two-col">
+<label>الفئة
+<select name="category" id="asset-category">
+<option value="أصل ثابت" {% if not asset or asset.category=="أصل ثابت" %}selected{% endif %}>أصل ثابت</option>
+<option value="خزان ديزل" {% if asset and "خزان" in asset.category %}selected{% endif %}>خزان ديزل</option>
+<option value="مضخة / معدة" {% if asset and "مضخة" in asset.category %}selected{% endif %}>مضخة / معدة</option>
+</select></label>
+{% if not editing %}<label>قيمة الشراء<input name="cost" type="number" step="0.001" min="0.001" required></label>{% else %}<label>القيمة المسجلة<input value="{{asset.acquisition_cost|clean_number}}" readonly></label>{% endif %}
+</div>
+<div id="tank-details" class="asset-tank-details" {% if not asset or "خزان" not in asset.category %}hidden{% endif %}>
+<label>سعة الخزان باللتر<input name="tank_capacity_liters" type="number" step="0.001" min="1" value="{{asset.tank.capacity_liters|clean_number if asset and asset.tank else ''}}" data-unit="liter"></label>
+{% if not editing %}<label class="check-row"><input type="checkbox" name="create_tank" value="1" checked> <span>إنشاء الخزان التشغيلي وربطه بهذا الأصل</span></label>{% else %}<div class="info-card"><i class="bi bi-link-45deg"></i><span>{% if asset.tank %}هذا الأصل مرتبط بالخزان {{asset.tank.code}}.{% else %}يمكن إنشاء الخزان من شاشة الخزانات لهذا الأصل القديم.{% endif %}</span></div>{% endif %}
+</div>
+<label>تاريخ الشراء<input name="acquisition_date" type="date" value="{{today}}" required></label>
 {% if not editing %}<label>الصندوق الدافع<select name="payer_cashbox_id" required>{% for box in cashboxes %}<option value="{{box.id}}">{{box.name}}</option>{% endfor %}</select></label>{% endif %}
 <label>المسؤول<select name="custodian_user_id"><option value="">بدون</option>{% for e in employees %}<option value="{{e.id}}" {% if asset and asset.custodian_user_id==e.id %}selected{% endif %}>{{e.display_name}}</option>{% endfor %}</select></label>
 <div class="two-col"><label>الموقع<input name="location" value="{{asset.location if asset else ''}}"></label>{% if editing %}<label>الحالة<select name="status"><option value="active" {% if asset.status=="active" %}selected{% endif %}>فعال</option><option value="maintenance" {% if asset.status=="maintenance" %}selected{% endif %}>صيانة</option><option value="retired" {% if asset.status=="retired" %}selected{% endif %}>متقاعد</option></select></label>{% endif %}</div>
 <label>ملاحظات<textarea name="notes" rows="3">{{asset.notes if asset else ''}}</textarea></label>
-<button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ {% if editing %}التعديلات{% else %}الأصل{% endif %}</span></button>
+<div class="info-card"><i class="bi bi-info-circle"></i><span>شراء الخزان هنا يسجل كأصل ثابت، يخصم من الصندوق المختار، وينشئ خزانًا تشغيليًا يظهر أيضًا في «الخزانات» إذا كان خيار الربط مفعّلًا.</span></div>
+{% if not editing %}<script>
+(function(){
+ const s=document.getElementById("asset-category"),box=document.getElementById("tank-details");
+ function sync(){if(s&&box)box.hidden=!s.value.includes("خزان");}
+ s?.addEventListener("change",sync);sync();
+})();
+</script>{% endif %}
+<button class="primary-btn"><i class="bi bi-check2"></i><span>{% if editing %}حفظ التعديلات{% else %}حفظ الأصل والشراء{% endif %}</span></button>
 </form>
 {% endblock %}

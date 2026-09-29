@@ -61,19 +61,28 @@ def post_fuel_purchase(purchase,created_by_id):
     return post_journal("fuel_purchase",purchase.id,"شراء ديزل",created_by_id,[{"account_code":"1200","debit":purchase.landed_cost},{"account_code":"1110","credit":purchase.landed_cost,"employee_id":purchase.employee_id}],purchase.document_id)
 
 def post_sale(dispense,created_by_id):
+    # Farmer sales may create a receivable; direct sales are cash-only.
+    if dispense.farmer_id:
+        lines=[
+            {"account_code":"4000","credit":dispense.total_amount},
+            {"account_code":"5000","debit":dispense.cost_amount},
+            {"account_code":"1200","credit":dispense.cost_amount},
+        ]
+        if dispense.paid_amount and dispense.credit_amount:
+            lines.append({"account_code":"1110","debit":dispense.paid_amount,"employee_id":dispense.employee_id})
+            lines.append({"account_code":"1400","debit":dispense.credit_amount,"farmer_id":dispense.farmer_id})
+        elif dispense.paid_amount:
+            lines.append({"account_code":"1110","debit":dispense.paid_amount,"employee_id":dispense.employee_id,"farmer_id":dispense.farmer_id})
+        else:
+            lines.append({"account_code":"1400","debit":dispense.total_amount,"farmer_id":dispense.farmer_id})
+        return post_journal("fuel_dispense",dispense.id,"بيع وصرف ديزل",created_by_id,lines,dispense.document_id)
     lines=[
         {"account_code":"4000","credit":dispense.total_amount},
         {"account_code":"5000","debit":dispense.cost_amount},
         {"account_code":"1200","credit":dispense.cost_amount},
-        {"account_code":"1110" if dispense.paid_amount else "1400","debit":dispense.total_amount,"employee_id":dispense.employee_id,"farmer_id":dispense.farmer_id},
+        {"account_code":"1110","debit":dispense.total_amount,"employee_id":dispense.employee_id},
     ]
-    if dispense.paid_amount and dispense.credit_amount:
-        lines[-1]["debit"]=dispense.paid_amount
-        lines.append({"account_code":"1400","debit":dispense.credit_amount,"farmer_id":dispense.farmer_id})
-    elif not dispense.paid_amount:
-        lines[-1]["account_code"]="1400"
-    return post_journal("fuel_dispense",dispense.id,"بيع وصرف ديزل",created_by_id,lines,dispense.document_id)
-
+    return post_journal("general_sale",dispense.id,"بيع ديزل مباشر",created_by_id,lines,dispense.document_id)
 def post_payment(payment,created_by_id):
     return post_journal("farmer_payment",payment.id,"تحصيل من مزارع",created_by_id,[{"account_code":"1110","debit":payment.amount,"employee_id":payment.employee_id},{"account_code":"1400","credit":payment.amount,"farmer_id":payment.farmer_id}],payment.document_id)
 

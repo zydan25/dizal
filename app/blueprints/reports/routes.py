@@ -4,7 +4,7 @@ from flask_login import current_user
 from sqlalchemy import func
 from ...decorators import permission_required
 from ...models import Cashbox,CashboxTransaction,EmployeeSettlement,User
-from ...services.reports import employee_operations,employee_performance,farmer_debts,inventory_commitment,project_summary
+from ...services.reports import employee_operations,employee_performance,farmer_debts,inventory_commitment,project_summary,sales_report,dispense_report
 from . import reports_bp
 
 @reports_bp.get("/")
@@ -21,6 +21,38 @@ def farmers_debts():
 @permission_required("reports.view")
 def employees():
     return render_template("reports/employees.html",rows=employee_performance())
+
+def _report_dates():
+    try:
+        start=date.fromisoformat(request.args.get("start") or date.today().replace(day=1).isoformat())
+        end=date.fromisoformat(request.args.get("end") or date.today().isoformat())
+    except ValueError:
+        abort(400,description="صيغة التاريخ غير صحيحة.")
+    if end<start: abort(400,description="نهاية الفترة لا يمكن أن تسبق بدايتها.")
+    return start,end
+
+@reports_bp.get("/sales")
+@permission_required("reports.view")
+def sales_report_view():
+    start,end=_report_dates()
+    data=sales_report(start,end)
+    return render_template("reports/sales.html",data=data,start=start,end=end)
+
+@reports_bp.get("/dispenses")
+@permission_required("reports.view")
+def dispense_report_view():
+    start,end=_report_dates()
+    data=dispense_report(start,end)
+    return render_template("reports/dispenses.html",data=data,start=start,end=end)
+
+@reports_bp.get("/employee/<int:employee_id>/operations")
+@permission_required("employee.statement.view")
+def employee_operations_report(employee_id):
+    employee=User.query.filter_by(id=employee_id,is_employee=True).first_or_404()
+    if not current_user.has_role("manager") and employee.id!=current_user.id: abort(403)
+    start,end=_report_dates()
+    data=employee_operations(employee.id,start,end)
+    return render_template("reports/employee_operations.html",data=data,start=start,end=end,report_employee=employee)
 
 @reports_bp.get("/my-statement")
 @permission_required("employee.statement.view")

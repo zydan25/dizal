@@ -1,8 +1,10 @@
-from flask import current_app,flash,redirect,render_template,request,url_for
+from flask import current_app,flash,redirect,render_template,request,url_for,send_file,abort
 from ...decorators import permission_required
+from flask_security.utils import verify_password
 from ...extensions import db
 from ...models import ProjectSettings
 from ...services.audit import audit
+from ...services.system_admin import create_backup,list_backups,reset_project_data
 from ...services.files import save_image
 from . import settings_bp
 
@@ -61,4 +63,51 @@ def index():
         flash("تم حفظ إعدادات المشروع والثيم والسندات.","success")
         return redirect(url_for("settings.index"))
     current_palette=next((key for key,colors in PALETTES.items() if settings.primary_color==colors["primary"] and settings.secondary_color==colors["secondary"] and settings.accent_color==colors["accent"]), "")
-    return render_template("settings/index.html",settings=settings,palettes=PALETTES,font_scales=FONT_SCALES,current_palette=current_palette)
+    backup_rows=[{"name":row.name,"size_mb":row.stat().st_size/1024/1024,"modified":__import__("datetime").datetime.fromtimestamp(row.stat().st_mtime).strftime("%Y-%m-%d %H:%M")} for row in list_backups()[:10]]
+    return render_template("settings/index.html",settings=settings,palettes=PALETTES,font_scales=FONT_SCALES,current_palette=current_palette,backups=backup_rows)
+
+@settings_bp.post("/backup")
+@permission_required("settings.manage")
+def backup():
+    try:
+        path=create_backup()
+        audit("system.backup.created","system",0,after={"filename":path.name})
+        db.session.commit()
+        flash("تم إنشاء النسخة الاحتياطية وحفظها على الخادم.","success")
+    except Exception as exc:
+        db.session.rollback()
+        flash("تعذر إنشاء النسخة الاحتياطية: "+str(exc),"danger")
+    return redirect(url_for("settings.index"))
+
+@settings_bp.get("/backup/<path:filename>")
+@permission_required("settings.manage")
+def backup_download(filename):
+    from pathlib import Path
+    safe=Path(filename).name
+    if safe!=filename or not safe.startswith("dizal-backup-") or not safe.endswith(".zip"): abort(404)
+    root=(Path(current_app.instance_path)/"backups").resolve()
+    path=(root/safe).resolve()
+    if root not in path.parents or not path.is_file(): abort(404)
+    return send_file(path,as_attachment=True,download_name=safe)
+
+@settings_bp.post("/reset")
+@permission_required("settings.manage")
+def reset():
+    from flask_login import current_user
+    password=request.form.get("password") or ""
+    confirmation=request.form.get("confirmation") or ""
+    if not verify_password(password,current_user.password):
+        flash("كلمة المرور غير صحيحة. لم يتم تصفير النظام.","danger")
+        return redirect(url_for("settings.index"))
+    if confirmation!="تصفير":
+        flash("اكتب كلمة «تصفير» لتأكيد العملية.","danger")
+        return redirect(url_for("settings.index"))
+    try:
+        reset_project_data()
+        audit("system.reset","system",0,after={"preserved":"manager/settings/roles/permissions"})
+        db.session.commit()
+        flash("تم تصفير بيانات المشروع وحذف حسابات الموظفين، مع إبقاء حساب المدير والإعدادات الأساسية.","success")
+    except Exception as exc:
+        db.session.rollback()
+        flash("فشل التصفير ولم تكتمل العملية: "+str(exc),"danger")
+    return redirect(url_for("settings.index"))

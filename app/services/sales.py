@@ -74,6 +74,44 @@ def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amou
         post_transaction(cashbox.id,"IN",paid,"farmer_sale_cash",employee.id,f"تحصيل فوري من {farmer.name}",document.id,"fuel_dispense",row.id)
     return row
 
+def create_general_sale(employee,tank_id,drums,sale_price_per_liter,customer_name=None,notes=None):
+    drums=Decimal(str(drums))
+    price=Decimal(str(sale_price_per_liter))
+    settings=ProjectSettings.get()
+    if drums<=0 or price<=0:
+        raise ValueError("عدد الدباب وسعر اللتر يجب أن يكونا أكبر من صفر.")
+    liters=drums*Decimal(str(settings.drum_liters))
+    if liters>current_stock_liters(tank_id):
+        raise ValueError("المخزون في الخزان لا يكفي لهذه العملية.")
+    total=liters*price
+    document=create_document("DSP","سند بيع ديزل مباشر",employee.id,source_type="general_sale",notes=notes)
+    row=FuelDispense(
+        document_id=document.id,farmer_id=None,employee_id=employee.id,tank_id=tank_id,
+        liters=liters,drums=drums,sale_price_per_liter=price,total_amount=total,
+        paid_amount=total,credit_amount=Decimal("0"),credit_drums=Decimal("0"),
+        payment_mode="cash",sale_type="general",customer_name=(customer_name or "").strip() or None,
+        notes=notes,status="approved",
+    )
+    db.session.add(row)
+    db.session.flush()
+    document.source_id=str(row.id)
+    cost_amount=consume_fifo(tank_id,liters,row.id,employee.id)
+    row.cost_amount=cost_amount
+    row.gross_profit=total-cost_amount
+    db.session.add(FuelStockMovement(
+        tank_id=tank_id,direction="OUT",movement_type="general_sale",liters=liters,
+        unit_cost=(cost_amount/liters if liters else 0),source_type="general_sale",
+        source_id=str(row.id),document_id=document.id,created_by_id=employee.id,
+    ))
+    from .accounting import post_sale
+    post_sale(row,employee.id)
+    cashbox=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
+    if not cashbox:
+        raise ValueError("لا يوجد صندوق فعال للموظف.")
+    post_transaction(cashbox.id,"IN",total,"general_sale_cash",employee.id,
+                     f"بيع ديزل مباشر{': '+customer_name if customer_name else ''}",document.id,"general_sale",row.id)
+    return row
+
 def register_payment(employee,farmer,amount,payment_method="cash",reference=None,notes=None):
     amount=Decimal(str(amount))
     if amount<=0: raise ValueError("مبلغ السداد يجب أن يكون أكبر من صفر.")

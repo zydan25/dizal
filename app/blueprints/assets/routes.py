@@ -57,7 +57,9 @@ def new():
                 created_by_id=__import__("flask_login").current_user.id,
                 custodian_user_id=int(request.form["custodian_user_id"]) if request.form.get("custodian_user_id") else None,
                 location=request.form.get("location"),
-                notes=request.form.get("notes")
+                notes=request.form.get("notes"),
+                create_tank=request.form.get("create_tank")=="1",
+                tank_capacity_liters=request.form.get("tank_capacity_liters") or None,
             )
             audit("asset.created","asset",asset.id,after={"asset_code":asset.asset_code,"cost":str(asset.acquisition_cost),"document_id":asset.document_id})
             db.session.commit()

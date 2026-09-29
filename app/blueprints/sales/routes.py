@@ -5,7 +5,7 @@ from ...extensions import db
 from ...models import Document,Farmer,FarmerPayment,FarmerQuotaMovement,FuelDispense,FuelTank,User,ProjectSettings
 from ...permissions import user_has_permission
 from ...services.audit import audit
-from ...services.sales import create_dispense,farmer_account,farmer_account_metrics,register_payment
+from ...services.sales import create_dispense,create_general_sale,farmer_account,farmer_account_metrics,register_payment
 from . import sales_bp
 
 def selected_employee(farmer=None):
@@ -91,6 +91,43 @@ def payment():
         if selected_farmer:
             selected_employee_id=str(selected_farmer.assigned_employee_id or "")
     return render_template("sales/payment.html",farmers=farmers,accounts=accounts,accounts_json=accounts_json,employees=employees,selected_farmer_id=selected_farmer_id,selected_employee_id=selected_employee_id)
+
+@sales_bp.route("/point-of-sale",methods=["GET","POST"])
+@sales_bp.route("/pos",methods=["GET","POST"])
+@permission_required("fuel.dispense")
+def point_of_sale():
+    if request.method=="POST":
+        try:
+            employee=current_user
+            if current_user.has_role("manager") and request.form.get("employee_id"):
+                employee=User.query.filter_by(id=int(request.form["employee_id"]),is_employee=True,active=True).first()
+                if not employee:
+                    raise ValueError("الموظف المحدد غير صالح.")
+            row=create_general_sale(
+                employee=employee,
+                tank_id=int(request.form.get("tank_id")),
+                drums=request.form.get("drums"),
+                sale_price_per_liter=request.form.get("sale_price_per_liter"),
+                customer_name=request.form.get("customer_name"),
+                notes=request.form.get("notes"),
+            )
+            audit("general.sale.created","fuel_dispense",row.id,after={
+                "employee_id":employee.id,"tank_id":row.tank_id,"drums":str(row.drums),
+                "liters":str(row.liters),"total":str(row.total_amount),"document_id":row.document_id,
+            })
+            db.session.commit()
+            flash("تم تسجيل البيع العام وقبض المبلغ وإصدار السند.","success")
+            return redirect(url_for("sales.point_of_sale"))
+        except (ValueError,TypeError) as exc:
+            db.session.rollback()
+            flash(str(exc),"danger")
+    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).all()
+    employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
+    settings=ProjectSettings.get()
+    selected_employee_id=request.args.get("employee_id") or ""
+    if current_user.has_role("manager") and not selected_employee_id and employees:
+        selected_employee_id=str(employees[0].id)
+    return render_template("sales/point_of_sale.html",tanks=tanks,employees=employees,settings=settings,selected_employee_id=selected_employee_id)
 
 @sales_bp.get("/farmer/<int:farmer_id>")
 @permission_required("farmers.view")

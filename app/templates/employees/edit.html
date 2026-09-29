@@ -11,7 +11,9 @@
 <div class="two-col"><label>أقصى مزارعين<input name="farmer_limit_override" type="number" value="{{profile.farmer_limit_override or ''}}"></label><label>حد الدين بالدبة<input name="credit_limit_override" type="number" step="0.1" value="{{profile.credit_limit_override or ''}}"></label></div>
 <label>أقصى صرف يومي باللتر<input name="daily_liters_limit_override" type="number" step="0.001" value="{{profile.daily_liters_limit_override or ''}}"></label>
 <label class="check-row"><input type="checkbox" name="can_change_farmer_quota" value="1" {% if profile.can_change_farmer_quota %}checked{% endif %}> السماح بتعديل سقف المزارع ضمن الحدود</label>
-<div class="two-col"><label>نوع الراتب<select name="salary_type"><option value="fixed" {% if profile.salary_type=="fixed" %}selected{% endif %}>ثابت</option><option value="commission" {% if profile.salary_type=="commission" %}selected{% endif %}>عمولة</option></select></label><label>القيمة<input name="salary_value" type="number" step="0.001" value="{{profile.salary_value}}"></label></div>
+<div class="two-col"><label>نوع الراتب<select name="salary_type"><option value="fixed" {% if profile.salary_type=="fixed" %}selected{% endif %}>ثابت</option><option value="per_liter" {% if profile.salary_type=="per_liter" %}selected{% endif %}>ربح لكل لتر</option>
+<option value="per_drum" {% if profile.salary_type=="per_drum" %}selected{% endif %}>ربح لكل دبة</option>
+<option value="percent_profit" {% if profile.salary_type in ["percent_profit","commission"] %}selected{% endif %}>نسبة من الربح %</option></select></label><label>القيمة (ريال / لتر / دبة / %)<input name="salary_value" type="number" step="0.001" value="{{profile.salary_value}}"></label></div>
 {% endif %}
 <button class="primary-btn"><i class="bi bi-check2"></i> حفظ</button>
 </form>

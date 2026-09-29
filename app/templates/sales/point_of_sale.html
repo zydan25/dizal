@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row">
+  <div class="page-heading"><h1>نقطة بيع عامة</h1><p>بيع فوري بدون ربط بمزارع، مع خصم الديزل من الخزان وقبض المبلغ في صندوق الموظف.</p></div>
+  <a class="secondary-btn" href="{{url_for('reports.sales_report')}}"><i class="bi bi-bar-chart"></i><span>تقرير المبيعات</span></a>
+</div>
+<form method="post" class="mobile-form card-form" id="pos-form">
+<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+{% if current_user.has_role("manager") %}
+<label>الموظف<select name="employee_id" required>{% for e in employees %}<option value="{{e.id}}" {% if selected_employee_id|string==e.id|string %}selected{% endif %}>{{e.display_name}}</option>{% endfor %}</select></label>
+{% endif %}
+<label>الخزان<select name="tank_id" id="pos-tank" required><option value="">اختر الخزان</option>{% for tank in tanks %}<option value="{{tank.id}}">{{tank.name}}</option>{% endfor %}</select></label>
+<label>اسم العميل <span class="field-optional">اختياري</span><input name="customer_name" placeholder="عميل نقدي / اسم اختياري"></label>
+<div class="two-col">
+<label>عدد الدباب<input name="drums" id="pos-drums" type="number" step="0.1" min="0.1" inputmode="decimal" required data-unit="drum"></label>
+<label>سعر اللتر<input name="sale_price_per_liter" id="pos-price" type="number" step="0.001" min="0.001" value="{{settings.default_sale_price_per_liter|clean_number}}" required></label>
+</div>
+<div class="calculation-card pos-total-card">
+<div><small>اللترات</small><strong id="pos-liters">0</strong><span>لتر</span></div>
+<div><small>الإجمالي المقبوض</small><strong id="pos-total">0</strong><span>{{project_settings.currency}}</span></div>
+<div><small>العملية</small><strong>بيع فوري</strong><span>نقد</span></div>
+</div>
+<div class="info-card"><i class="bi bi-info-circle"></i> البيع العام لا ينشئ دينًا ولا يحتاج حساب مزارع؛ يسجل مباشرة على صندوق الموظف ويخصم من المخزون.</div>
+<label>ملاحظات<textarea name="notes" rows="2"></textarea></label>
+<button class="primary-btn"><i class="bi bi-cash-stack"></i><span>تأكيد البيع وقبض المبلغ</span></button>
+</form>
+<script>
+(function(){
+const drumLiters={{project_settings.drum_liters|float}},d=document.getElementById("pos-drums"),p=document.getElementById("pos-price");
+function fmt(v,digits){const n=Number(v||0);return n.toFixed(digits||2).replace(/.?0+$/,"");}
+function recalc(){const liters=Number(d?.value||0)*drumLiters,total=liters*Number(p?.value||0);document.getElementById("pos-liters").textContent=fmt(liters,1);document.getElementById("pos-total").textContent=fmt(total,2);}
+["input","change"].forEach(e=>[d,p].forEach(x=>x?.addEventListener(e,recalc)));recalc();
+})();
+</script>
+{% endblock %}

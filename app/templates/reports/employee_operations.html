@@ -2,7 +2,7 @@
 {% block content %}
 <div class="page-heading-row">
   <div class="page-heading">
-    <h1>تقريري التشغيلي</h1>
+    <h1>{% if report_employee %}التقرير التشغيلي — {{report_employee.display_name}}{% else %}تقريري التشغيلي{% endif %}</h1>
     <p>كل عملياتك في الفترة المحددة: السحب والتحصيل والتوريدات.</p>
   </div>
   <button class="secondary-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i> طباعة</button>
@@ -24,10 +24,10 @@
 <div class="section-title"><h2>سحبيات الديزل</h2><span>{{data.dispenses|length}} عملية</span></div>
 <div class="entity-list">
 {% for row in data.dispenses %}
-<a class="entity-row" href="{{url_for('sales.farmer_account_view',farmer_id=row.farmer.id)}}">
+<a class="entity-row" href="{{url_for('documents.view',document_id=row.document_id)}}">
   <div class="avatar"><i class="bi bi-droplet-fill"></i></div>
   <div class="entity-main">
-    <strong>{{row.document.number}} · {{row.farmer.name}}</strong>
+    <strong>{{row.document.number}} · {% if row.sale_type=="general" %}بيع عام{% elif row.farmer %}{{row.farmer.name}}{% else %}عميل نقدي{% endif %}</strong>
     <span>{{row.drums}} دبة · {{row.liters}} لتر · {{row.total_amount}} {{project_settings.currency}}</span>
     <small>مدفوع {{row.paid_amount}} · دين {{row.credit_amount}} · {{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small>
   </div>
