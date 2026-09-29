@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "Dizal - إدارة توزيع الديزل",
+  "short_name": "Dizal",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f8fc",
+  "theme_color": "#1877F2",
+  "description": "نظام Dizal لإدارة توزيع الديزل والحسابات والسداد.",
+  "lang": "ar",
+  "dir": "rtl",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/static/icons/dizal.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
