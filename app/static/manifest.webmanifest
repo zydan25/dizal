@@ -1,16 +1,12 @@
 {
-  "id": "/",
   "name": "Dizal - إدارة توزيع الديزل",
   "short_name": "Dizal",
+  "lang": "ar",
+  "dir": "rtl",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
   "background_color": "#f6f8fc",
   "theme_color": "#1877F2",
-  "description": "نظام Dizal لإدارة توزيع الديزل والحسابات والسداد.",
-  "lang": "ar",
-  "dir": "rtl",
-  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/static/icons/dizal-192.png",
@@ -22,29 +18,7 @@
       "src": "/static/icons/dizal-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/static/icons/dizal-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/static/pwa/dizal-mobile.png?v=20260929-pwa2",
-      "sizes": "360x640",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "واجهة Dizal على الهاتف"
-    },
-    {
-      "src": "/static/pwa/dizal-desktop.png?v=20260929-pwa2",
-      "sizes": "640x400",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "واجهة Dizal على الكمبيوتر"
+      "purpose": "any maskable"
     }
   ]
 }
