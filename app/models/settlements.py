@@ -17,6 +17,8 @@ class EmployeeSettlement(db.Model):
     gross_profit=db.Column(db.Numeric(18,3),nullable=False,default=0)
     operating_expenses=db.Column(db.Numeric(18,3),nullable=False,default=0)
     employee_salary=db.Column(db.Numeric(18,3),nullable=False,default=0)
+    compensation_type_snapshot=db.Column(db.String(30),nullable=True)
+    compensation_value_snapshot=db.Column(db.Numeric(18,3),nullable=True)
     owner_transfer=db.Column(db.Numeric(18,3),nullable=False,default=0)
     retained_operating_capital=db.Column(db.Numeric(18,3),nullable=False,default=0)
     status=db.Column(db.String(25),nullable=False,default="draft")
