@@ -103,14 +103,6 @@ def reset_project_data():
                     Cashbox.owner_user_id.in_(manager_ids),
                 ).all()
             )
-        if keep_cashbox_ids:
-            db.session.execute(
-                delete(cashbox_table).where(
-                    cashbox_table.c.id.notin_(keep_cashbox_ids)
-                )
-            )
-        else:
-            db.session.execute(delete(cashbox_table))
 
     preserve_tables={
         "user","role","permission","role_permission","roles_users",
