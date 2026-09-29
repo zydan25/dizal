@@ -146,3 +146,47 @@ def test_employee_creation_can_assign_manager_role():
         assert created.has_role("manager")
         assert EmployeeProfile.query.filter_by(user_id=created.id).first() is not None
         assert Cashbox.query.filter_by(owner_user_id=created.id,box_type="employee").first() is not None
+
+def test_pos_page_renders_with_default_tank_and_price_policy():
+    from app.models import Permission,RolePermission
+    app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite://","WTF_CSRF_ENABLED":False,"SECRET_KEY":"test","SECURITY_PASSWORD_SALT":"test"})
+    with app.app_context():
+        db.create_all()
+        settings=ProjectSettings.get()
+        manager_role=Role(name="manager",description="manager",label="مدير")
+        employee_role=Role(name="employee",description="employee",label="موظف")
+        db.session.add_all([manager_role,employee_role]);db.session.flush()
+        permission=Permission(key="fuel.dispense",label="صرف الديزل",module="fuel")
+        db.session.add(permission);db.session.flush()
+        db.session.add(RolePermission(role_id=employee_role.id,permission_id=permission.id))
+        manager=User(username="manager",email="manager@test.local",password=hash_password("secret"),display_name="مدير",active=True,fs_uniquifier="pos-manager")
+        employee=User(username="employee",email="employee@test.local",password=hash_password("secret"),display_name="موظف",active=True,is_employee=True,fs_uniquifier="pos-employee")
+        manager.roles.append(manager_role);employee.roles.append(employee_role)
+        db.session.add_all([manager,employee]);db.session.flush()
+        db.session.add(EmployeeProfile(user_id=employee.id,employee_code="EMP-0001"))
+        db.session.add_all([
+            Cashbox(name="الرئيسي",box_type="central",is_active=True),
+            Cashbox(name="الموظف",box_type="employee",owner_user_id=employee.id,is_active=True),
+        ])
+        from app.models import FuelTank
+        first=FuelTank(name="الخزان الأول",code="TANK-001",is_active=True)
+        second=FuelTank(name="الخزان الثاني",code="TANK-002",is_active=True)
+        db.session.add_all([first,second]);db.session.commit()
+        first_id=first.id
+    manager_client=app.test_client()
+    assert manager_client.post("/auth/login",data={"identifier":"manager","password":"secret"},follow_redirects=True).status_code==200
+    manager_page=manager_client.get("/sales/point-of-sale")
+    assert manager_page.status_code==200
+    html=manager_page.get_data(as_text=True)
+    assert f'value="{first_id}" selected' in html
+    employee_client=app.test_client()
+    assert employee_client.post("/auth/login",data={"identifier":"employee","password":"secret"},follow_redirects=True).status_code==200
+    employee_page=employee_client.get("/sales/point-of-sale")
+    assert employee_page.status_code==200
+    assert 'name="sale_price_per_liter"' in employee_page.get_data(as_text=True)
+    assert 'readonly' in employee_page.get_data(as_text=True)
+    with app.app_context():
+        ProjectSettings.get().allow_employee_sale_price_override=True
+        db.session.commit()
+    employee_page=employee_client.get("/sales/point-of-sale")
+    assert 'readonly' not in employee_page.get_data(as_text=True)
