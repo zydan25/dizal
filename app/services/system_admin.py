@@ -86,5 +86,8 @@ def reset_project_data():
                 try: child.unlink()
                 except OSError: pass
     from .accounting import ensure_accounts
+    from ..models import Cashbox
+    if not Cashbox.query.filter_by(box_type="central",is_active=True).first():
+        db.session.add(Cashbox(name="الصندوق الرئيسي",box_type="central",is_active=True))
     ensure_accounts()
     db.session.commit()
