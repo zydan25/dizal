@@ -157,6 +157,7 @@ window.addEventListener("offline",()=>{updateNetworkState();dizalToast("انقط
 updateNetworkState();
 
 let deferredInstallPrompt=null;
+let installPromptBusy=false;
 const installButtons=[...document.querySelectorAll("[data-install-app]")];
 const installSheet=document.getElementById("install-sheet");
 const installHelp=document.getElementById("install-help");
@@ -165,42 +166,35 @@ const installReadyTitle=document.getElementById("install-ready-title");
 const installReadyText=document.getElementById("install-ready-text");
 const installConfirmText=document.getElementById("install-confirm-text");
 const isStandalone=()=>window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone===true;
-const isIos=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
-const isAndroid=()=>/android/i.test(navigator.userAgent);
-const isChromium=()=>/chrome|crios|edg|opr|samsungbrowser/i.test(navigator.userAgent);
 
-function refreshInstallButtons(){
-  const installed=isStandalone();
+function setInstallReadyState(ready){
   installButtons.forEach(btn=>{
-    btn.hidden=installed && !isIos();
-    btn.classList.toggle("is-ready",!!deferredInstallPrompt);
-    btn.setAttribute("aria-label",deferredInstallPrompt?"تثبيت Dizal الآن":"تثبيت Dizal على الشاشة");
+    btn.classList.toggle("is-ready",ready);
+    btn.setAttribute("aria-label",ready?"تثبيت Dizal الآن":"فتح تعليمات تثبيت Dizal");
   });
   if(installReadyCard){
-    installReadyCard.hidden=!deferredInstallPrompt;
-    if(deferredInstallPrompt){
+    installReadyCard.hidden=!ready;
+    if(ready){
       installReadyTitle.textContent="التثبيت جاهز";
-      installReadyText.textContent="اضغط «تثبيت الآن» لفتح نافذة التثبيت الرسمية.";
-      if(installConfirmText)installConfirmText.textContent="تثبيت الآن";
+      installReadyText.textContent="اضغط زر التثبيت لفتح نافذة النظام الرسمية.";
     }
   }
 }
 function renderInstallHelp(){
-  if(installConfirmText)installConfirmText.textContent=deferredInstallPrompt?"تثبيت الآن":"عرض التعليمات";
+  if(installConfirmText)installConfirmText.textContent=deferredInstallPrompt?"تثبيت الآن":"عرض تعليمات التثبيت";
   if(!installHelp)return;
   if(deferredInstallPrompt){
-    installHelp.innerHTML='<div class="install-help-ready"><i class="bi bi-check-circle-fill"></i><span>المتصفح جهّز التثبيت لهذا الجهاز. يمكنك تثبيت Dizal مباشرة.</span></div>';
+    installHelp.innerHTML='<div class="install-help-ready"><i class="bi bi-check-circle-fill"></i><span>المتصفح جهّز التثبيت. اضغط «تثبيت الآن» ثم وافق من نافذة النظام.</span></div>';
     return;
   }
-  if(isIos()){
-    installHelp.innerHTML='<div class="install-steps"><div><b>1</b><span>اضغط زر المشاركة في Safari.</span></div><div><b>2</b><span>اختر «إضافة إلى الشاشة الرئيسية».</span></div><div><b>3</b><span>اضغط «إضافة» ليظهر Dizal كتطبيق.</span></div></div>';
-    return;
+  const ua=navigator.userAgent||"";
+  if(/iphone|ipad|ipod/i.test(ua)){
+    installHelp.innerHTML='<div class="install-steps"><div><b>1</b><span>في Safari اضغط مشاركة.</span></div><div><b>2</b><span>اختر إضافة إلى الشاشة الرئيسية.</span></div><div><b>3</b><span>اضغط إضافة.</span></div></div>';
+  }else if(/android/i.test(ua)){
+    installHelp.innerHTML='<div class="install-steps"><div><b>1</b><span>افتح قائمة المتصفح ⋮.</span></div><div><b>2</b><span>اختر تثبيت التطبيق أو إضافة إلى الشاشة الرئيسية.</span></div><div><b>3</b><span>أكد التثبيت في نافذة المتصفح.</span></div></div>';
+  }else{
+    installHelp.innerHTML='<div class="install-steps"><div><b>1</b><span>افتح قائمة المتصفح.</span></div><div><b>2</b><span>اختر تثبيت Dizal أو تثبيت التطبيق.</span></div><div><b>3</b><span>أكد التثبيت.</span></div></div>';
   }
-  if(isAndroid()){
-    installHelp.innerHTML='<div class="install-steps"><div><b>1</b><span>افتح قائمة المتصفح ⋮.</span></div><div><b>2</b><span>اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».</span></div><div><b>3</b><span>أكد الإضافة من نافذة المتصفح.</span></div></div>';
-    return;
-  }
-  installHelp.innerHTML='<div class="install-steps"><div><b>1</b><span>افتح قائمة المتصفح بجانب شريط العنوان.</span></div><div><b>2</b><span>اختر «تثبيت Dizal» أو «تثبيت التطبيق».</span></div><div><b>3</b><span>أكد التثبيت ليظهر التطبيق في جهازك.</span></div></div>';
 }
 function openInstallSheet(){
   if(!installSheet)return;
@@ -217,58 +211,56 @@ function closeInstallSheet(){
   document.body.classList.remove("install-sheet-open");
 }
 async function triggerInstall(){
+  if(installPromptBusy)return;
   if(isStandalone()){
     dizalToast("Dizal مثبت كتطبيق بالفعل.","success");
     return;
   }
-  if(deferredInstallPrompt){
-    const prompt=deferredInstallPrompt;
-    try{
-      prompt.prompt();
-      const choice=await prompt.userChoice;
-      deferredInstallPrompt=null;
-      refreshInstallButtons();
-      if(choice?.outcome==="accepted"){
-        closeInstallSheet();
-        dizalToast("تمت الموافقة على تثبيت Dizal. سيكتمل التثبيت من المتصفح.","success");
-      }else{
-        closeInstallSheet();
-        dizalToast("تم إلغاء تثبيت Dizal.");
-      }
-    }catch(_){
-      deferredInstallPrompt=null;
-      refreshInstallButtons();
-      openInstallSheet();
-      if(installHelp)installHelp.innerHTML='<div class="install-help-ready"><i class="bi bi-exclamation-circle"></i><span>انتهت صلاحية نافذة التثبيت المباشر. استخدم تعليمات المتصفح الظاهرة هنا.</span></div>'+installHelp.innerHTML;
-    }
-    return;
-  }
-  if(isIos()){
+  if(!deferredInstallPrompt){
     openInstallSheet();
     return;
   }
-  openInstallSheet();
+  installPromptBusy=true;
+  const event=deferredInstallPrompt;
+  try{
+    event.prompt();
+    const choice=await event.userChoice;
+    if(choice?.outcome==="accepted"){
+      dizalToast("تم قبول التثبيت. سيكمل المتصفح التثبيت من نافذته الرسمية.","success");
+      deferredInstallPrompt=null;
+      setInstallReadyState(false);
+      renderInstallHelp();
+      closeInstallSheet();
+    }else{
+      dizalToast("تم إلغاء التثبيت. يمكنك المحاولة مرة أخرى.","info");
+    }
+  }catch(error){
+    console.error("Dizal install failed",error);
+    dizalToast("تعذر فتح نافذة التثبيت. افتح قائمة المتصفح واختر «تثبيت التطبيق».","info");
+    openInstallSheet();
+  }finally{
+    installPromptBusy=false;
+  }
 }
 window.addEventListener("beforeinstallprompt",event=>{
   event.preventDefault();
   deferredInstallPrompt=event;
-  refreshInstallButtons();
-  if(installSheet && !installSheet.hidden)renderInstallHelp();
+  setInstallReadyState(true);
+  if(installSheet&&!installSheet.hidden)renderInstallHelp();
 });
 window.addEventListener("appinstalled",()=>{
   deferredInstallPrompt=null;
+  setInstallReadyState(false);
   installButtons.forEach(btn=>btn.hidden=true);
-  refreshInstallButtons();
   closeInstallSheet();
   dizalToast("تم تثبيت Dizal كتطبيق على الشاشة.","success");
 });
-installButtons.forEach(btn=>btn.addEventListener("click",()=>triggerInstall()));
-document.querySelectorAll("[data-install-confirm]").forEach(btn=>btn.addEventListener("click",()=>triggerInstall()));
+installButtons.forEach(btn=>btn.addEventListener("click",triggerInstall));
+document.querySelectorAll("[data-install-confirm]").forEach(btn=>btn.addEventListener("click",triggerInstall));
 document.querySelectorAll("[data-install-close]").forEach(btn=>btn.addEventListener("click",closeInstallSheet));
-installSheet?.addEventListener("click",event=>{if(event.target===installSheet)closeInstallSheet();});
-document.addEventListener("keydown",event=>{if(event.key==="Escape" && installSheet && !installSheet.hidden)closeInstallSheet();});
-refreshInstallButtons();
-
+document.addEventListener("keydown",event=>{if(event.key==="Escape"&&installSheet&&!installSheet.hidden)closeInstallSheet();});
+window.addEventListener("pageshow",()=>{if(isStandalone())installButtons.forEach(btn=>btn.hidden=true);});
+if(isStandalone())installButtons.forEach(btn=>btn.hidden=true);
 document.addEventListener("submit",event=>{
   if(navigator.onLine!==false)return;
   const form=event.target;
@@ -278,6 +270,6 @@ document.addEventListener("submit",event=>{
 });
 
 if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>(async()=>{const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.filter(r=>r.active?.scriptURL.includes("/static/sw.js")).map(r=>r.unregister()));await navigator.serviceWorker.register("/sw.js?v=20260929-2",{scope:"/",updateViaCache:"none"});})());
+  window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js?v=20260929-4",{scope:"/",updateViaCache:"none"}).catch(error=>console.error("Dizal service worker registration failed",error)));
 }
 })();
