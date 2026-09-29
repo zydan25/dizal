@@ -1,10 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>إضافة موظف</h1><p>سيُنشأ له حساب وصندوق مرتبط تلقائيًا.</p></div>
+<div class="page-heading"><h1>إضافة موظف</h1><p>سيُنشأ له حساب وصندوق مرتبط تلقائيًا، ويمكن جعله مديرًا بصلاحيات كاملة.</p></div>
 <form method="post" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>الاسم الكامل<input name="display_name" required></label>
 <div class="two-col"><label>اسم المستخدم<input name="username" required></label><label>الهاتف<input name="phone" inputmode="tel"></label></div>
+<label>دور الحساب
+<select name="role" required>
+{% for role in roles %}<option value="{{role.name}}" {% if role.name=="employee" %}selected{% endif %}>{{role.label or role.name}}{% if role.name=="manager" %} · صلاحية مدير كاملة{% endif %}</option>{% endfor %}
+</select>
+<small class="field-help">اختر «مدير» لإنشاء موظف بصلاحيات الإدارة الكاملة. يبقى الحساب موظفًا من ناحية السجل التشغيلي.</small></label>
 <label>البريد الإلكتروني<input name="email" type="email"></label>
 <label>كلمة المرور<input name="password" type="password" required></label>
 <div class="two-col"><label>طريقة الاستحقاق<select name="salary_type"><option value="fixed">ثابت</option><option value="per_liter">ربح لكل لتر</option><option value="per_drum">ربح لكل دبة</option><option value="percent_profit">نسبة من الربح %</option></select></label><label>القيمة (ريال / لتر / دبة / %)<input name="salary_value" type="number" step="0.001" value="0"></label></div>
