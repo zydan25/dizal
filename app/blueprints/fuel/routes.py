@@ -4,10 +4,11 @@ from flask_login import current_user
 from sqlalchemy import func
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import FuelPurchase,FuelStockMovement,FuelTank,User
+from ...models import Asset,Cashbox,FuelPurchase,FuelStockMovement,FuelTank,User
 from ...services.audit import audit
 from ...services.files import save_attachment
 from ...services.fuel import approve_purchase,attach_proof,create_purchase,current_stock_liters
+from ...services.assets import create_asset
 from ...services.notifications import notify_user
 from . import fuel_bp
 
@@ -132,27 +133,39 @@ def tanks():
     if request.method=="POST":
         try:
             name=(request.form.get("name") or "").strip()
-            if not name:
-                raise ValueError("اسم الخزان مطلوب.")
-            tank=FuelTank(
-                name=name,
-                code=_next_tank_code(),
-                capacity_liters=request.form.get("capacity_liters") or None,
+            cost=request.form.get("asset_cost")
+            cashbox_id=request.form.get("payer_cashbox_id")
+            capacity=request.form.get("capacity_liters") or None
+            if not name: raise ValueError("اسم الخزان مطلوب.")
+            if not cost or not cashbox_id: raise ValueError("قيمة الخزان والصندوق الدافع مطلوبان.")
+            asset=create_asset(
+                name=name,category="خزان ديزل",cost=cost,
+                acquisition_date=date.fromisoformat(request.form.get("purchase_date") or date.today().isoformat()),
+                payer_cashbox_id=int(cashbox_id),created_by_id=current_user.id,
+                custodian_user_id=int(request.form["custodian_user_id"]) if request.form.get("custodian_user_id") else None,
                 location=(request.form.get("location") or "").strip() or None,
                 notes=(request.form.get("notes") or "").strip() or None,
-                is_active=True,
+                create_tank=True,tank_capacity_liters=capacity,
             )
-            db.session.add(tank)
-            db.session.flush()
-            audit("fuel.tank.created","fuel_tank",tank.id,after={"name":tank.name,"code":tank.code})
+            tank=asset.tank
+            audit("fuel.tank.created","fuel_tank",tank.id,after={
+                "name":tank.name,"code":tank.code,"asset_id":asset.id,
+                "asset_code":asset.asset_code,"cost":str(asset.acquisition_cost),
+                "cashbox_id":asset.payer_cashbox_id,
+            })
             db.session.commit()
-            flash("تم إنشاء الخزان.","success")
+            flash("تم إنشاء الخزان وتسجيله تلقائيًا كأصل ثابت مع خصم قيمته من الصندوق المحدد.","success")
             return redirect(url_for("fuel.tanks"))
         except (ValueError,TypeError) as exc:
-            db.session.rollback()
-            flash(str(exc),"danger")
-    rows=[{"tank":tank,"stats":_tank_stats(tank)} for tank in FuelTank.query.order_by(FuelTank.id.desc()).all()]
-    return render_template("fuel/tanks.html",rows=rows)
+            db.session.rollback();flash(str(exc),"danger")
+    tanks=FuelTank.query.order_by(FuelTank.id.desc()).all()
+    ids=[tank.id for tank in tanks]
+    linked=Asset.query.filter(Asset.tank_id.in_(ids)).all() if ids else []
+    asset_map={asset.tank_id:asset for asset in linked}
+    rows=[{"tank":tank,"stats":_tank_stats(tank),"asset":asset_map.get(tank.id)} for tank in tanks]
+    cashboxes=Cashbox.query.filter_by(is_active=True).order_by(Cashbox.box_type,Cashbox.name).all()
+    employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all()
+    return render_template("fuel/tanks.html",rows=rows,cashboxes=cashboxes,employees=employees,today=date.today().isoformat())
 
 @fuel_bp.route("/tanks/<int:tank_id>/edit",methods=["GET","POST"])
 @permission_required("fuel.tank.manage")
