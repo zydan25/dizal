@@ -110,9 +110,39 @@ def test_manager_account_page_updates_identity_and_password():
     },follow_redirects=True)
     assert response.status_code==200
     with app.app_context():
-        user=User.query.filter_by(id=1).first()
+        user=User.query.filter_by(email="admin@dizal.local").first()
         assert user.username=="system-admin"
         assert user.display_name=="مدير النظام"
         assert ProjectSettings.get().manager_name=="المهندس زيدان"
         assert ProjectSettings.get().manager_phone=="700000009"
         assert user.password!= "new-secret"
+
+def test_employee_creation_can_assign_manager_role():
+    app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite://","WTF_CSRF_ENABLED":False,"SECRET_KEY":"test","SECURITY_PASSWORD_SALT":"test"})
+    with app.app_context():
+        db.create_all()
+        manager_role=Role(name="manager",description="manager",label="مدير")
+        employee_role=Role(name="employee",description="employee",label="موظف")
+        db.session.add_all([manager_role,employee_role]);db.session.flush()
+        manager=User(username="manager",email="manager@test.local",password=hash_password("secret"),display_name="مدير",active=True,fs_uniquifier="create-manager")
+        manager.roles.append(manager_role);db.session.add(manager);db.session.commit()
+    client=app.test_client()
+    assert client.post("/auth/login",data={"identifier":"manager","password":"secret"},follow_redirects=True).status_code==200
+    response=client.post("/employees/new",data={
+        "display_name":"مدير تشغيل",
+        "username":"ops-manager",
+        "phone":"700000010",
+        "email":"ops-manager@dizal.local",
+        "password":"secret123",
+        "role":"manager",
+        "salary_type":"fixed",
+        "salary_value":"0",
+        "notes":"مدير فرعي",
+    },follow_redirects=True)
+    assert response.status_code==200
+    with app.app_context():
+        created=User.query.filter_by(username="ops-manager").one()
+        assert created.is_employee is True
+        assert created.has_role("manager")
+        assert EmployeeProfile.query.filter_by(user_id=created.id).first() is not None
+        assert Cashbox.query.filter_by(owner_user_id=created.id,box_type="employee").first() is not None
