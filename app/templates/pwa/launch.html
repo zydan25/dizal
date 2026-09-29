@@ -19,11 +19,8 @@ html,body{height:100%;margin:0}body{display:grid;place-items:center;background:#
 </main>
 <script>
 (function(){
-  var target="/auth/login";
-  fetch("/",{credentials:"same-origin",cache:"no-store",redirect:"manual"}).then(function(r){
-    if(r.type!=="opaqueredirect" && r.status>=200 && r.status<400){ target="/dashboard/"; }
-    window.location.replace(target);
-  }).catch(function(){ window.location.replace("/auth/login"); });
+  var target={{ "/dashboard/"|tojson if current_user.is_authenticated else "/auth/login"|tojson }};
+  window.setTimeout(function(){ window.location.replace(target); }, 150);
 })();
 </script>
 </body>
