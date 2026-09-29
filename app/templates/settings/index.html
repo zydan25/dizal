@@ -44,6 +44,24 @@ const select=document.getElementById("color_preset");
 document.querySelectorAll("[data-palette]").forEach(btn=>btn.addEventListener("click",()=>{select.value=btn.dataset.palette;select.dispatchEvent(new Event("change"));}));
 })();
 </script>
+<script>
+(function(){
+  const fields=[["document-header-input","document-header-count","document-preview-header"],["document-footer-input","document-footer-count","document-preview-footer"]];
+  fields.forEach(([inputId,countId,previewId])=>{
+    const input=document.getElementById(inputId),count=document.getElementById(countId),preview=document.getElementById(previewId);
+    const update=()=>{
+      const value=input?.value||"";
+      if(count)count.textContent=value.length+"/500";
+      if(preview)preview.textContent=value||"يظهر النص هنا...";
+    };
+    input?.addEventListener("input",update);
+    update();
+  });
+  const policy=document.querySelector('input[name="allow_employee_sale_price_override"]');
+  const policyNote=document.querySelector(".pricing-policy-fields .switch-field small");
+  policy?.addEventListener("change",()=>{if(policyNote)policyNote.textContent=policy.checked?"مسموح في الصرف ونقطة البيع":"السعر ثابت حسب الإعدادات";});
+})();
+</script>
 <div class="section-title"><h2>التطبيق</h2><span>تثبيت واستخدام دون اتصال</span></div>
 <div class="info-card install-card"><div><strong>ثبّت Dizal على الشاشة الرئيسية</strong><p>يعمل كتطبيق مستقل بواجهة أنظف. وعند انقطاع الإنترنت سيظهر تنبيه بدل إرسال عمليات الحفظ.</p></div><button class="secondary-btn" type="button" data-install-app><i class="bi bi-download"></i><span>تثبيت الآن</span></button></div>
 <div class="section-title"><h2>أدوات النظام</h2><span>نسخ احتياطي وتصفير</span></div>
