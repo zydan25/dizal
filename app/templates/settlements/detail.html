@@ -1,20 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-heading-row"><div class="page-heading"><h1>تسوية الموظف</h1><p>{{settlement.document.number}} · {{settlement.employee.display_name}} · {{settlement.period_start}} → {{settlement.period_end}}</p></div><span class="status-chip status-{{settlement.status}}">{{settlement.status}}</span></div>
+
 <div class="calculation-card">
 <div><small>المتوقع</small><strong>{{settlement.expected_cash}}</strong><span>{{project_settings.currency}}</span></div>
 <div><small>الفعلي</small><strong>{{settlement.actual_cash}}</strong><span>{{project_settings.currency}}</span></div>
 <div><small>العجز</small><strong>{{settlement.cash_shortage}}</strong><span>{{project_settings.currency}}</span></div>
 <div><small>الزيادة</small><strong>{{settlement.cash_overage}}</strong><span>{{project_settings.currency}}</span></div>
 <div><small>المبيعات</small><strong>{{settlement.sales_amount}}</strong><span>{{project_settings.currency}}</span></div>
-<div><small>الربح التشغيلي</small><strong>{{settlement.sales_amount-settlement.cost_of_sales-settlement.operating_expenses-settlement.employee_salary}}</strong><span>{{project_settings.currency}}</span></div>
+<div><small>الربح الصافي للفترة</small><strong>{{settlement.sales_amount-settlement.cost_of_sales-settlement.operating_expenses-settlement.employee_salary}}</strong><span>{{project_settings.currency}}</span></div>
 </div>
-<div class="section-title"><h2>تفاصيل الحساب</h2><span>قبل الاعتماد</span></div>
+
+<div class="section-title"><h2>تفاصيل الحساب</h2><span>{% if settlement.status=="draft" %}قبل الاعتماد{% else %}معتمد{% endif %}</span></div>
 <div class="entity-list">
+<div class="entity-row"><div class="entity-main"><strong>كمية الصرف</strong><small>حسب العمليات المعتمدة في الفترة</small></div><div class="money-value">{{settlement.document.source_id and "" or ""}}{% if settlement.employee.employee_profile %}{{" "}}{% endif %}</div></div>
 <div class="entity-row"><div class="entity-main"><strong>تكلفة المبيعات</strong></div><div class="money-value">{{settlement.cost_of_sales}}</div></div>
 <div class="entity-row"><div class="entity-main"><strong>الربح الإجمالي</strong></div><div class="money-value">{{settlement.gross_profit}}</div></div>
 <div class="entity-row"><div class="entity-main"><strong>المصروفات التشغيلية</strong></div><div class="money-value negative">{{settlement.operating_expenses}}</div></div>
-<div class="entity-row"><div class="entity-main"><strong>الراتب/العمولة</strong></div><div class="money-value negative">{{settlement.employee_salary}}</div></div>
+<div class="entity-row"><div class="entity-main"><strong>{% if settlement.employee_salary and settlement.employee.employee_profile and settlement.employee.employee_profile.salary_type=="fixed" %}الراتب{% else %}العمولة{% endif %}</strong><small>{% if settlement.employee.employee_profile %}النوع: {{settlement.employee.employee_profile.salary_type}} · القيمة: {{settlement.employee.employee_profile.salary_value}}{% endif %}</small></div><div class="money-value negative">{{settlement.employee_salary}}</div></div>
 <div class="entity-row"><div class="entity-main"><strong>التحويل للمدير</strong></div><div class="money-value">{{settlement.owner_transfer}}</div></div>
 <div class="entity-row"><div class="entity-main"><strong>رأس المال المتبقي</strong></div><div class="money-value">{{settlement.retained_operating_capital}}</div></div>
 </div>
