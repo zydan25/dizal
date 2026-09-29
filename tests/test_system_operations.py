@@ -86,6 +86,26 @@ def test_pwa_icon_files_are_valid_pngs_with_declared_dimensions():
         assert int.from_bytes(data[20:24],"big")==expected
 
 
+
+def test_pwa_launch_route_is_public_and_is_start_url():
+    app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite://","WTF_CSRF_ENABLED":False,"SECRET_KEY":"test","SECURITY_PASSWORD_SALT":"test"})
+    client=app.test_client()
+    response=client.get("/pwa/launch")
+    assert response.status_code==200
+    html=response.get_data(as_text=True)
+    assert "Dizal" in html
+    assert "window.location.replace" in html
+
+def test_pwa_manifest_uses_public_bootstrap_start_url():
+    app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite://","WTF_CSRF_ENABLED":False,"SECRET_KEY":"test","SECURITY_PASSWORD_SALT":"test"})
+    manifest=app.test_client().get("/manifest.webmanifest").get_json()
+    assert manifest["id"]=="/dashboard/"
+    assert manifest["start_url"]=="/pwa/launch"
+    assert manifest["scope"]=="/"
+    assert manifest["display"]=="standalone"
+    assert "display_override" not in manifest
+    assert manifest["prefer_related_applications"] is False
+
 def test_reset_clears_operational_data_but_preserves_manager():
     app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite://","WTF_CSRF_ENABLED":False,"SECRET_KEY":"test","SECURITY_PASSWORD_SALT":"test"})
     with app.app_context():
