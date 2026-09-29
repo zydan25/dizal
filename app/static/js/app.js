@@ -136,38 +136,10 @@ function installNumberWords(){
 window.DizalNumberWords={installNumberWords,arNumberWords,unitWords};
 installNumberWords();
 
-function dizalToast(message,type){
-  const old=document.querySelector(".dizal-toast"); old?.remove();
-  const toast=document.createElement("div");
-  toast.className="dizal-toast "+(type||"info");
-  toast.innerHTML='<i class="bi '+(type==="success"?"bi-check-circle":"bi-wifi-off")+'"></i><span></span>';
-  toast.querySelector("span").textContent=message;
-  document.body.appendChild(toast);
-  requestAnimationFrame(()=>toast.classList.add("show"));
-  setTimeout(()=>{toast.classList.remove("show");setTimeout(()=>toast.remove(),220);},4200);
-}
-const offlineBanner=document.getElementById("offline-banner");
-function updateNetworkState(){
-  const offline=!navigator.onLine;
-  if(offlineBanner)offlineBanner.hidden=!offline;
-  document.documentElement.classList.toggle("is-offline",offline);
-}
-window.addEventListener("online",()=>{updateNetworkState();dizalToast("عاد الاتصال بالإنترنت ويمكن تنفيذ العمليات الآن.","success");});
-window.addEventListener("offline",()=>{updateNetworkState();dizalToast("انقطع الاتصال بالإنترنت. لن يتم إرسال أي عملية حتى يعود الاتصال.","info");});
-updateNetworkState();
-
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {});
   });
 }
-
-document.addEventListener("submit",event=>{
-  if(navigator.onLine!==false)return;
-  const form=event.target;
-  if(form.matches('form[action*="/auth/logout"]'))return;
-  event.preventDefault();
-  dizalToast("لا يوجد اتصال بالإنترنت. أعد المحاولة بعد عودة الاتصال.");
-});
 
 })();
