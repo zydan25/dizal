@@ -13,7 +13,6 @@
 
 <div class="section-title"><h2>تفاصيل الحساب</h2><span>{% if settlement.status=="draft" %}قبل الاعتماد{% else %}معتمد{% endif %}</span></div>
 <div class="entity-list">
-<div class="entity-row"><div class="entity-main"><strong>كمية الصرف</strong><small>حسب العمليات المعتمدة في الفترة</small></div><div class="money-value">{{settlement.document.source_id and "" or ""}}{% if settlement.employee.employee_profile %}{{" "}}{% endif %}</div></div>
 <div class="entity-row"><div class="entity-main"><strong>تكلفة المبيعات</strong></div><div class="money-value">{{settlement.cost_of_sales}}</div></div>
 <div class="entity-row"><div class="entity-main"><strong>الربح الإجمالي</strong></div><div class="money-value">{{settlement.gross_profit}}</div></div>
 <div class="entity-row"><div class="entity-main"><strong>المصروفات التشغيلية</strong></div><div class="money-value negative">{{settlement.operating_expenses}}</div></div>
