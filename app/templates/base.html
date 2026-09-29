@@ -51,7 +51,7 @@
 <main class="main-area">
 <header class="topbar">
 <button class="icon-btn" data-sidebar-open aria-label="فتح القائمة" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
-<div class="top-user"><small>{% if current_user.has_role('manager') %}المدير{% else %}الموظف{% endif %}</small><strong>{{current_user.display_name or current_user.username}}</strong></div>
+<a class="top-user top-user-link" href="{{url_for('employees.account')}}"><small>{% if current_user.has_role('manager') %}المدير{% else %}الموظف{% endif %}</small><strong>{{current_user.display_name or current_user.username}}</strong><i class="bi bi-person-circle"></i></a>
 <a class="icon-btn notification-btn" href="{{url_for('notifications.index')}}" aria-label="الإشعارات"><i class="bi bi-bell"></i>{% if unread_notifications %}<span class="notification-badge">{{unread_notifications}}</span>{% endif %}</a>
 <a class="icon-btn" href="{{url_for('dashboard.index')}}" aria-label="الرئيسية"><i class="bi bi-house"></i></a>
 </header>
