@@ -137,4 +137,58 @@ window.DizalNumberWords={installNumberWords,arNumberWords,unitWords};
 installNumberWords();
 
 
+// Minimal install-only PWA. No Service Worker, Cache API, or offline shell.
+let dizalInstallPrompt=null;
+let dizalInstallBusy=false;
+const dizalInstallBar=document.getElementById("global-install-bar");
+const dizalInstallButton=document.querySelector("[data-install-app]");
+
+function dizalIsStandalone(){
+  return window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone===true;
+}
+
+function dizalRefreshInstallUI(){
+  if(!dizalInstallBar || !dizalInstallButton)return;
+  const standalone=dizalIsStandalone();
+  dizalInstallBar.hidden=standalone || !dizalInstallPrompt;
+  dizalInstallButton.disabled=dizalInstallBusy;
+}
+
+window.DizalPWA={
+  state:()=>({
+    secureContext:window.isSecureContext===true,
+    standalone:dizalIsStandalone(),
+    installPromptReady:!!dizalInstallPrompt
+  })
+};
+
+window.addEventListener("beforeinstallprompt",event=>{
+  event.preventDefault();
+  dizalInstallPrompt=event;
+  dizalRefreshInstallUI();
+});
+
+dizalInstallButton?.addEventListener("click",async()=>{
+  if(dizalInstallBusy || !dizalInstallPrompt)return;
+  const event=dizalInstallPrompt;
+  dizalInstallPrompt=null;
+  dizalInstallBusy=true;
+  dizalRefreshInstallUI();
+  try{
+    await event.prompt();
+  }catch(error){
+    console.error("Dizal install prompt error",error);
+  }finally{
+    dizalInstallBusy=false;
+    dizalRefreshInstallUI();
+  }
+});
+
+window.addEventListener("appinstalled",()=>{
+  dizalInstallPrompt=null;
+  dizalInstallBusy=false;
+  dizalRefreshInstallUI();
+});
+dizalRefreshInstallUI();
+
 })();
