@@ -243,7 +243,7 @@ body{font-size:1rem}
 }
 
 /* 2026-09-28 install, payment and search polish */
-.sidebar-install{padding:9px 11px 8px;border-top:1px solid #eceff4;background:#fbfcff}
+
 .login-install{min-height:46px!important;border-radius:13px!important;font-size:.78rem!important}
 @keyframes installSheetIn{from{transform:translateY(20px);opacity:.7}to{transform:translateY(0);opacity:1}}
 .payment-amount-wrap{position:relative;margin-top:6px}.payment-amount-wrap input{margin-top:0!important;padding-inline-end:75px!important;direction:ltr;text-align:right;font-variant-numeric:tabular-nums}.payment-currency{position:absolute;inset-inline-start:11px;top:50%;transform:translateY(-50%);font-size:.68rem;color:#7d899a;font-weight:800;pointer-events:none;background:#f8fafc;border:1px solid #e6ebf1;border-radius:8px;padding:4px 6px}
