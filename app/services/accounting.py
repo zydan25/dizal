@@ -83,6 +83,40 @@ def post_sale(dispense,created_by_id):
         {"account_code":"1110","debit":dispense.total_amount,"employee_id":dispense.employee_id},
     ]
     return post_journal("general_sale",dispense.id,"بيع ديزل مباشر",created_by_id,lines,dispense.document_id)
+def post_commission_accrual(dispense,created_by_id):
+    amount=Decimal(str(dispense.employee_commission_amount or 0))
+    if amount<=0:
+        return None
+    return post_journal(
+        "employee_commission_accrual",
+        dispense.id,
+        "استحقاق عمولة الموظف",
+        created_by_id,
+        [
+            {"account_code":"6100","debit":amount,"employee_id":dispense.employee_id},
+            {"account_code":"2100","credit":amount,"employee_id":dispense.employee_id},
+        ],
+        dispense.document_id,
+    )
+
+
+def post_commission_payment(employee_id,amount,document_id,created_by_id):
+    amount=Decimal(str(amount or 0))
+    if amount<=0:
+        return None
+    return post_journal(
+        "employee_commission_payment",
+        document_id,
+        "سداد عمولة موظف",
+        created_by_id,
+        [
+            {"account_code":"2100","debit":amount,"employee_id":employee_id},
+            {"account_code":"1110","credit":amount,"employee_id":employee_id},
+        ],
+        document_id,
+    )
+
+
 def post_payment(payment,created_by_id):
     return post_journal("farmer_payment",payment.id,"تحصيل من مزارع",created_by_id,[{"account_code":"1110","debit":payment.amount,"employee_id":payment.employee_id},{"account_code":"1400","credit":payment.amount,"farmer_id":payment.farmer_id}],payment.document_id)
 
