@@ -46,6 +46,7 @@ def settlement_preview(employee,start_date,end_date):
         "operating_expenses":expenses,
         "employee_salary":compensation["earned"],
         "salary_type":compensation["salary_type"],
+        "salary_value":compensation["salary_value"],
         "commission_label":compensation["label"],
         "sold_liters":compensation["liters"],
         "sold_drums":compensation["drums"],
@@ -68,6 +69,11 @@ def create_settlement(employee,start_date,end_date,created_by_id,actual_cash,own
         expected_cash=expected,actual_cash=actual,cash_shortage=shortage,cash_overage=overage,
         sales_amount=preview["sales_amount"],cost_of_sales=preview["cost_of_sales"],gross_profit=preview["gross_profit"],
         operating_expenses=preview["operating_expenses"],employee_salary=employee_salary,
+        compensation_type_snapshot=preview["salary_type"],
+        compensation_value_snapshot=Decimal(str(
+            preview.get("salary_value",0) if preview["salary_type"]!="fixed"
+            else (employee.employee_profile.salary_value if employee.employee_profile else 0)
+        )),
         owner_transfer=Decimal(str(owner_transfer or 0)),retained_operating_capital=Decimal(str(retained_operating_capital or 0)),
         status="draft",created_by_id=created_by_id,notes=notes
     )
@@ -101,7 +107,16 @@ def approve_settlement(settlement,approved_by_id):
             employee_cashbox.id,"OUT",settlement.employee_salary,"employee_salary",
             approved_by_id,"راتب/عمولة الموظف",settlement.document_id,"settlement",settlement.id
         )
-        post_salary(settlement.employee_id,settlement.employee_salary,settlement.document_id,approved_by_id)
+        if settlement.compensation_type_snapshot in {"per_liter","per_drum","percent_profit","commission"}:
+            from .accounting import post_commission_payment
+            post_commission_payment(
+                settlement.employee_id,
+                settlement.employee_salary,
+                settlement.document_id,
+                approved_by_id,
+            )
+        else:
+            post_salary(settlement.employee_id,settlement.employee_salary,settlement.document_id,approved_by_id)
 
     settlement.status="approved"
     settlement.document.status="approved"
