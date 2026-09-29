@@ -41,7 +41,10 @@ def account():
         if not username or not display_name:
             flash("اسم المستخدم والاسم الظاهر مطلوبان.","danger")
             return render_template("employees/account.html",employee=employee,settings=settings,is_manager=employee.has_role("manager"))
-        duplicate=User.query.filter(User.id!=employee.id).filter((User.username==username)|(User.phone==phone if phone else User.phone==None)).first()
+        duplicate_query=User.query.filter(User.id!=employee.id).filter(User.username==username)
+        if phone:
+            duplicate_query=duplicate_query.union(User.query.filter(User.id!=employee.id,User.phone==phone))
+        duplicate=duplicate_query.first()
         if duplicate:
             flash("اسم المستخدم أو رقم الهاتف مستخدم لحساب آخر.","danger")
             return render_template("employees/account.html",employee=employee,settings=settings,is_manager=employee.has_role("manager"))
@@ -89,7 +92,10 @@ def new():
         if not username or not password or not name:
             flash("الاسم واسم المستخدم وكلمة المرور مطلوبة.","danger")
             return render_template("employees/form.html")
-        if User.query.filter((User.username==username)|(User.phone==phone if phone else User.phone==None)).first():
+        duplicate_query=User.query.filter(User.username==username)
+        if phone:
+            duplicate_query=duplicate_query.union(User.query.filter(User.phone==phone))
+        if duplicate_query.first():
             flash("اسم المستخدم أو الهاتف مستخدم بالفعل.","danger")
             return render_template("employees/form.html")
         account_role=request.form.get("account_role") or "employee"
