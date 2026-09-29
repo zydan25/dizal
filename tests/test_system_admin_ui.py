@@ -45,7 +45,7 @@ def test_pwa_assets_and_manifest_are_install_ready():
     assert icons["/static/icons/dizal-192.png"] == "192x192"
     assert icons["/static/icons/dizal-512.png"] == "512x512"
     assert Path("app/static/icons/dizal-192.png").read_bytes().startswith(b"\x89PNG")
-    assert Path("app/static/icons/dizal-512.png").read_bytes().startswith(b"\\x89PNG")
+    assert Path("app/static/icons/dizal-512.png").read_bytes().startswith(b"\x89PNG")
     sw = Path("app/static/sw.js").read_text(encoding="utf-8")
     assert 'register("/sw.js' in Path("app/static/js/app.js").read_text(encoding="utf-8") or "register('/sw.js" in Path("app/static/js/app.js").read_text(encoding="utf-8")
     assert "const VERSION=" in sw
