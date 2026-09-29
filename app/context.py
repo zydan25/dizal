@@ -8,9 +8,9 @@ AUDIT_ACTION_LABELS={
     "auth.login":"تسجيل دخول","auth.login_failed":"محاولة دخول فاشلة","settings.updated":"تحديث الإعدادات",
     "farmer.created":"إضافة مزارع","farmer.updated":"تعديل مزارع","farmer.document.deleted":"حذف مرفق مزارع","farmer.quota.changed":"تعديل سقف المزارع",
     "farmer.approve":"اعتماد مزارع","farmer.changes":"طلب استكمال المزارع","farmer.reject":"رفض مزارع","farmer.suspend":"إيقاف مزارع","farmer.activate":"تفعيل مزارع","farmer.delete":"أرشفة مزارع",
-    "fuel.purchase.created":"إضافة توريد ديزل","fuel.purchase.reviewed":"مراجعة توريد ديزل","fuel.dispense.created":"صرف ديزل","farmer.payment.created":"تحصيل من مزارع",
+    "fuel.purchase.created":"إضافة توريد ديزل","fuel.purchase.reviewed":"مراجعة توريد ديزل","fuel.dispense.created":"صرف ديزل","general.sale.created":"بيع عام","farmer.payment.created":"تحصيل من مزارع",
     "capital.added":"إضافة رأس مال","capital.allocated":"تسليم رأس مال لموظف","asset.created":"إضافة أصل","asset.updated":"تعديل أصل",
-    "document.reversed":"عكس سند","employee.created":"إضافة موظف","employee.updated":"تعديل موظف","employee.password.reset":"تغيير كلمة مرور موظف",
+    "document.reversed":"عكس سند","employee.created":"إضافة موظف","employee.updated":"تعديل موظف","employee.deleted":"حذف موظف","employee.activated":"تفعيل موظف","employee.suspended":"تعطيل موظف","employee.password.reset":"تغيير كلمة مرور موظف","system.backup.created":"إنشاء نسخة احتياطية","system.reset":"تصفير النظام",
 }
 
 AUDIT_OBJECT_LABELS={"farmer":"المزارع","fuel_dispense":"صرف ديزل","farmer_payment":"سند قبض","fuel_purchase":"توريد ديزل","fuel_tank":"خزان","asset":"أصل","capital_contribution":"رأس مال","capital_allocation":"تسليم رأس مال","employee":"موظف","user":"مستخدم","document":"سند","project_settings":"إعدادات المشروع","system":"النظام"}
