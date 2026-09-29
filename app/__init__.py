@@ -1,6 +1,6 @@
 from decimal import Decimal,InvalidOperation
 import math
-from flask import Flask,render_template,redirect,request,url_for,send_from_directory
+from flask import Flask,render_template,redirect,request,url_for,send_from_directory,Response
 from flask_login import current_user
 from .config import Config
 from .extensions import db,migrate,csrf,security
@@ -79,7 +79,21 @@ def create_app(config_object=None):
 
     @app.get("/pwa/launch")
     def pwa_launch():
-        return render_template("pwa/launch.html")
+        target="/dashboard/" if current_user.is_authenticated else "/auth/login"
+        html=f"""<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1877F2">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>Dizal</title>
+<style>html,body{{height:100%;margin:0}}body{{display:grid;place-items:center;background:#f6f8fc;color:#172033;font-family:Arial,sans-serif}}.box{{text-align:center;padding:32px}}.logo{{width:76px;height:76px;border-radius:22px;background:#1877F2;color:#fff;display:grid;place-items:center;margin:0 auto 18px;font-size:34px;font-weight:800}}.spinner{{width:24px;height:24px;border:3px solid #d9e0ec;border-top-color:#1877F2;border-radius:50%;animation:spin .8s linear infinite;margin:18px auto}}@keyframes spin{{to{{transform:rotate(360deg)}}}}p{{margin:0;color:#68758b;font-size:14px}}</style>
+</head>
+<body><main class="box" aria-live="polite"><div class="logo">D</div><h1>Dizal</h1><div class="spinner" aria-hidden="true"></div><p>جاري فتح النظام…</p></main>
+<script>window.setTimeout(function(){{window.location.replace({target!r});}},150);</script>
+</body></html>"""
+        return Response(html,mimetype="text/html")
 
     @app.get("/manifest.webmanifest")
     def web_manifest():
