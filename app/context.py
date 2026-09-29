@@ -2,6 +2,7 @@ from flask_login import current_user
 from flask import url_for
 from .models import ProjectSettings,Notification
 from .navigation import build_navigation
+from .permissions import user_has_permission
 
 AUDIT_ACTION_LABELS={
     "auth.login":"تسجيل دخول","auth.login_failed":"محاولة دخول فاشلة","settings.updated":"تحديث الإعدادات",
@@ -60,4 +61,4 @@ def register_context(app):
         if current_user.is_authenticated:
             unread=Notification.query.filter_by(user_id=current_user.id,read_at=None).count()
             navigation=build_navigation(current_user)
-        return {"project_settings":settings,"navigation":navigation,"unread_notifications":unread,"audit_action_label":audit_action_label,"audit_object_label":audit_object_label,"audit_target_url":audit_target_url}
+        return {"project_settings":settings,"navigation":navigation,"unread_notifications":unread,"audit_action_label":audit_action_label,"audit_object_label":audit_object_label,"audit_target_url":audit_target_url,"user_has_permission":user_has_permission}
