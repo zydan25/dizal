@@ -23,7 +23,7 @@ def test_new_reports_remain_safe_on_empty_db():
 
 def test_point_of_sale_and_sales_report_routes_exist():
     app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite://","WTF_CSRF_ENABLED":False,"SECRET_KEY":"test","SECURITY_PASSWORD_SALT":"test"})
-    with app.app_context():
+    with app.test_request_context("/"):
         from flask import url_for
         assert url_for("sales.point_of_sale") == "/sales/point-of-sale"
         assert url_for("reports.sales_report_view") == "/reports/sales"
