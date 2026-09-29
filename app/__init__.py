@@ -93,7 +93,10 @@ def create_app(config_object=None):
 <body><main class="box" aria-live="polite"><div class="logo">D</div><h1>Dizal</h1><div class="spinner" aria-hidden="true"></div><p>جاري فتح النظام…</p></main>
 <script>window.setTimeout(function(){{window.location.replace({target!r});}},150);</script>
 </body></html>"""
-        return Response(html,mimetype="text/html")
+        response=Response(html,mimetype="text/html")
+        response.headers["Cache-Control"]="no-cache, no-store, must-revalidate"
+        response.headers["X-Content-Type-Options"]="nosniff"
+        return response
 
     @app.get("/manifest.webmanifest")
     def web_manifest():
