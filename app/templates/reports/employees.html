@@ -1,9 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>أداء الموظفين</h1><p>المبيعات والربحية وصندوق كل موظف.</p></div>
+<div class="page-heading"><h1>أداء الموظفين والعمولات</h1><p>حساب العمولة من جميع الصرفيات المعتمدة، حتى لو تجاوزت العمليات المعروضة 300 سجل.</p></div>
 <div class="entity-list">
 {% for row in rows %}
-<div class="entity-row"><div class="avatar"><i class="bi bi-person-badge"></i></div><div class="entity-main"><strong>{{row.employee.display_name}}</strong><span>{{row.farmer_count}} مزارعين · مبيعات {{row.sales}}</span><small>التكلفة {{row.cogs}} · الربح {{row.profit}}</small></div><div class="entity-actions"><div class="money-value">{{row.cashbox_balance}}</div><a class="icon-btn" href="{{url_for('reports.employee_statement',employee_id=row.employee.id)}}" aria-label="كشف الحساب"><i class="bi bi-file-earmark-text"></i></a></div></div>
+<div class="entity-row">
+  <div class="avatar"><i class="bi bi-person-badge"></i></div>
+  <div class="entity-main">
+    <strong>{{row.employee.display_name}}</strong>
+    <span>{{row.drums|clean_number}} دبة · {{row.liters|clean_number}} لتر · مبيعات {{row.sales|clean_number}} {{project_settings.currency}}</span>
+    <small>
+      تكلفة {{row.cogs|clean_number}} · مجمل الربح {{row.gross_profit|clean_number}} ·
+      {% if row.salary_type=="fixed" %}راتب {{row.salary|clean_number}}{% else %}عمولة مكتسبة {{row.employee_commission|clean_number}}{% endif %}
+      · صافي مساهمة {{row.net_contribution|clean_number}}
+    </small>
+  </div>
+  <div class="entity-actions">
+    <div class="money-value">{{row.compensation_earned|clean_number}}</div>
+    <small>{{row.commission_label}}</small>
+    {% if row.compensation_outstanding>0 %}<small>متبقي {{row.compensation_outstanding|clean_number}}</small>{% else %}<small>مسدد/غير مستحق</small>{% endif %}
+    <a class="icon-btn" href="{{url_for('reports.employee_statement',employee_id=row.employee.id)}}" aria-label="كشف الحساب"><i class="bi bi-file-earmark-text"></i></a>
+  </div>
+</div>
 {% else %}<div class="empty-state">لا يوجد موظفون.</div>{% endfor %}
 </div>
 {% endblock %}
