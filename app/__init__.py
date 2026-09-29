@@ -80,20 +80,48 @@ def create_app(config_object=None):
 
     @app.get("/manifest.webmanifest")
     def web_manifest():
-        response=send_from_directory(app.static_folder,"pwa/manifest.webmanifest",mimetype="application/manifest+json")
-        response.headers["Cache-Control"]="no-cache, no-store, must-revalidate"
-        response.headers["X-Content-Type-Options"]="nosniff"
-        return response
+        return Response(
+            """{
+  "name": "Dizal - إدارة توزيع الديزل",
+  "short_name": "Dizal",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f8fc",
+  "theme_color": "#1877F2",
+  "icons": [
+    {
+      "src": "/static/icons/dizal-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/dizal-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}""",
+            mimetype="application/manifest+json",
+        )
 
     @app.get("/sw.js")
     def service_worker():
-        response=send_from_directory(app.static_folder,"pwa/sw.js",mimetype="application/javascript")
-        response.headers["Service-Worker-Allowed"]="/"
-        response.headers["Cache-Control"]="no-cache, no-store, must-revalidate"
-        response.headers["X-Content-Type-Options"]="nosniff"
-        return response
+        js = """const CACHE='dizal-shell-v14';
+const SHELL=['/','/static/css/app.css','/static/js/app.js'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('dizal-shell-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{
+  const u=new URL(e.request.url);
+  if(e.request.method!=='GET'||u.pathname.startsWith('/api')||u.pathname.startsWith('/dashboard')||u.pathname.startsWith('/auth')||u.pathname.startsWith('/settings')) return;
+  e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match('/'))));
+});"""
+        return Response(js, mimetype="application/javascript")
 
-    @app.errorhandler(401)
+        @app.errorhandler(401)
     def unauthorized(_error):
         return redirect(url_for("auth.login", next=request.full_path))
 
