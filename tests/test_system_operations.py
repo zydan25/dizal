@@ -81,7 +81,7 @@ def test_pwa_icon_files_are_valid_pngs_with_declared_dimensions():
         response=client.get("/static/icons/"+name)
         assert response.status_code==200
         data=response.data
-        assert data[:8]==b"\\x89PNG\\r\\n\\x1a\\n"
+        assert data[:8]==b"\x89PNG\r\n\x1a\n"
         assert int.from_bytes(data[16:20],"big")==expected
         assert int.from_bytes(data[20:24],"big")==expected
 
