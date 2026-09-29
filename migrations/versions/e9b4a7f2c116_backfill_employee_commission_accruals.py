@@ -114,23 +114,7 @@ def upgrade():
 
 
 def downgrade():
-    conn = op.get_bind()
-    conn.execute(
-        sa.text(
-            """
-            DELETE FROM journal_line
-            WHERE journal_entry_id IN (
-                SELECT id FROM journal_entry
-                WHERE source_type = 'employee_commission_accrual'
-            )
-            """
-        )
-    )
-    conn.execute(
-        sa.text(
-            """
-            DELETE FROM journal_entry
-            WHERE source_type = 'employee_commission_accrual'
-            """
-        )
-    )
+    # Historical accrual entries are intentionally retained on downgrade.
+    # Removing them could also remove legitimate newer accruals created after
+    # this migration was applied.
+    pass
