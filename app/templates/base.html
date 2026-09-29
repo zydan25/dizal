@@ -58,11 +58,13 @@
 {% with messages=get_flashed_messages(with_categories=true) %}{% for c,m in messages %}<div class="alert alert-{{c}} compact-alert">{{m}}</div>{% endfor %}{% endwith %}
 {% else %}
 <main class="guest-main">
+{% if request.endpoint not in ["auth.login", "root"] %}
 <section class="guest-brand">
   <div class="brand-mark brand-large"><i class="bi bi-fuel-pump-fill"></i></div>
   <strong>{{project_settings.project_name}}</strong>
   <small>Dizal · إدارة توزيع الديزل</small>
 </section>
+{% endif %}
 <section class="guest-content">
 {% with messages=get_flashed_messages(with_categories=true) %}{% for c,m in messages %}<div class="alert alert-{{c}} compact-alert">{{m}}</div>{% endfor %}{% endwith %}
 {% endif %}
