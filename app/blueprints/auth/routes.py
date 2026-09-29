@@ -1,6 +1,7 @@
 from flask import flash,redirect,render_template,request,url_for
 from flask_login import current_user,login_required,login_user,logout_user
 from flask_security.utils import hash_password,verify_password
+from ...extensions import db
 from ...models import User
 from ...services.audit import audit
 from . import auth_bp
