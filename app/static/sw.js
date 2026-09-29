@@ -1,11 +1,11 @@
-const VERSION="20260930-2";
+const VERSION="20260930-3";
 const CACHE="dizal-static-"+VERSION;
 const STATIC_SHELL=[
-  "/static/css/app.css?v=20260930-2",
-  "/static/js/app.js?v=20260930-2",
-  "/static/manifest.webmanifest?v=20260930-2",
-  "/static/icons/dizal-192.png?v=20260930-2",
-  "/static/icons/dizal-512.png?v=20260930-2",
+  "/static/css/app.css?v=20260930-3",
+  "/static/js/app.js?v=20260930-3",
+  "/static/manifest.webmanifest?v=20260930-3",
+  "/static/icons/dizal-192.png?v=20260930-3",
+  "/static/icons/dizal-512.png?v=20260930-3",
   "/static/offline.html"
 ];
 
