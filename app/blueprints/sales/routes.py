@@ -36,12 +36,17 @@ def dispense():
         try:
             farmer=Farmer.query.get_or_404(int(request.form["farmer_id"]))
             employee=selected_employee(farmer)
-            tank=FuelTank.query.get_or_404(int(request.form["tank_id"]))
+            tank_id=int(request.form.get("tank_id") or 0)
+            if not tank_id:
+                first_tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).first()
+                if not first_tank:
+                    raise ValueError("لا يوجد خزان فعال. أضف خزانًا أولًا.")
+                tank_id=first_tank.id
+            tank=FuelTank.query.get_or_404(tank_id)
             settings=ProjectSettings.get()
-            if current_user.has_role("manager") or user_has_permission(current_user,"fuel.price.override"):
-                price=request.form.get("sale_price_per_liter") or settings.default_sale_price_per_liter
-            else:
-                price=settings.default_sale_price_per_liter
+            can_change_price=current_user.has_role("manager") or settings.employee_can_change_sale_price
+            price=request.form.get("sale_price_per_liter") if can_change_price else settings.default_sale_price_per_liter
+            price=price or settings.default_sale_price_per_liter
             row=create_dispense(employee,farmer,tank.id,request.form.get("drums"),price,request.form.get("paid_amount") or 0,request.form.get("notes"))
             audit("fuel.dispense.created","fuel_dispense",row.id,after={"farmer_id":farmer.id,"employee_id":employee.id,"drums":str(row.drums),"liters":str(row.liters),"total":str(row.total_amount),"credit":str(row.credit_amount),"cost":str(row.cost_amount),"document_id":row.document_id})
             db.session.commit()
@@ -51,9 +56,11 @@ def dispense():
             db.session.rollback()
             flash(str(exc),"danger")
     farmers=visible_farmers()
-    tanks=FuelTank.query.filter_by(is_active=True).all()
+    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).all()
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
     settings=ProjectSettings.get()
+    selected_tank_id=request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
+    can_change_price=current_user.has_role("manager") or settings.employee_can_change_sale_price
     farmer_info={str(farmer.id):{key:(float(value) if isinstance(value,(int,float)) else str(value)) for key,value in farmer_account(farmer).items()} for farmer in farmers}
     selected_farmer_id=request.args.get("farmer_id") or ""
     selected_employee_id=request.args.get("employee_id") or ""
@@ -61,7 +68,7 @@ def dispense():
         selected_farmer=Farmer.query.get(selected_farmer_id)
         if selected_farmer:
             selected_employee_id=str(selected_farmer.assigned_employee_id or "")
-    return render_template("sales/dispense.html",farmers=farmers,tanks=tanks,employees=employees,settings=settings,farmer_info=farmer_info,selected_farmer_id=selected_farmer_id,selected_employee_id=selected_employee_id)
+    return render_template("sales/dispense.html",farmers=farmers,tanks=tanks,employees=employees,settings=settings,farmer_info=farmer_info,selected_farmer_id=selected_farmer_id,selected_employee_id=selected_employee_id,selected_tank_id=selected_tank_id,can_change_price=can_change_price)
 
 @sales_bp.route("/payment",methods=["GET","POST"])
 @permission_required("farmer.payment.create")
@@ -103,11 +110,21 @@ def point_of_sale():
                 employee=User.query.filter_by(id=int(request.form["employee_id"]),is_employee=True,active=True).first()
                 if not employee:
                     raise ValueError("الموظف المحدد غير صالح.")
+            settings=ProjectSettings.get()
+            can_change_price=current_user.has_role("manager") or settings.employee_can_change_sale_price
+            tank_id=int(request.form.get("tank_id") or 0)
+            if not tank_id:
+                first_tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).first()
+                if not first_tank:
+                    raise ValueError("لا يوجد خزان فعال. أضف خزانًا أولًا.")
+                tank_id=first_tank.id
+            price=request.form.get("sale_price_per_liter") if can_change_price else settings.default_sale_price_per_liter
+            price=price or settings.default_sale_price_per_liter
             row=create_general_sale(
                 employee=employee,
-                tank_id=int(request.form.get("tank_id")),
+                tank_id=tank_id,
                 drums=request.form.get("drums"),
-                sale_price_per_liter=request.form.get("sale_price_per_liter"),
+                sale_price_per_liter=price,
                 customer_name=request.form.get("customer_name"),
                 notes=request.form.get("notes"),
             )
@@ -124,10 +141,12 @@ def point_of_sale():
     tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).all()
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
     settings=ProjectSettings.get()
+    selected_tank_id=request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
+    can_change_price=current_user.has_role("manager") or settings.employee_can_change_sale_price
     selected_employee_id=request.args.get("employee_id") or ""
     if current_user.has_role("manager") and not selected_employee_id and employees:
         selected_employee_id=str(employees[0].id)
-    return render_template("sales/point_of_sale.html",tanks=tanks,employees=employees,settings=settings,selected_employee_id=selected_employee_id)
+    return render_template("sales/point_of_sale.html",tanks=tanks,employees=employees,settings=settings,selected_employee_id=selected_employee_id,selected_tank_id=selected_tank_id,can_change_price=can_change_price)
 
 @sales_bp.get("/farmer/<int:farmer_id>")
 @permission_required("farmers.view")
