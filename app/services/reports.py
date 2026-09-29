@@ -131,3 +131,22 @@ def employee_operations(employee_id,start=None,end=None):
     result["collected"]=result["instant_collected"]+result["payment_collected"]
     result["supplied_liters"]=sum((Decimal(str(row.liters)) for row in approved_supplies),Decimal("0"))
     return result
+
+def sales_report(start=None,end=None):
+    from datetime import datetime,time,timezone
+    query=FuelDispense.query.filter_by(status="approved").order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc())
+    if start:
+        query=query.filter(FuelDispense.created_at>=datetime.combine(start,time.min).replace(tzinfo=timezone.utc))
+    if end:
+        query=query.filter(FuelDispense.created_at<=datetime.combine(end,time.max).replace(tzinfo=timezone.utc))
+    rows=query.limit(500).all()
+    sales=sum((Decimal(str(row.total_amount)) for row in rows),Decimal("0"))
+    cogs=sum((Decimal(str(row.cost_amount)) for row in rows),Decimal("0"))
+    liters=sum((Decimal(str(row.liters)) for row in rows),Decimal("0"))
+    drums=sum((Decimal(str(row.drums)) for row in rows),Decimal("0"))
+    collected=sum((Decimal(str(row.paid_amount)) for row in rows),Decimal("0"))
+    return {"rows":rows,"sales":sales,"cogs":cogs,"gross_profit":sales-cogs,"liters":liters,"drums":drums,"collected":collected}
+
+def dispense_report(start=None,end=None):
+    data=sales_report(start,end)
+    return data
