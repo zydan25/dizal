@@ -337,16 +337,12 @@ main.login-screen-shell .auth-page.login-page{
   display:block!important;
 }
 main.login-screen-shell .login-page .login-card{
-  margin:60px 0 0!important;
+  margin:60px 0 40px!important;
 }
-/* Login should use the phone viewport with no extra blank area below the footer credit. */
+/* Restore the programming footer padding; only the gap above it is tuned on login. */
 body:has(main.login-screen-shell) .app-footer{
-  padding-top:25px!important;
-  padding-bottom:0!important;
+  padding:38px 16px 20px!important;
   margin-top:0!important;
-}
-body:has(main.login-screen-shell) .app-footer .footer-content{
-  margin-bottom:0!important;
 }
 @media(max-width:600px){
   main.login-screen-shell{padding:5px 8px!important}
