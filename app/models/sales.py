@@ -5,7 +5,7 @@ class FuelDispense(db.Model):
     __tablename__="fuel_dispense"
     id=db.Column(db.Integer,primary_key=True)
     document_id=db.Column(db.Integer,db.ForeignKey("document.id"),nullable=False,unique=True)
-    farmer_id=db.Column(db.Integer,db.ForeignKey("farmer.id"),nullable=False,index=True)
+    farmer_id=db.Column(db.Integer,db.ForeignKey("farmer.id"),nullable=True,index=True)
     employee_id=db.Column(db.Integer,db.ForeignKey("user.id"),nullable=False,index=True)
     tank_id=db.Column(db.Integer,db.ForeignKey("fuel_tank.id"),nullable=False,index=True)
     liters=db.Column(db.Numeric(18,3),nullable=False)
@@ -18,6 +18,8 @@ class FuelDispense(db.Model):
     cost_amount=db.Column(db.Numeric(18,3),nullable=False,default=0)
     gross_profit=db.Column(db.Numeric(18,3),nullable=False,default=0)
     payment_mode=db.Column(db.String(20),nullable=False,default="credit")
+    sale_type=db.Column(db.String(20),nullable=False,default="farmer",index=True)
+    customer_name=db.Column(db.String(180),nullable=True)
     status=db.Column(db.String(25),nullable=False,default="approved")
     notes=db.Column(db.Text,nullable=True)
     created_at=db.Column(db.DateTime(timezone=True),nullable=False,default=lambda:datetime.now(timezone.utc))
