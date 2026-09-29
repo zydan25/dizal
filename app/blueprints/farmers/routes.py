@@ -68,7 +68,7 @@ def index():
         "remaining":sum((item["account"]["remaining_quota_drums"] for item in cards),0),
         "debt":sum((item["account"]["outstanding_amount"] for item in cards),0),
     }
-    return render_template("farmers/index.html",cards=cards,farmers=farmers,status=status,search=search,sort=sort,stats=stats)
+    return render_template("farmers/index.html",cards=cards,farmers=farmers,status=status,search=search,sort=sort,stats=stats,can_create_farmer=user_has_permission(current_user,"farmers.create"))
 
 @farmers_bp.route("/new",methods=["GET","POST"])
 @permission_required("farmers.create")
