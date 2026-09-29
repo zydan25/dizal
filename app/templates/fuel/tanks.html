@@ -22,7 +22,7 @@
 </div>
 <label>ملاحظات<textarea name="notes" rows="2"></textarea></label>
 <div class="info-card"><i class="bi bi-link-45deg"></i><div><strong>ربط تلقائي بالأصول</strong><small>هذا ليس مجرد إنشاء خزان: عند الحفظ ينشئ النظام أصلًا ثابتًا للخزان، ويصدر سند شراء، ويخصم قيمته من الصندوق المحدد. الديزل الموجود لاحقًا هو مخزون مستقل عن قيمة الخزان.</small></div></div>
-<button class="primary-btn" {% if not cashboxes %}disabled{% endif %}><i class="bi bi-check2"></i><span>حفظ الخزان وتسجيل الأصل</span></button>
+<button class="primary-btn submit-loading" type="submit" data-loading-text="جارٍ حفظ الخزان…"{% if not cashboxes %} disabled{% endif %}><i class="bi bi-check2"></i><span>حفظ الخزان وتسجيل الأصل</span></button>
 </form></div>
 <div class="section-title"><h2>الخزانات</h2><span>{{rows|length|clean_number}} خزان</span></div>
 {% set ns=namespace(stock=0,outbound=0,capacity=0) %}
