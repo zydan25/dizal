@@ -158,6 +158,7 @@ updateNetworkState();
 
 let deferredInstallPrompt=null;
 let appInstalledSignal=false;
+let installInProgress=false;
 const installButton=document.querySelector("[data-install-app]");
 const installText=document.getElementById("global-install-text");
 const installState=document.getElementById("global-install-state");
@@ -187,7 +188,7 @@ function refreshInstallButton(){
     return;
   }
   installButton.hidden=false;
-  installButton.disabled=false;
+  installButton.disabled=installInProgress;
   installButton.classList.toggle("is-ready",!!deferredInstallPrompt);
   if(deferredInstallPrompt){
     if(installText)installText.textContent="تثبيت Dizal الآن";
@@ -210,6 +211,7 @@ async function triggerInstall(){
     dizalToast("Dizal مثبت كتطبيق بالفعل.","success");
     return;
   }
+  if(installInProgress)return;
   if(!deferredInstallPrompt){
     refreshInstallButton();
     if(isIos()){
@@ -221,9 +223,13 @@ async function triggerInstall(){
   }
   const event=deferredInstallPrompt;
   deferredInstallPrompt=null;
+  installInProgress=true;
   refreshInstallButton();
+  setInstallState("جاري إرسال طلب التثبيت إلى المتصفح…");
   try{
     const choice=await event.prompt();
+    installInProgress=false;
+    refreshInstallButton();
     if(choice?.outcome==="accepted"){
       setInstallState("تم قبول التثبيت. ننتظر تأكيد النظام…");
       dizalToast("تم قبول طلب التثبيت. سيكمل المتصفح تثبيت التطبيق.","success");
@@ -232,6 +238,8 @@ async function triggerInstall(){
       dizalToast("تم إلغاء التثبيت.");
     }
   }catch(error){
+    installInProgress=false;
+    refreshInstallButton();
     setInstallState("تعذر فتح نافذة التثبيت المباشر؛ استخدم قائمة المتصفح.");
     console.error("Dizal install prompt error",error);
   }
@@ -245,6 +253,7 @@ window.addEventListener("beforeinstallprompt",event=>{
 window.addEventListener("appinstalled",()=>{
   appInstalledSignal=true;
   deferredInstallPrompt=null;
+  installInProgress=false;
   if(installButton)installButton.hidden=true;
   setInstallState("تم تثبيت Dizal بنجاح.");
   dizalToast("تم تثبيت Dizal كتطبيق على الشاشة.","success");
