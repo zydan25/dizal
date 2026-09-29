@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row">
+  <div class="page-heading"><h1>حسابي</h1><p>إدارة بيانات الدخول والاسم والهاتف وكلمة المرور{% if current_user.has_role("manager") %} وبيانات المدير الظاهرة في السندات{% endif %}.</p></div>
+  <span class="status-chip status-approved"><i class="bi bi-shield-check"></i> حساب نشط</span>
+</div>
+
+<section class="account-card">
+  <div class="account-card-head">
+    <div class="account-avatar"><i class="bi bi-person-fill"></i></div>
+    <div><strong>{{user.display_name or user.username}}</strong><span>{% if user.has_role("manager") %}مدير{% else %}موظف{% endif %} · {{user.username}}</span></div>
+  </div>
+  <div class="account-badges"><span><i class="bi bi-phone"></i>{{user.phone or "بدون هاتف"}}</span><span><i class="bi bi-envelope"></i>{{user.email or "بدون بريد"}}</span></div>
+</section>
+
+<form method="post" class="mobile-form account-form">
+  <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+
+  <section class="account-section">
+    <div class="account-section-head"><div class="settings-section-icon"><i class="bi bi-person-vcard"></i></div><div><strong>البيانات الأساسية</strong><small>بيانات الدخول والاسم الظاهر داخل النظام.</small></div></div>
+    <div class="two-col">
+      <label>الاسم الظاهر<input name="display_name" value="{{user.display_name or ''}}" required></label>
+      <label>اسم المستخدم<input name="username" value="{{user.username or ''}}" autocomplete="username" required></label>
+    </div>
+    <div class="two-col">
+      <label>رقم الهاتف<input name="phone" value="{{user.phone or ''}}" inputmode="tel" autocomplete="tel"></label>
+      <label>البريد الإلكتروني<input name="email" value="{{user.email or ''}}" type="email" autocomplete="email"></label>
+    </div>
+  </section>
+
+  {% if user.has_role("manager") %}
+  <section class="account-section manager-identity">
+    <div class="account-section-head"><div class="settings-section-icon"><i class="bi bi-receipt"></i></div><div><strong>هوية المدير في السندات</strong><small>تُحفظ هذه البيانات أيضًا في إعدادات المشروع.</small></div></div>
+    <div class="two-col">
+      <label>اسم المدير في السندات<input name="document_manager_name" value="{{settings.manager_name or user.display_name or ''}}" placeholder="الاسم الذي يظهر في السند"></label>
+      <label>هاتف المدير في السندات<input name="document_manager_phone" value="{{settings.manager_phone or user.phone or ''}}" inputmode="tel" placeholder="رقم التواصل"></label>
+    </div>
+    <div class="info-card"><i class="bi bi-info-circle"></i><span>يمكنك إدارة الاسم الشخصي وبيانات الهوية المطبوعة من هذه الصفحة دون فتح إعدادات المشروع.</span></div>
+  </section>
+  {% endif %}
+
+  <section class="account-section">
+    <div class="account-section-head"><div class="settings-section-icon"><i class="bi bi-key"></i></div><div><strong>تحديث كلمة المرور</strong><small>اتركها فارغة إذا لم ترد تغييرها.</small></div></div>
+    <label>كلمة المرور الحالية<input name="current_password" type="password" autocomplete="current-password"></label>
+    <div class="two-col">
+      <label>كلمة المرور الجديدة<input name="new_password" type="password" autocomplete="new-password" minlength="6"></label>
+      <label>تأكيد كلمة المرور<input name="confirm_password" type="password" autocomplete="new-password" minlength="6"></label>
+    </div>
+  </section>
+
+  <button class="primary-btn account-save" type="submit"><i class="bi bi-check2-circle"></i><span>حفظ بيانات الحساب</span></button>
+</form>
+{% endblock %}
