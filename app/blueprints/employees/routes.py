@@ -4,7 +4,7 @@ from flask_security.utils import hash_password,verify_password
 from ...decorators import permission_required
 from ...extensions import db
 from ...models import Cashbox,CashboxTransaction,EmployeeProfile,Role,User,Permission,UserPermissionOverride
-from ...models import Farmer,FuelDispense,FuelPurchase,FarmerPayment,CapitalAllocation,EmployeeSettlement,OperatingExpense,JournalLine
+from ...models import Farmer,FuelDispense,FuelPurchase,FarmerPayment,CapitalAllocation,EmployeeSettlement,OperatingExpense,JournalLine,AuditLog
 from ...permissions import PERMISSIONS
 from ...services.cashbox import balance
 from ...services.reports import employee_operations,employee_finance_summary
@@ -159,8 +159,11 @@ def delete(user_id):
     if linked or (cashbox and CashboxTransaction.query.filter_by(cashbox_id=cashbox.id).count()):
         flash("لا يمكن حذف الموظف نهائيًا لأن له بيانات تشغيلية أو مزارعين أو حركات صندوق. عطّل الحساب بدل الحذف، أو استخدم «تصفير النظام» لمسح بيانات المشروع ثم الحسابات.","danger")
         return redirect(url_for("employees.index"))
+    AuditLog.query.filter_by(actor_user_id=employee.id).update({"actor_user_id":None},synchronize_session=False)
     if cashbox: db.session.delete(cashbox)
+    deleted_id=employee.id
     db.session.delete(employee)
+    audit("employee.deleted","user",deleted_id,after={"deleted":True})
     db.session.commit()
     flash("تم حذف الموظف نهائيًا.","success")
     return redirect(url_for("employees.index"))
