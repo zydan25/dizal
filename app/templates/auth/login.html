@@ -17,7 +17,10 @@
 </div>
 </label>
 <label class="check-row"><input type="checkbox" name="remember" value="1"> تذكرني</label>
-<button class="primary-btn login-submit" type="submit"><i class="bi bi-box-arrow-in-left"></i><span>دخول إلى النظام</span></button>
+<button class="primary-btn login-submit" type="submit">
+  <span class="login-submit-icon"><i class="bi bi-box-arrow-in-left"></i></span>
+  <span class="login-submit-label">دخول إلى النظام</span>
+</button>
 </form>
 </div></div>
 <style>
@@ -26,6 +29,19 @@
 .password-toggle{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:24px;height:28px;border:0;border-radius:0;background:transparent!important;color:#9aa6b6;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;font-size:.98rem;line-height:1;box-shadow:none!important;opacity:.78}
 .password-toggle:hover,.password-field:focus-within .password-toggle{color:var(--primary);opacity:1}
 .password-toggle:focus-visible{outline:none}
+</style>
+<style>
+.login-submit{position:relative;overflow:hidden;transition:opacity .18s ease,transform .18s ease}
+.login-submit-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 18px}
+.login-submit-label{display:inline-flex;align-items:center;justify-content:center}
+.login-submit.is-loading{cursor:wait;pointer-events:none;opacity:.92}
+.login-submit.is-loading .login-submit-icon{
+  width:18px;height:18px;border:2px solid rgba(255,255,255,.34);border-top-color:#fff;border-radius:50%;
+  animation:login-spin .72s linear infinite;
+}
+.login-submit.is-loading .login-submit-icon i{display:none}
+.login-submit.is-loading .login-submit-label{opacity:.96}
+@keyframes login-spin{to{transform:rotate(360deg)}}
 </style>
 <script>
 document.querySelectorAll(".password-toggle").forEach(function(button){
@@ -37,6 +53,19 @@ document.querySelectorAll(".password-toggle").forEach(function(button){
     icon.className=show?"bi bi-eye-slash":"bi bi-eye";
     button.setAttribute("aria-label",show?"إخفاء كلمة المرور":"إظهار كلمة المرور");
     button.setAttribute("aria-pressed",show?"true":"false");
+  });
+});
+document.querySelectorAll(".login-page form").forEach(function(form){
+  form.addEventListener("submit",function(){
+    var button=form.querySelector(".login-submit");
+    if(!button || button.classList.contains("is-loading")) return;
+    var iconWrap=button.querySelector(".login-submit-icon");
+    var label=button.querySelector(".login-submit-label");
+    button.classList.add("is-loading");
+    button.setAttribute("aria-busy","true");
+    button.disabled=true;
+    if(iconWrap) iconWrap.innerHTML="";
+    if(label) label.textContent="جارٍ تسجيل الدخول…";
   });
 });
 </script>
