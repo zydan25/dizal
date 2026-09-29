@@ -159,8 +159,12 @@ def test_pos_page_renders_with_default_tank_and_price_policy():
         employee_role=Role(name="employee",description="employee",label="موظف")
         db.session.add_all([manager_role,employee_role]);db.session.flush()
         permission=Permission(key="fuel.dispense",label="صرف الديزل",module="fuel")
-        db.session.add(permission);db.session.flush()
-        db.session.add(RolePermission(role_id=employee_role.id,permission_id=permission.id))
+        dashboard_permission=Permission(key="dashboard.view",label="لوحة المتابعة",module="dashboard")
+        db.session.add_all([permission,dashboard_permission]);db.session.flush()
+        db.session.add_all([
+            RolePermission(role_id=employee_role.id,permission_id=permission.id),
+            RolePermission(role_id=employee_role.id,permission_id=dashboard_permission.id),
+        ])
         manager=User(username="manager",email="manager@test.local",password=hash_password("secret"),display_name="مدير",active=True,fs_uniquifier="pos-manager")
         employee=User(username="employee",email="employee@test.local",password=hash_password("secret"),display_name="موظف",active=True,is_employee=True,fs_uniquifier="pos-employee")
         manager.roles.append(manager_role);employee.roles.append(employee_role)
