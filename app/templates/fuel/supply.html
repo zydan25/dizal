@@ -5,7 +5,7 @@
 <form method="post" enctype="multipart/form-data" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 {% if current_user.has_role("manager") %}<label>الموظف المسؤول<select name="employee_id"><option value="">اختر الموظف</option>{% for e in employees %}<option value="{{e.id}}">{{e.display_name}}</option>{% endfor %}</select></label>{% endif %}
-<label>الخزان<select name="tank_id" required><option value="">اختر الخزان</option>{% for tank in tanks %}<option value="{{tank.id}}">{{tank.name}} · {{tank.code}}</option>{% endfor %}</select></label>
+<label>الخزان<select name="tank_id" required>{% for tank in tanks %}<option value="{{tank.id}}" {% if selected_tank_id|string==tank.id|string %}selected{% endif %}>{{tank.name}} · {{tank.code}}</option>{% else %}<option value="">لا توجد خزانات</option>{% endfor %}</select></label>
 <div class="two-col"><label>التاريخ<input name="purchase_date" type="date" value="{{today}}" required></label><label>المورد<input name="supplier_name"></label></div>
 <div class="two-col"><label>كمية التوريد باللتر<input name="liters" type="number" step="0.001" min="0.001" required data-unit="liter"></label><label>قيمة الديزل<input name="diesel_amount" type="number" step="0.001" min="0" required></label></div>
 <div class="two-col"><label>التوصيل<input name="delivery_fee" type="number" step="0.001" min="0" value="0"></label><label>رسوم أخرى<input name="other_fee" type="number" step="0.001" min="0" value="0"></label></div>
