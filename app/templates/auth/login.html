@@ -10,9 +10,34 @@
 <form method="post" class="mobile-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>رقم الهاتف أو اسم المستخدم<input name="identifier" autocomplete="username" required></label>
-<label>كلمة المرور<input type="password" name="password" autocomplete="current-password" required></label>
+<label>كلمة المرور
+<div class="password-field">
+<input type="password" name="password" autocomplete="current-password" required>
+<button type="button" class="password-toggle" aria-label="إظهار كلمة المرور" aria-pressed="false"><i class="bi bi-eye"></i></button>
+</div>
+</label>
 <label class="check-row"><input type="checkbox" name="remember" value="1"> تذكرني</label>
 <button class="primary-btn login-submit" type="submit"><i class="bi bi-box-arrow-in-left"></i><span>دخول إلى النظام</span></button>
 </form>
 </div></div>
+<style>
+.password-field{position:relative;margin-top:6px}
+.password-field input{margin-top:0!important;padding-left:44px!important}
+.password-toggle{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:24px;height:28px;border:0;border-radius:0;background:transparent!important;color:#9aa6b6;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;font-size:.98rem;line-height:1;box-shadow:none!important;opacity:.78}
+.password-toggle:hover,.password-field:focus-within .password-toggle{color:var(--primary);opacity:1}
+.password-toggle:focus-visible{outline:none}
+</style>
+<script>
+document.querySelectorAll(".password-toggle").forEach(function(button){
+  button.addEventListener("click",function(){
+    var input=button.parentElement.querySelector("input");
+    var icon=button.querySelector("i");
+    var show=input.type==="password";
+    input.type=show?"text":"password";
+    icon.className=show?"bi bi-eye-slash":"bi bi-eye";
+    button.setAttribute("aria-label",show?"إخفاء كلمة المرور":"إظهار كلمة المرور");
+    button.setAttribute("aria-pressed",show?"true":"false");
+  });
+});
+</script>
 {% endblock %}
