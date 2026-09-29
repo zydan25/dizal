@@ -3,7 +3,7 @@ from datetime import datetime,timezone,time
 from sqlalchemy import func
 from ..extensions import db
 from ..models import (
-    Document,Farmer,FuelDispense,FuelStockMovement,FuelStockLayer,Cashbox,
+    Document,Farmer,FuelDispense,FuelPurchase,FuelStockMovement,FuelStockLayer,Cashbox,
     CashboxTransaction,EmployeeProfile,EmployeeSettlement,OperatingExpense,User,
     FarmerPayment,CapitalContribution,CapitalAllocation,FuelTank,ProjectSettings
 )
@@ -350,7 +350,8 @@ def employee_finance_summary(employee,operations=None):
     from ..models import CapitalAllocation
     capital=_decimal(
         db.session.query(func.coalesce(func.sum(CapitalAllocation.amount),0))
-        .filter(CapitalAllocation.employee_id==employee.id).scalar()
+        .join(Document,CapitalAllocation.document_id==Document.id)
+        .filter(CapitalAllocation.employee_id==employee.id,Document.status!="reversed").scalar()
     )
     box=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
     employee_box_balance=balance(box.id) if box else ZERO
@@ -364,7 +365,10 @@ def employee_finance_summary(employee,operations=None):
     average_stock_cost=remaining_cost/stock if stock else ZERO
     forecast_sales=stock*sale_price
     forecast_gross_profit=stock*(sale_price-average_stock_cost)
-    purchased_cost=sum((row.landed_cost for row in operations["supplies"] if row.status=="approved"),ZERO)
+    purchased_cost=_decimal(
+        db.session.query(func.coalesce(func.sum(FuelPurchase.landed_cost),0))
+        .filter(FuelPurchase.employee_id==employee.id,FuelPurchase.status=="approved").scalar()
+    )
 
     return {
         "capital_delivered":capital,
