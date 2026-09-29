@@ -8,14 +8,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="{{project_settings.project_name}}">
-<link rel="manifest" href="{{url_for('web_manifest',v='20260930-3')}}">
+<link rel="manifest" href="{{url_for('web_manifest',v='20260930-4')}}">
 <link rel="icon" href="{{url_for('static',filename='icons/dizal.svg',v='20260930-2')}}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Noto+Sans+Arabic:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-<link href="{{url_for('static',filename='css/app.css',v='20260930-3')}}" rel="stylesheet">
+<link href="{{url_for('static',filename='css/app.css',v='20260930-4')}}" rel="stylesheet">
 <style>:root{--primary:{{project_settings.primary_color}};--secondary:{{project_settings.secondary_color}};--accent:{{project_settings.accent_color}};--surface:{{project_settings.surface_color}};--danger:{{project_settings.danger_color}};--radius:{{project_settings.radius}};--font-scale:{{project_settings.font_scale or '1'}};--font-family:"{{project_settings.font_family}}",Tajawal,sans-serif}.app-logo{max-height:36px;max-width:120px;object-fit:contain}</style>
 <title>{{project_settings.project_name}} | Dizal</title>
 </head>
@@ -40,7 +40,6 @@
 {% endfor %}
 </div>
 <a class="sidebar-account" href="{{url_for('auth.account')}}"><i class="bi bi-person-circle"></i><span>حسابي وإعدادات الحساب</span></a>
-<div class="sidebar-install"><button class="sidebar-install-btn" type="button" data-install-app><i class="bi bi-phone"></i><span>تثبيت التطبيق على الشاشة</span></button></div>
 <form class="sidebar-logout" method="post" action="{{url_for('auth.logout')}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button><i class="bi bi-box-arrow-right"></i> تسجيل الخروج</button></form>
 <div class="sidebar-credit" aria-label="حقوق التصميم والبرمجة">
   <span class="credit-kicker">برمجة وتصميم</span>
@@ -69,6 +68,12 @@
 {% with messages=get_flashed_messages(with_categories=true) %}{% for c,m in messages %}<div class="alert alert-{{c}} compact-alert">{{m}}</div>{% endfor %}{% endwith %}
 {% endif %}
 
+<div class="global-install-bar" id="global-install-bar">
+  <button class="primary-btn global-install-btn" type="button" data-install-app>
+    <i class="bi bi-download"></i><span id="global-install-text">تثبيت Dizal كتطبيق</span>
+  </button>
+  <small id="global-install-state">يتم التثبيت من المتصفح الرسمي.</small>
+</div>
 {% block content %}{% endblock %}
 
 {% if current_user.is_authenticated %}
@@ -98,29 +103,7 @@
   </div>
 </footer>
 {% endif %}
-<div class="install-sheet" id="install-sheet" hidden aria-hidden="true">
-  <div class="install-sheet-backdrop" data-install-close></div>
-  <section class="install-sheet-dialog" role="dialog" aria-modal="true" aria-labelledby="install-sheet-title">
-    <button class="install-sheet-close" type="button" data-install-close aria-label="إغلاق"><i class="bi bi-x-lg"></i></button>
-    <div class="install-app-icon"><i class="bi bi-phone-fill"></i><span class="install-app-check"><i class="bi bi-check2"></i></span></div>
-    <div class="install-sheet-copy">
-      <span class="install-eyebrow">DIZAL · تطبيق على جهازك</span>
-      <h2 id="install-sheet-title">ثبّت Dizal على الشاشة الرئيسية</h2>
-      <p id="install-sheet-message">وصول أسرع للنظام وتجربة أقرب للتطبيق.</p>
-    </div>
-    <div class="install-ready-card" id="install-ready-card">
-      <i class="bi bi-lightning-charge-fill"></i>
-      <div><strong id="install-ready-title">التثبيت جاهز</strong><small id="install-ready-text">اضغط تثبيت الآن لفتح نافذة التثبيت الرسمية.</small></div>
-    </div>
-    <div class="install-help" id="install-help"></div>
-    <div class="install-sheet-actions">
-      <button class="primary-btn install-sheet-primary" type="button" data-install-confirm><i class="bi bi-download"></i><span id="install-confirm-text">تثبيت الآن</span></button>
-      <button class="secondary-btn" type="button" data-install-close>لاحقًا</button>
-    </div>
-    <p class="install-note"><i class="bi bi-shield-check"></i> التثبيت يتم من المتصفح ولا ينزّل ملفًا مجهولًا.</p>
-  </section>
-</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{url_for('static',filename='js/app.js',v='20260930-3')}}" defer></script>
+<script src="{{url_for('static',filename='js/app.js',v='20260930-4')}}" defer></script>
 </body>
 </html>
