@@ -3,7 +3,7 @@ from flask_login import current_user
 from flask_security.utils import hash_password,verify_password
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import Cashbox,CashboxTransaction,EmployeeProfile,Role,User,Permission,UserPermissionOverride
+from ...models import Cashbox,CashboxTransaction,EmployeeProfile,Role,User,Permission,UserPermissionOverride,ProjectSettings
 from ...models import Farmer,FuelDispense,FuelPurchase,FarmerPayment,CapitalAllocation,EmployeeSettlement,OperatingExpense,JournalLine,AuditLog
 from ...permissions import PERMISSIONS
 from ...services.cashbox import balance
@@ -32,7 +32,7 @@ def employee_operations_cards(employees):
 def account():
     from flask_security.utils import hash_password
     employee=current_user
-    settings=__import__("app.models",fromlist=["ProjectSettings"]).ProjectSettings.get()
+    settings=ProjectSettings.get()
     if request.method=="POST":
         username=(request.form.get("username") or "").strip()
         phone=(request.form.get("phone") or "").strip() or None
@@ -92,10 +92,12 @@ def new():
         if User.query.filter((User.username==username)|(User.phone==phone if phone else User.phone==None)).first():
             flash("اسم المستخدم أو الهاتف مستخدم بالفعل.","danger")
             return render_template("employees/form.html")
+        account_role=request.form.get("account_role") or "employee"
+        if account_role not in {"employee","manager"}: account_role="employee"
         user=User(username=username,phone=phone or None,email=(request.form.get("email") or None),display_name=name,is_employee=True,active=True,password=hash_password(password),fs_uniquifier=uuid.uuid4().hex)
-        role=Role.query.filter_by(name="employee").first()
+        role=Role.query.filter_by(name=account_role).first()
         if not role:
-            raise ValueError("دور الموظف غير موجود. نفذ seed أولًا.")
+            raise ValueError("الدور المطلوب غير موجود. نفذ seed أولًا.")
         user.roles.append(role)
         db.session.add(user)
         db.session.flush()
@@ -124,6 +126,11 @@ def edit(user_id):
         employee.phone=(request.form.get("phone") or employee.phone or "").strip() or None
         employee.email=(request.form.get("email") or employee.email or "").strip() or None
         employee.active=request.form.get("active")=="1"
+        account_role=request.form.get("account_role") or ("manager" if employee.has_role("manager") else "employee")
+        target_role=Role.query.filter_by(name=account_role).first()
+        if not target_role: raise ValueError("الدور المطلوب غير موجود.")
+        employee.roles=list(employee.roles)
+        employee.roles=[target_role]
         if profile:
             salary_type=request.form.get("salary_type") or profile.salary_type
             if salary_type not in {"fixed","per_liter","per_drum","percent_profit","commission"}: salary_type=profile.salary_type
