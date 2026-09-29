@@ -13,6 +13,19 @@
   <i class="bi bi-wallet2"></i>
 </div>
 
+{% if finance and owner %}
+<div class="section-title"><h2>تحليل صندوق {{owner.display_name}}</h2><span>الرصيد الحقيقي + الاستحقاقات</span></div>
+<div class="cashbox-owner-grid">
+  <div><small>رأس المال المُسلَّم</small><strong>{{finance.capital_delivered|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div><small>الربح المحقق من البيع</small><strong>{{finance.gross_profit|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div><small>استحقاق الموظف</small><strong>{{finance.employee_commission|clean_number}}</strong><span>{{finance.commission_label}}</span></div>
+  <div><small>حصة المشروع التقديرية</small><strong>{{finance.project_profit_estimate|clean_number}}</strong><span>قبل المصروفات الأخرى</span></div>
+  <div><small>الديزل المتبقي</small><strong>{{finance.stock_drums|round(1)|clean_number}}</strong><span>دبة · {{finance.stock_liters|clean_number}} لتر</span></div>
+  <div><small>قيمة المخزون المتوقعة للبيع</small><strong>{{finance.forecast_sales_value|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+</div>
+<div class="info-card finance-note"><i class="bi bi-info-circle"></i><span>{{finance.note}}</span></div>
+{% endif %}
+
 <div class="stats-grid page-stats-compact">
   <div class="stat-card"><div><small>داخل الفترة</small><strong>{{total_in|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
   <div class="stat-card"><div><small>خارج الفترة</small><strong>{{total_out|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
