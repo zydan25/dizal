@@ -4,7 +4,7 @@ from flask_security.utils import hash_password,verify_password
 from ...decorators import permission_required
 from ...extensions import db
 from ...models import Cashbox,CashboxTransaction,EmployeeProfile,Role,User,Permission,UserPermissionOverride
-from ...models import Farmer
+from ...models import Farmer,FuelDispense,FuelPurchase,FarmerPayment,CapitalAllocation,EmployeeSettlement,OperatingExpense,JournalLine
 from ...permissions import PERMISSIONS
 from ...services.cashbox import balance
 from ...services.reports import employee_operations
@@ -58,7 +58,9 @@ def new():
         db.session.add(user)
         db.session.flush()
         code=f"EMP-{user.id:04d}"
-        profile=EmployeeProfile(user_id=user.id,employee_code=code,salary_type=request.form.get("salary_type") or "fixed",salary_value=request.form.get("salary_value") or 0,notes=request.form.get("notes"))
+        salary_type=request.form.get("salary_type") or "fixed"
+        if salary_type not in {"fixed","per_liter","per_drum","percent_profit","commission"}: salary_type="fixed"
+        profile=EmployeeProfile(user_id=user.id,employee_code=code,salary_type=salary_type,salary_value=request.form.get("salary_value") or 0,notes=request.form.get("notes"))
         db.session.add(profile)
         box=Cashbox(name=f"صندوق {name}",box_type="employee",owner_user_id=user.id,is_active=True)
         db.session.add(box)
@@ -81,7 +83,9 @@ def edit(user_id):
         employee.email=(request.form.get("email") or employee.email or "").strip() or None
         employee.active=request.form.get("active")=="1"
         if profile:
-            profile.salary_type=request.form.get("salary_type") or profile.salary_type
+            salary_type=request.form.get("salary_type") or profile.salary_type
+            if salary_type not in {"fixed","per_liter","per_drum","percent_profit","commission"}: salary_type=profile.salary_type
+            profile.salary_type=salary_type
             profile.salary_value=request.form.get("salary_value") or profile.salary_value
             profile.farmer_limit_override=request.form.get("farmer_limit_override") or None
             profile.credit_limit_override=request.form.get("credit_limit_override") or None
@@ -118,6 +122,48 @@ def permissions(user_id):
     return render_template("employees/permissions.html",employee=employee,permissions=PERMISSIONS,effective=effective)
 
 
+
+@employees_bp.post("/<int:user_id>/toggle")
+@permission_required("users.manage")
+def toggle(user_id):
+    employee=User.query.filter_by(id=user_id,is_employee=True).first_or_404()
+    if employee.id==current_user.id:
+        flash("لا يمكن تعطيل حساب المدير الحالي من هذه الشاشة.","danger")
+        return redirect(url_for("employees.index"))
+    employee.active=not employee.active
+    if employee.employee_profile:
+        employee.employee_profile.status="active" if employee.active else "inactive"
+    audit("employee.activated" if employee.active else "employee.suspended","user",employee.id,after={"active":employee.active})
+    db.session.commit()
+    flash("تم تفعيل الموظف." if employee.active else "تم تعطيل الموظف.","success")
+    return redirect(url_for("employees.index"))
+
+@employees_bp.post("/<int:user_id>/delete")
+@permission_required("users.manage")
+def delete(user_id):
+    employee=User.query.filter_by(id=user_id,is_employee=True).first_or_404()
+    if employee.id==current_user.id:
+        flash("لا يمكن حذف الحساب المستخدم حاليًا.","danger")
+        return redirect(url_for("employees.index"))
+    linked=(
+        FuelDispense.query.filter_by(employee_id=employee.id).count()+
+        FarmerPayment.query.filter_by(employee_id=employee.id).count()+
+        FuelPurchase.query.filter_by(employee_id=employee.id).count()+
+        CapitalAllocation.query.filter_by(employee_id=employee.id).count()+
+        EmployeeSettlement.query.filter_by(employee_id=employee.id).count()+
+        OperatingExpense.query.filter_by(employee_id=employee.id).count()+
+        JournalLine.query.filter_by(employee_id=employee.id).count()+
+        Farmer.query.filter_by(assigned_employee_id=employee.id).count()
+    )
+    cashbox=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee").first()
+    if linked or (cashbox and CashboxTransaction.query.filter_by(cashbox_id=cashbox.id).count()):
+        flash("لا يمكن حذف الموظف نهائيًا لأن له بيانات تشغيلية أو مزارعين أو حركات صندوق. عطّل الحساب بدل الحذف، أو استخدم «تصفير النظام» لمسح بيانات المشروع ثم الحسابات.","danger")
+        return redirect(url_for("employees.index"))
+    if cashbox: db.session.delete(cashbox)
+    db.session.delete(employee)
+    db.session.commit()
+    flash("تم حذف الموظف نهائيًا.","success")
+    return redirect(url_for("employees.index"))
 
 @employees_bp.get("/<int:user_id>")
 @permission_required("employee.statement.view")
