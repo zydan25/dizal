@@ -7,7 +7,7 @@ from ...models import Cashbox,CashboxTransaction,EmployeeProfile,Role,User,Permi
 from ...models import Farmer,FuelDispense,FuelPurchase,FarmerPayment,CapitalAllocation,EmployeeSettlement,OperatingExpense,JournalLine
 from ...permissions import PERMISSIONS
 from ...services.cashbox import balance
-from ...services.reports import employee_operations
+from ...services.reports import employee_operations,employee_finance_summary
 from ...services.audit import audit
 from . import employees_bp
 import uuid
@@ -175,7 +175,8 @@ def detail(user_id):
     farmers=Farmer.query.filter_by(assigned_employee_id=employee.id).filter(Farmer.status!="deleted").order_by(Farmer.name).limit(100).all()
     box=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
     sales=operations["sales"]; cost=sum((getattr(row,"cost_amount",0) for row in operations["dispenses"] if row.status=="approved"),0)
-    return render_template("employees/detail.html",employee=employee,operations=operations,farmers=farmers,box=box,cashbox_balance=balance(box.id) if box else 0,profit=sales-cost)
+    finance=employee_finance_summary(employee,operations)
+    return render_template("employees/detail.html",employee=employee,operations=operations,farmers=farmers,box=box,cashbox_balance=balance(box.id) if box else 0,profit=sales-cost,finance=finance)
 
 
 @employees_bp.route("/password",methods=["GET","POST"])
