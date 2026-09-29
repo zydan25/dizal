@@ -10,6 +10,7 @@ from ..models import (
 from .cashbox import balance
 from .fuel import current_stock_liters
 from .capital import central_cashbox
+from .compensation import compensation_label
 
 
 ZERO=Decimal("0")
@@ -74,12 +75,13 @@ def _employee_dispense_aggregate(employee_id=None,start=None,end=None):
         func.coalesce(func.sum(FuelDispense.drums),0),
         func.coalesce(func.sum(FuelDispense.credit_amount),0),
         func.coalesce(func.sum(FuelDispense.paid_amount),0),
+        func.coalesce(func.sum(FuelDispense.employee_commission_amount),0),
     ).filter(FuelDispense.status=="approved")
     if employee_id is not None:
         query=query.filter(FuelDispense.employee_id==employee_id)
     for condition in _date_window(start,end):
         query=query.filter(condition)
-    sales,cogs,liters,drums,credit,paid=query.one()
+    sales,cogs,liters,drums,credit,paid,commission_earned=query.one()
     return {
         "sales":_decimal(sales),
         "cogs":_decimal(cogs),
@@ -87,6 +89,7 @@ def _employee_dispense_aggregate(employee_id=None,start=None,end=None):
         "drums":_decimal(drums),
         "credit":_decimal(credit),
         "instant_collected":_decimal(paid),
+        "commission_earned":_decimal(commission_earned),
     }
 
 
@@ -109,14 +112,22 @@ def _approved_settlement_total(employee_ids=None,start=None,end=None):
 def employee_compensation(employee,start=None,end=None):
     totals=_employee_dispense_aggregate(employee.id,start,end)
     profile=employee.employee_profile
-    result=calculate_employee_compensation(
-        profile,
-        totals["sales"],
-        totals["cogs"],
-        totals["liters"],
-        totals["drums"],
-        ProjectSettings.get().currency,
-    )
+    settings=ProjectSettings.get()
+    salary_type=(profile.salary_type if profile else "fixed") or "fixed"
+    value=_decimal(profile.salary_value if profile else 0)
+    if salary_type=="fixed":
+        earned=value
+        label=compensation_label(salary_type,value,settings.currency)
+    else:
+        earned=totals["commission_earned"]
+        label=f"استحقاق مثبت على العمليات · {compensation_label(salary_type,value,settings.currency)}"
+    result={
+        "salary_type":salary_type,
+        "salary_value":value,
+        "earned":earned,
+        "label":label,
+        "gross_profit":totals["sales"]-totals["cogs"],
+    }
     result.update(totals)
     return result
 
@@ -135,6 +146,7 @@ def project_summary():
         func.coalesce(func.sum(FuelDispense.cost_amount),0),
         func.coalesce(func.sum(FuelDispense.liters),0),
         func.coalesce(func.sum(FuelDispense.drums),0),
+        func.coalesce(func.sum(FuelDispense.employee_commission_amount),0),
     ).filter(FuelDispense.status=="approved").group_by(FuelDispense.employee_id).all()
     aggregate_map={
         row[0]:{
@@ -142,6 +154,7 @@ def project_summary():
             "cogs":_decimal(row[2]),
             "liters":_decimal(row[3]),
             "drums":_decimal(row[4]),
+            "commission_earned":_decimal(row[5]),
         }
         for row in aggregate_rows
     }
@@ -153,15 +166,21 @@ def project_summary():
     variable_commission_earned=ZERO
     for employee in employees:
         profile=employee.employee_profile
-        totals=aggregate_map.get(employee.id,{"sales":ZERO,"cogs":ZERO,"liters":ZERO,"drums":ZERO})
-        comp=calculate_employee_compensation(
-            profile,totals["sales"],totals["cogs"],totals["liters"],totals["drums"],ProjectSettings.get().currency
+        totals=aggregate_map.get(
+            employee.id,
+            {"sales":ZERO,"cogs":ZERO,"liters":ZERO,"drums":ZERO,"commission_earned":ZERO},
         )
-        if comp["salary_type"]=="fixed":
+        salary_type=(profile.salary_type if profile else "fixed") or "fixed"
+        value=_decimal(profile.salary_value if profile else 0)
+        if salary_type=="fixed":
             fixed_ids.append(employee.id)
+            earned=value
+            label=compensation_label(salary_type,value,ProjectSettings.get().currency)
         else:
             variable_ids.append(employee.id)
-            variable_commission_earned+=comp["earned"]
+            earned=totals["commission_earned"]
+            variable_commission_earned+=earned
+            label=f"استحقاق مثبت على العمليات · {compensation_label(salary_type,value,ProjectSettings.get().currency)}"
         employee_compensation_rows.append({
             "employee":employee,
             "sales":totals["sales"],
@@ -169,9 +188,10 @@ def project_summary():
             "liters":totals["liters"],
             "drums":totals["drums"],
             "gross_profit":comp["gross_profit"],
-            "earned":comp["earned"],
-            "salary_type":comp["salary_type"],
-            "label":comp["label"],
+            "commission_earned":totals["commission_earned"],
+            "earned":earned,
+            "salary_type":salary_type,
+            "label":label,
         })
 
     # Fixed salaries are recognized from approved settlements. Variable
@@ -304,15 +324,15 @@ def employee_performance():
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name)
     for employee in employees:
         totals=_employee_dispense_aggregate(employee.id)
-        comp=calculate_employee_compensation(
-            employee.employee_profile,
-            totals["sales"],totals["cogs"],totals["liters"],totals["drums"],
-            ProjectSettings.get().currency,
-        )
+        profile=employee.employee_profile
+        salary_type=(profile.salary_type if profile else "fixed") or "fixed"
+        value=_decimal(profile.salary_value if profile else 0)
+        earned=totals["commission_earned"] if salary_type!="fixed" else value
+        label=compensation_label(salary_type,value,ProjectSettings.get().currency)
         box=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
         paid=_approved_settlement_total([employee.id])
         farmer_count=Farmer.query.filter_by(assigned_employee_id=employee.id,status="approved").count()
-        outstanding=max(comp["earned"]-paid,ZERO) if comp["salary_type"]!="fixed" else ZERO
+        outstanding=max(earned-paid,ZERO) if salary_type!="fixed" else ZERO
         rows.append({
             "employee":employee,
             "sales":totals["sales"],
@@ -321,14 +341,14 @@ def employee_performance():
             "gross_profit":totals["sales"]-totals["cogs"],
             "liters":totals["liters"],
             "drums":totals["drums"],
-            "employee_commission":comp["earned"] if comp["salary_type"]!="fixed" else ZERO,
-            "salary":comp["earned"] if comp["salary_type"]=="fixed" else ZERO,
-            "compensation_earned":comp["earned"],
+            "employee_commission":earned if salary_type!="fixed" else ZERO,
+            "salary":earned if salary_type=="fixed" else ZERO,
+            "compensation_earned":earned,
             "compensation_paid":paid,
             "compensation_outstanding":outstanding,
             "net_contribution":totals["sales"]-totals["cogs"]-comp["earned"],
-            "commission_label":comp["label"],
-            "salary_type":comp["salary_type"],
+            "commission_label":label,
+            "salary_type":salary_type,
             "cashbox_balance":balance(box.id) if box else ZERO,
             "farmer_count":farmer_count,
         })
@@ -339,14 +359,15 @@ def employee_finance_summary(employee,operations=None):
     if operations is None:
         operations=employee_operations(employee.id)
     settings=ProjectSettings.get()
-    comp=calculate_employee_compensation(
-        employee.employee_profile,
-        operations["sales"],
-        operations["cogs"],
-        operations["liters"],
-        operations["drums"],
-        settings.currency,
-    )
+    profile=employee.employee_profile
+    salary_type=(profile.salary_type if profile else "fixed") or "fixed"
+    value=_decimal(profile.salary_value if profile else 0)
+    if salary_type=="fixed":
+        earned=value
+        label=compensation_label(salary_type,value,settings.currency)
+    else:
+        earned=_decimal(operations.get("commission_earned"))
+        label=f"استحقاق مثبت على العمليات · {compensation_label(salary_type,value,settings.currency)}"
     from ..models import CapitalAllocation
     capital=_decimal(
         db.session.query(func.coalesce(func.sum(CapitalAllocation.amount),0))
@@ -374,13 +395,13 @@ def employee_finance_summary(employee,operations=None):
         "capital_delivered":capital,
         "cashbox_balance":employee_box_balance,
         "gross_profit":operations["sales"]-operations["cogs"],
-        "employee_commission":comp["earned"] if comp["salary_type"]!="fixed" else ZERO,
-        "salary":comp["earned"] if comp["salary_type"]=="fixed" else ZERO,
-        "compensation_earned":comp["earned"],
-        "project_profit_estimate":operations["sales"]-operations["cogs"]-comp["earned"],
-        "commission_label":comp["label"],
-        "salary_type":comp["salary_type"],
-        "salary_value":comp["salary_value"],
+        "employee_commission":earned if salary_type!="fixed" else ZERO,
+        "salary":earned if salary_type=="fixed" else ZERO,
+        "compensation_earned":earned,
+        "project_profit_estimate":operations["sales"]-operations["cogs"]-earned,
+        "commission_label":label,
+        "salary_type":salary_type,
+        "salary_value":value,
         "purchased_cost":purchased_cost,
         "stock_liters":stock,
         "stock_drums":stock/drum if drum else ZERO,
