@@ -97,6 +97,7 @@ def payment():
 @sales_bp.route("/pos",methods=["GET","POST"],endpoint="point_of_sale_short")
 @permission_required("fuel.dispense")
 def point_of_sale():
+    settings=ProjectSettings.get()
     if request.method=="POST":
         try:
             employee=current_user
@@ -131,7 +132,6 @@ def point_of_sale():
             flash(str(exc),"danger")
     tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).all()
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
-    settings=ProjectSettings.get()
     selected_employee_id=request.args.get("employee_id") or ""
     if current_user.has_role("manager") and not selected_employee_id and employees:
         selected_employee_id=str(employees[0].id)
