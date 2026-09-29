@@ -156,114 +156,11 @@ window.addEventListener("online",()=>{updateNetworkState();dizalToast("عاد ا
 window.addEventListener("offline",()=>{updateNetworkState();dizalToast("انقطع الاتصال بالإنترنت. لن يتم إرسال أي عملية حتى يعود الاتصال.","info");});
 updateNetworkState();
 
-let deferredInstallPrompt=null;
-let appInstalledSignal=false;
-let installInProgress=false;
-const installButton=document.querySelector("[data-install-app]");
-const installText=document.getElementById("global-install-text");
-const installState=document.getElementById("global-install-state");
-const isStandalone=()=>window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone===true;
-const isIos=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
-const isAndroid=()=>/android/i.test(navigator.userAgent);
-
-function pwaState(){
-  return {
-    secureContext:window.isSecureContext===true,
-    standalone:isStandalone(),
-    serviceWorkerSupported:"serviceWorker" in navigator,
-    controlled:!!navigator.serviceWorker?.controller,
-    installPromptReady:!!deferredInstallPrompt,
-    installedSignal:appInstalledSignal,
-  };
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
 }
-window.DizalPWA={state:pwaState};
-
-function setInstallState(text){
-  if(installState)installState.textContent=text;
-}
-function refreshInstallButton(){
-  if(!installButton)return;
-  if(isStandalone()){
-    installButton.hidden=true;
-    return;
-  }
-  installButton.hidden=false;
-  installButton.disabled=installInProgress;
-  installButton.classList.toggle("is-ready",!!deferredInstallPrompt);
-  if(deferredInstallPrompt){
-    if(installText)installText.textContent="تثبيت Dizal الآن";
-    setInstallState("المتصفح جهّز التثبيت الرسمي لهذا الجهاز.");
-  }else if(isIos()){
-    if(installText)installText.textContent="إضافة Dizal للشاشة";
-    setInstallState("في iPhone/iPad استخدم مشاركة Safari ثم «إضافة إلى الشاشة الرئيسية».");
-  }else if(isAndroid()){
-    if(installText)installText.textContent="تثبيت Dizal كتطبيق";
-    setInstallState("يمكنك أيضًا استخدام قائمة المتصفح ⋮ ثم «تثبيت التطبيق».");
-  }else{
-    if(installText)installText.textContent="تثبيت Dizal كتطبيق";
-    setInstallState("افتح قائمة المتصفح واختر «تثبيت التطبيق» عند توفرها.");
-  }
-}
-
-async function triggerInstall(){
-  if(isStandalone()){
-    refreshInstallButton();
-    dizalToast("Dizal مثبت كتطبيق بالفعل.","success");
-    return;
-  }
-  if(installInProgress)return;
-  if(!deferredInstallPrompt){
-    refreshInstallButton();
-    if(isIos()){
-      dizalToast("افتح مشاركة Safari ثم اختر «إضافة إلى الشاشة الرئيسية».","info");
-    }else{
-      dizalToast("لم يرسل المتصفح نافذة التثبيت المباشر. استخدم قائمة المتصفح ثم اختر «تثبيت التطبيق».","info");
-    }
-    return;
-  }
-  const event=deferredInstallPrompt;
-  deferredInstallPrompt=null;
-  installInProgress=true;
-  refreshInstallButton();
-  setInstallState("جاري إرسال طلب التثبيت إلى المتصفح…");
-  try{
-    const choice=await event.prompt();
-    installInProgress=false;
-    refreshInstallButton();
-    if(choice?.outcome==="accepted"){
-      setInstallState("تم قبول التثبيت. ننتظر تأكيد النظام…");
-      dizalToast("تم قبول طلب التثبيت. سيكمل المتصفح تثبيت التطبيق.","success");
-    }else{
-      setInstallState("يمكنك إعادة المحاولة من الزر أو قائمة المتصفح.");
-      dizalToast("تم إلغاء التثبيت.");
-    }
-  }catch(error){
-    installInProgress=false;
-    refreshInstallButton();
-    setInstallState("تعذر فتح نافذة التثبيت المباشر؛ استخدم قائمة المتصفح.");
-    console.error("Dizal install prompt error",error);
-  }
-}
-
-window.addEventListener("beforeinstallprompt",event=>{
-  event.preventDefault();
-  deferredInstallPrompt=event;
-  console.info("Dizal PWA install prompt is ready",{platforms:event.platforms||[]});
-  refreshInstallButton();
-});
-window.addEventListener("appinstalled",()=>{
-  appInstalledSignal=true;
-  deferredInstallPrompt=null;
-  installInProgress=false;
-  if(installButton)installButton.hidden=true;
-  setInstallState("تم تثبيت Dizal بنجاح.");
-  dizalToast("تم تثبيت Dizal كتطبيق على الشاشة.","success");
-});
-
-installButton?.addEventListener("click",triggerInstall);
-refreshInstallButton();
-
-window.DizalPWA.state=pwaState;
 
 document.addEventListener("submit",event=>{
   if(navigator.onLine!==false)return;
