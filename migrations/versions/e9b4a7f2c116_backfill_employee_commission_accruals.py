@@ -19,16 +19,31 @@ depends_on = None
 def upgrade():
     conn = op.get_bind()
 
+    # The application normally creates system accounts lazily via
+    # accounting.ensure_accounts(). Migrations must not depend on application
+    # runtime code, so seed only the two accounts needed by this backfill.
+    conn.execute(
+        sa.text(
+            """
+            INSERT INTO account (code, name, account_type, parent_id, is_system, active)
+            SELECT '6100', 'رواتب وعمولات الموظفين', 'expense', NULL, 1, 1
+            WHERE NOT EXISTS (SELECT 1 FROM account WHERE code = '6100')
+            """
+        )
+    )
+    conn.execute(
+        sa.text(
+            """
+            INSERT INTO account (code, name, account_type, parent_id, is_system, active)
+            SELECT '2100', 'التزامات الموظفين', 'liability', NULL, 1, 1
+            WHERE NOT EXISTS (SELECT 1 FROM account WHERE code = '2100')
+            """
+        )
+    )
     account_rows = conn.execute(
         sa.text("SELECT id, code FROM account WHERE code IN ('6100','2100')")
     ).mappings().all()
     account_ids = {row["code"]: row["id"] for row in account_rows}
-    missing = {"6100", "2100"} - set(account_ids)
-    if missing:
-        raise RuntimeError(
-            "لا يمكن ترحيل عمولات الموظفين لأن الحسابات النظامية غير موجودة: "
-            + ", ".join(sorted(missing))
-        )
 
     rows = conn.execute(
         sa.text(
