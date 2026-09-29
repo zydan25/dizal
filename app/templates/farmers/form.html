@@ -11,6 +11,33 @@
 <div class="section-title"><h2>المرفقات</h2><span>اختيارية الآن ويمكن طلب استكمالها</span></div>
 <div class="two-col"><label>البطاقة الأمامية<input type="file" name="id_front" accept=".pdf,.png,.jpg,.jpeg,.webp"></label><label>البطاقة الخلفية<input type="file" name="id_back" accept=".pdf,.png,.jpg,.jpeg,.webp"></label></div>
 <div class="two-col"><label>العقد/الالتزام<input type="file" name="contract" accept=".pdf,.png,.jpg,.jpeg,.webp"></label><label>ملف إضافي<input type="file" name="other_document" accept=".pdf,.png,.jpg,.jpeg,.webp"></label></div>
-<button class="primary-btn"><i class="bi bi-send"></i> إرسال للمراجعة</button>
+<button class="primary-btn form-submit-loading" type="submit">
+  <span class="form-submit-icon"><i class="bi bi-send"></i></span>
+  <span class="form-submit-label">إرسال للمراجعة</span>
+</button>
 </form>
+<style>
+.form-submit-loading{position:relative;overflow:hidden;transition:opacity .18s ease,transform .18s ease}
+.form-submit-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 18px}
+.form-submit-label{display:inline-flex;align-items:center;justify-content:center}
+.form-submit-loading.is-loading{cursor:wait;pointer-events:none;opacity:.92}
+.form-submit-loading.is-loading .form-submit-icon{width:18px;height:18px;border:2px solid rgba(255,255,255,.34);border-top-color:#fff;border-radius:50%;animation:form-submit-spin .72s linear infinite}
+.form-submit-loading.is-loading .form-submit-icon i{display:none}
+@keyframes form-submit-spin{to{transform:rotate(360deg)}}
+</style>
+<script>
+document.querySelectorAll("form.mobile-form").forEach(function(form){
+  form.addEventListener("submit",function(){
+    var button=form.querySelector(".form-submit-loading");
+    if(!button || button.classList.contains("is-loading")) return;
+    var iconWrap=button.querySelector(".form-submit-icon");
+    var label=button.querySelector(".form-submit-label");
+    button.classList.add("is-loading");
+    button.setAttribute("aria-busy","true");
+    button.disabled=true;
+    if(iconWrap) iconWrap.innerHTML="";
+    if(label) label.textContent="جارٍ إرسال الطلب…";
+  });
+});
+</script>
 {% endblock %}
