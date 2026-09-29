@@ -33,6 +33,7 @@ SECTIONS=[
 ]},
 {"key":"admin","title":"الإدارة","icon":"bi-sliders2","items":[
     ("employees.index","الموظفون","bi-person-gear","employees.view"),
+    ("employees.account","حسابي","bi-person-circle","employee.statement.view"),
     ("roles.index","الأدوار والصلاحيات","bi-shield-lock","roles.manage"),
     ("audit.index","سجل التدقيق","bi-journal-check","audit.view"),
     ("notifications.index","الإشعارات","bi-bell","notifications.view"),
