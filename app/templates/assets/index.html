@@ -15,7 +15,7 @@
 {% for asset in assets %}
 <article class="entity-card">
 <a class="entity-card-main" href="{{url_for('assets.detail',asset_id=asset.id)}}">
- <div class="entity-card-head"><div class="avatar"><i class="bi bi-building"></i></div><div class="entity-main"><strong>{{asset.name}}</strong><span>{{asset.category}} · {{asset.location or "بدون موقع"}}</span></div><span class="status-chip">{{asset.status}}</span></div>
+ <div class="entity-card-head"><div class="avatar"><i class="bi bi-building"></i></div><div class="entity-main"><strong>{{asset.name}}</strong><span>{{asset.category}}{% if asset.tank %} · {{asset.tank.code}}{% endif %} · {{asset.location or "بدون موقع"}}</span></div><span class="status-chip">{{asset.status}}</span></div>
  <div class="entity-card-metrics"><div><small>القيمة</small><strong>{{asset.acquisition_cost|clean_number}}</strong><span>{{project_settings.currency}}</span></div><div><small>التاريخ</small><strong>{{asset.acquisition_date}}</strong><span>شراء</span></div><div><small>الكود</small><strong>{{asset.asset_code}}</strong><span>تلقائي</span></div></div>
 </a>
 <div class="entity-card-actions"><a class="small-icon-btn" href="{{url_for('assets.detail',asset_id=asset.id)}}" title="التفاصيل" aria-label="التفاصيل"><i class="bi bi-eye"></i></a><a class="small-icon-btn" href="{{url_for('documents.view',document_id=asset.document_id)}}" title="السند" aria-label="السند"><i class="bi bi-receipt"></i></a><a class="small-icon-btn" href="{{url_for('assets.edit',asset_id=asset.id)}}" title="تعديل" aria-label="تعديل"><i class="bi bi-pencil-square"></i></a></div>
