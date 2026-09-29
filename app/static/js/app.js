@@ -278,6 +278,6 @@ document.addEventListener("submit",event=>{
 });
 
 if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("/static/sw.js?v=20260929-1",{updateViaCache:"none"}));
+  window.addEventListener("load",()=>(async()=>{const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.filter(r=>r.active?.scriptURL.includes("/static/sw.js")).map(r=>r.unregister()));await navigator.serviceWorker.register("/sw.js?v=20260929-2",{scope:"/",updateViaCache:"none"});})());
 }
 })();
