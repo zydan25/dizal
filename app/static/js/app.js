@@ -340,7 +340,7 @@ async function registerDizalServiceWorker(){
     await Promise.all(registrations
       .filter((registration)=>registration.active?.scriptURL.includes("/static/sw.js"))
       .map((registration)=>registration.unregister()));
-    const registration=await navigator.serviceWorker.register("/sw.js?v=20260930-1",{scope:"/",updateViaCache:"none"});
+    const registration=await navigator.serviceWorker.register("/sw.js?v=20260930-2",{scope:"/",updateViaCache:"none"});
     await registration.update();
     await navigator.serviceWorker.ready;
     window.DizalPWA.registration=registration;
@@ -364,7 +364,4 @@ document.addEventListener("submit",event=>{
   dizalToast("لا يوجد اتصال بالإنترنت. أعد المحاولة بعد عودة الاتصال.");
 });
 
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>(async()=>{const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.filter(r=>r.active?.scriptURL.includes("/static/sw.js")).map(r=>r.unregister()));await navigator.serviceWorker.register("/sw.js?v=20260929-2",{scope:"/",updateViaCache:"none"});})());
-}
 })();
