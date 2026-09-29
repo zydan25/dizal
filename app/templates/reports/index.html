@@ -1,25 +1,58 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>تقارير المشروع</h1><p>ملخص مالي وتشغيلي مبسط للمدير.</p></div>
+<div class="page-heading"><h1>تقرير الأرباح والمال والمخزون</h1><p>مرجع المدير الموحد للحسابات؛ الأرقام المالية من جميع العمليات المعتمدة، وليس من الصفوف المعروضة فقط.</p></div>
+
+<div class="section-title"><h2>الربحية</h2><span>قبل/بعد عمولات الموظفين</span></div>
 <div class="stats-grid">
-<div class="stat-card"><i class="bi bi-graph-up-arrow"></i><div><small>المبيعات</small><strong>{{summary.sales|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-graph-up-arrow"></i><div><small>إجمالي المبيعات</small><strong>{{summary.sales|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
 <div class="stat-card"><i class="bi bi-box-seam"></i><div><small>تكلفة الديزل المباع</small><strong>{{summary.cogs|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-<div class="stat-card"><i class="bi bi-stars"></i><div><small>مجمل الربح</small><strong>{{summary.gross_profit|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-<div class="stat-card"><i class="bi bi-calculator"></i><div><small>الربح التشغيلي</small><strong>{{summary.operating_profit|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-stars"></i><div><small>مجمل الربح</small><strong>{{summary.gross_profit|clean_number}}</strong><span>{{summary.gross_margin_pct|round(1)|clean_number}}%</span></div></div>
+<div class="stat-card"><i class="bi bi-receipt"></i><div><small>المصروفات التشغيلية</small><strong>{{summary.expenses|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-person-check"></i><div><small>عمولات الموظفين المكتسبة</small><strong>{{summary.employee_commission|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-person-vcard"></i><div><small>رواتب معتمدة</small><strong>{{summary.fixed_salary_recognized|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-calculator"></i><div><small>الربح الصافي</small><strong>{{summary.net_profit|clean_number}}</strong><span>{{summary.net_margin_pct|round(1)|clean_number}}%</span></div></div>
 </div>
+
+<div class="section-title"><h2>رأس المال والسيولة</h2><span>ليست أرباحًا</span></div>
 <div class="stats-grid">
-<div class="stat-card"><i class="bi bi-people"></i><div><small>المزارعون المعتمدون</small><strong>{{summary.farmers|clean_number}}</strong><span>مزارع</span></div></div>
-<div class="stat-card"><i class="bi bi-wallet2"></i><div><small>الذمم</small><strong>{{summary.receivables|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-<div class="stat-card"><i class="bi bi-fuel-pump"></i><div><small>المخزون</small><strong>{{inventory.stock_liters|clean_number}}</strong><span>لتر</span></div></div>
-<div class="stat-card"><i class="bi bi-exclamation-triangle"></i><div><small>العجز المتوقع</small><strong>{{inventory.shortage_liters|clean_number}}</strong><span>لتر</span></div></div>
+<div class="stat-card"><i class="bi bi-bank"></i><div><small>رأس المال المسجل</small><strong>{{summary.capital_contributed|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-arrow-left-right"></i><div><small>المحول للموظفين</small><strong>{{summary.allocated_capital|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-building"></i><div><small>الصندوق الرئيسي</small><strong>{{summary.central_cash|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-wallet2"></i><div><small>صناديق الموظفين</small><strong>{{summary.employee_cash|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-cash-stack"></i><div><small>إجمالي النقد المتوفر</small><strong>{{summary.cash_available|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-people"></i><div><small>الذمم المستحقة</small><strong>{{summary.receivables|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
 </div>
+
+<div class="section-title"><h2>المخزون</h2><span>بالتكلفة وبسعر البيع المتوقع</span></div>
+<div class="stats-grid">
+<div class="stat-card"><i class="bi bi-fuel-pump"></i><div><small>المخزون الحالي</small><strong>{{summary.stock_liters|clean_number}}</strong><span>لتر · {{summary.stock_drums|round(1)|clean_number}} دبة</span></div></div>
+<div class="stat-card"><i class="bi bi-box2"></i><div><small>قيمة المخزون بالتكلفة</small><strong>{{summary.stock_cost_value|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-tags"></i><div><small>القيمة المتوقعة عند البيع</small><strong>{{summary.stock_sale_value|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-stars"></i><div><small>الهامش غير المحقق للمخزون</small><strong>{{summary.stock_unrealized_margin|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+<div class="stat-card"><i class="bi bi-arrow-down-circle"></i><div><small>المخزون الحر</small><strong>{{inventory.free_liters|clean_number}}</strong><span>لتر</span></div></div>
+<div class="stat-card"><i class="bi bi-exclamation-triangle"></i><div><small>عجز تغطية المزارعين</small><strong>{{inventory.shortage_liters|clean_number}}</strong><span>لتر</span></div></div>
+</div>
+
+{% if summary.alerts %}
+<div class="section-title"><h2>تنبيهات المخزون والخزانات</h2><span>{{summary.alerts|length}} تنبيه</span></div>
+<div class="entity-list">
+{% for alert in summary.alerts %}
+<a class="entity-row" href="{{alert.url or url_for('fuel.stock')}}">
+  <div class="avatar"><i class="bi {% if alert.type=='danger' %}bi-exclamation-octagon{% else %}bi-exclamation-triangle{% endif %}"></i></div>
+  <div class="entity-main"><strong>{{alert.title}}</strong><span>{{alert.message}}</span></div>
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endfor %}
+</div>
+{% endif %}
+
 <div class="section-title"><h2>التقارير التفصيلية</h2></div>
 <div class="quick-grid">
 <a class="quick-card" href="{{url_for('reports.farmers_debts')}}"><i class="bi bi-person-lines-fill"></i><strong>ديون المزارعين</strong><small>المبالغ المستحقة</small></a>
-<a class="quick-card" href="{{url_for('reports.employees')}}"><i class="bi bi-person-badge"></i><strong>أداء الموظفين</strong><small>مبيعات وصناديق ومزارعين</small></a>
+<a class="quick-card" href="{{url_for('reports.employees')}}"><i class="bi bi-person-badge"></i><strong>أداء الموظفين والعمولات</strong><small>المبيعات والدباب والعمولة والربح الصافي</small></a>
 <a class="quick-card" href="{{url_for('reports.sales_report_view')}}"><i class="bi bi-graph-up"></i><strong>تقرير المبيعات</strong><small>المبيعات والربح والتحصيل</small></a>
 <a class="quick-card" href="{{url_for('reports.dispense_report_view')}}"><i class="bi bi-droplet-half"></i><strong>تقرير صرف الديزل</strong><small>اللترات والدباب والخزانات</small></a>
 <a class="quick-card" href="{{url_for('fuel.stock')}}"><i class="bi bi-fuel-pump-fill"></i><strong>المخزون</strong><small>الحالي والملتزم والحر</small></a>
-<a class="quick-card" href="{{url_for('settlements.index')}}"><i class="bi bi-arrow-left-right"></i><strong>التسويات</strong><small>المتوقع والفعلي</small></a>
+<a class="quick-card" href="{{url_for('settlements.index')}}"><i class="bi bi-arrow-left-right"></i><strong>التسويات</strong><small>المستحق والفعلي والراتب/العمولة</small></a>
 </div>
 {% endblock %}
