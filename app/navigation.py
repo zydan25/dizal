@@ -25,8 +25,8 @@ SECTIONS=[
     ("reports.index","ملخص التقارير","bi-file-earmark-bar-graph","reports.view"),
     ("reports.farmers_debts","ديون المزارعين","bi-person-exclamation","reports.view"),
     ("reports.employees","أداء الموظفين","bi-person-badge","reports.view"),
-    ("reports.sales_report","تقرير المبيعات","bi-graph-up-arrow","reports.view"),
-    ("reports.dispense_report","تقرير صرف الديزل","bi-droplet-half","reports.view"),
+    ("reports.sales_report_view","تقرير المبيعات","bi-graph-up-arrow","reports.view"),
+    ("reports.dispense_report_view","تقرير صرف الديزل","bi-droplet-half","reports.view"),
     ("documents.index","السندات","bi-receipt-cutoff","documents.view"),
     ("reports.my_statement","كشف حسابي","bi-file-earmark-text","employee.statement.view"),
     ("reports.my_operations","تقريري التشغيلي","bi-clipboard-data","employee.statement.view")
