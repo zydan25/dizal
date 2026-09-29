@@ -2,156 +2,498 @@ from decimal import Decimal
 from datetime import datetime,timezone,time
 from sqlalchemy import func
 from ..extensions import db
-from ..models import Document,Farmer,FuelDispense,FuelStockMovement,Cashbox,EmployeeProfile,OperatingExpense,User,FarmerPayment
+from ..models import (
+    Document,Farmer,FuelDispense,FuelStockMovement,FuelStockLayer,Cashbox,
+    CashboxTransaction,EmployeeProfile,EmployeeSettlement,OperatingExpense,User,
+    FarmerPayment,CapitalContribution,CapitalAllocation,FuelTank,ProjectSettings
+)
 from .cashbox import balance
 from .fuel import current_stock_liters
+from .capital import central_cashbox
+
+
+ZERO=Decimal("0")
+
+
+def _decimal(value):
+    return Decimal(str(value or 0))
+
+
+def _date_window(start=None,end=None):
+    conditions=[]
+    if start:
+        conditions.append(FuelDispense.created_at>=datetime.combine(start,time.min).replace(tzinfo=timezone.utc))
+    if end:
+        conditions.append(FuelDispense.created_at<=datetime.combine(end,time.max).replace(tzinfo=timezone.utc))
+    return conditions
+
+
+def calculate_employee_compensation(profile,sales,cogs,liters,drums,currency="ريال"):
+    """Calculate the employee's earned compensation from the supplied period totals.
+
+    Variable compensation is earned from approved sales in the period. A fixed
+    salary is returned as the configured salary value for the settlement/report
+    period; it is not automatically accrued into the all-time project P&L until
+    a salary settlement is approved.
+    """
+    sales=_decimal(sales)
+    cogs=_decimal(cogs)
+    liters=_decimal(liters)
+    drums=_decimal(drums)
+    value=_decimal(profile.salary_value if profile else 0)
+    salary_type=(profile.salary_type if profile else "fixed") or "fixed"
+    gross_profit=sales-cogs
+
+    if salary_type=="per_liter":
+        earned=liters*value
+        label=f"{value} {currency}/لتر"
+    elif salary_type=="per_drum":
+        earned=drums*value
+        label=f"{value} {currency}/دبة"
+    elif salary_type in {"percent_profit","commission"}:
+        earned=max(gross_profit,ZERO)*value/Decimal("100")
+        label=f"{value}% من الربح"
+    else:
+        earned=value
+        label=f"راتب ثابت {value} {currency}"
+
+    return {
+        "salary_type":salary_type,
+        "salary_value":value,
+        "earned":earned,
+        "label":label,
+        "gross_profit":gross_profit,
+    }
+
+
+def _employee_dispense_aggregate(employee_id=None,start=None,end=None):
+    query=db.session.query(
+        func.coalesce(func.sum(FuelDispense.total_amount),0),
+        func.coalesce(func.sum(FuelDispense.cost_amount),0),
+        func.coalesce(func.sum(FuelDispense.liters),0),
+        func.coalesce(func.sum(FuelDispense.drums),0),
+        func.coalesce(func.sum(FuelDispense.credit_amount),0),
+        func.coalesce(func.sum(FuelDispense.paid_amount),0),
+    ).filter(FuelDispense.status=="approved")
+    if employee_id is not None:
+        query=query.filter(FuelDispense.employee_id==employee_id)
+    for condition in _date_window(start,end):
+        query=query.filter(condition)
+    sales,cogs,liters,drums,credit,paid=query.one()
+    return {
+        "sales":_decimal(sales),
+        "cogs":_decimal(cogs),
+        "liters":_decimal(liters),
+        "drums":_decimal(drums),
+        "credit":_decimal(credit),
+        "instant_collected":_decimal(paid),
+    }
+
+
+def _approved_settlement_total(employee_ids=None,start=None,end=None):
+    query=db.session.query(func.coalesce(func.sum(EmployeeSettlement.employee_salary),0)).filter(
+        EmployeeSettlement.status=="approved"
+    )
+    if employee_ids is not None:
+        ids=list(employee_ids)
+        if not ids:
+            return ZERO
+        query=query.filter(EmployeeSettlement.employee_id.in_(ids))
+    if start:
+        query=query.filter(EmployeeSettlement.period_end>=start)
+    if end:
+        query=query.filter(EmployeeSettlement.period_start<=end)
+    return _decimal(query.scalar())
+
+
+def employee_compensation(employee,start=None,end=None):
+    totals=_employee_dispense_aggregate(employee.id,start,end)
+    profile=employee.employee_profile
+    result=calculate_employee_compensation(
+        profile,
+        totals["sales"],
+        totals["cogs"],
+        totals["liters"],
+        totals["drums"],
+        ProjectSettings.get().currency,
+    )
+    result.update(totals)
+    return result
+
 
 def project_summary():
-    sales=db.session.query(func.coalesce(func.sum(FuelDispense.total_amount),0)).filter(FuelDispense.status=="approved").scalar() or 0
-    cogs=db.session.query(func.coalesce(func.sum(FuelDispense.cost_amount),0)).filter(FuelDispense.status=="approved").scalar() or 0
-    expenses=db.session.query(func.coalesce(func.sum(OperatingExpense.amount),0)).filter(OperatingExpense.status=="approved").scalar() or 0
+    sales=_decimal(db.session.query(func.coalesce(func.sum(FuelDispense.total_amount),0)).filter(FuelDispense.status=="approved").scalar())
+    cogs=_decimal(db.session.query(func.coalesce(func.sum(FuelDispense.cost_amount),0)).filter(FuelDispense.status=="approved").scalar())
+    expenses=_decimal(db.session.query(func.coalesce(func.sum(OperatingExpense.amount),0)).filter(OperatingExpense.status=="approved").scalar())
+    gross_profit=sales-cogs
+
+    # Aggregate all variable employee compensation from ALL approved dispenses;
+    # this intentionally does not use the 300-row presentation limit.
+    aggregate_rows=db.session.query(
+        FuelDispense.employee_id,
+        func.coalesce(func.sum(FuelDispense.total_amount),0),
+        func.coalesce(func.sum(FuelDispense.cost_amount),0),
+        func.coalesce(func.sum(FuelDispense.liters),0),
+        func.coalesce(func.sum(FuelDispense.drums),0),
+    ).filter(FuelDispense.status=="approved").group_by(FuelDispense.employee_id).all()
+    aggregate_map={
+        row[0]:{
+            "sales":_decimal(row[1]),
+            "cogs":_decimal(row[2]),
+            "liters":_decimal(row[3]),
+            "drums":_decimal(row[4]),
+        }
+        for row in aggregate_rows
+    }
+
+    employees=User.query.filter_by(is_employee=True).all()
+    variable_ids=[]
+    fixed_ids=[]
+    employee_compensation_rows=[]
+    variable_commission_earned=ZERO
+    for employee in employees:
+        profile=employee.employee_profile
+        totals=aggregate_map.get(employee.id,{"sales":ZERO,"cogs":ZERO,"liters":ZERO,"drums":ZERO})
+        comp=calculate_employee_compensation(
+            profile,totals["sales"],totals["cogs"],totals["liters"],totals["drums"],ProjectSettings.get().currency
+        )
+        if comp["salary_type"]=="fixed":
+            fixed_ids.append(employee.id)
+        else:
+            variable_ids.append(employee.id)
+            variable_commission_earned+=comp["earned"]
+        employee_compensation_rows.append({
+            "employee":employee,
+            "sales":totals["sales"],
+            "cogs":totals["cogs"],
+            "liters":totals["liters"],
+            "drums":totals["drums"],
+            "gross_profit":comp["gross_profit"],
+            "earned":comp["earned"],
+            "salary_type":comp["salary_type"],
+            "label":comp["label"],
+        })
+
+    # Fixed salaries are recognized from approved settlements. Variable
+    # compensation is accrued from approved sales, so paying a commission does
+    # not create a second expense in this management report.
+    fixed_salary_recognized=_approved_settlement_total(fixed_ids)
+    employee_compensation_expense=variable_commission_earned+fixed_salary_recognized
+    net_profit=gross_profit-expenses-employee_compensation_expense
+
     approved_farmers=Farmer.query.filter_by(status="approved").count()
-    debt=db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0)).filter(FuelDispense.status=="approved").scalar() or 0
-    payments=(
+    debt=_decimal(db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0)).filter(FuelDispense.status=="approved").scalar())
+    payments=_decimal(
         db.session.query(func.coalesce(func.sum(FarmerPayment.amount),0))
         .join(Document,FarmerPayment.document_id==Document.id)
-        .filter(Document.status!="reversed")
-        .scalar() or 0
+        .filter(Document.status!="reversed").scalar()
     )
-    return {"sales":Decimal(str(sales)),"cogs":Decimal(str(cogs)),"gross_profit":Decimal(str(sales))-Decimal(str(cogs)),"expenses":Decimal(str(expenses)),"operating_profit":Decimal(str(sales))-Decimal(str(cogs))-Decimal(str(expenses)),"farmers":approved_farmers,"receivables":max(Decimal(str(debt))-Decimal(str(payments)),Decimal("0")),"stock_liters":current_stock_liters()}
+    receivables=max(debt-payments,ZERO)
+
+    settings=ProjectSettings.get()
+    stock=current_stock_liters()
+    stock_cost=_decimal(
+        db.session.query(
+            func.coalesce(func.sum(FuelStockLayer.remaining_liters*FuelStockLayer.unit_cost),0)
+        ).scalar()
+    )
+    sale_price=_decimal(settings.default_sale_price_per_liter)
+    stock_sale_value=stock*sale_price
+    stock_unrealized_margin=stock_sale_value-stock_cost
+    drum=_decimal(settings.drum_liters)
+    stock_drums=stock/drum if drum else ZERO
+    avg_stock_cost=stock_cost/stock if stock else ZERO
+
+    capital_contributed=_decimal(
+        db.session.query(func.coalesce(func.sum(CapitalContribution.amount),0))
+        .filter(CapitalContribution.status=="approved").scalar()
+    )
+    allocated_capital=_decimal(
+        db.session.query(func.coalesce(func.sum(CapitalAllocation.amount),0))
+        .join(Document,CapitalAllocation.document_id==Document.id)
+        .filter(Document.status!="reversed").scalar()
+    )
+
+    central=Cashbox.query.filter_by(box_type="central",is_active=True).first()
+    central_cash=balance(central.id) if central else ZERO
+    employee_boxes=Cashbox.query.filter_by(box_type="employee",is_active=True).all()
+    employee_cash=sum((balance(box.id) for box in employee_boxes),ZERO)
+    cash_available=central_cash+employee_cash
+
+    inventory=inventory_commitment()
+
+    tank_rows=[]
+    tank_alerts=[]
+    for tank in FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).all():
+        tank_stock=current_stock_liters(tank.id)
+        capacity=_decimal(tank.capacity_liters)
+        percent=(tank_stock/capacity*Decimal("100")) if capacity>0 else ZERO
+        row={"tank":tank,"stock":tank_stock,"capacity":capacity,"percent":percent}
+        tank_rows.append(row)
+        if capacity>0 and tank_stock>capacity:
+            tank_alerts.append({"type":"danger","title":f"الخزان {tank.name} تجاوز السعة","message":f"المخزون {tank_stock} لتر مقابل سعة {capacity} لتر.","url":None})
+        elif capacity>0 and percent>=Decimal("90"):
+            tank_alerts.append({"type":"warning","title":f"الخزان {tank.name} قريب من السعة","message":f"امتلاء الخزان {percent.quantize(Decimal('0.1'))}%.","url":None})
+
+    alerts=[]
+    minimum=_decimal(settings.minimum_stock_liters)
+    if stock<=ZERO:
+        alerts.append({"type":"danger","title":"المخزون نفد","message":"لا يوجد ديزل متاح في المخزون الحالي.","url":"/fuel/stock"})
+    elif minimum>ZERO and stock<=minimum:
+        alerts.append({"type":"warning","title":"المخزون منخفض","message":f"المخزون {stock} لتر، والحد الأدنى {minimum} لتر.","url":"/fuel/stock"})
+    if inventory["shortage_liters"]>ZERO:
+        alerts.append({"type":"danger","title":"عجز في تغطية التزامات المزارعين","message":f"العجز {inventory['shortage_liters']} لتر.","url":"/fuel/stock"})
+    alerts.extend(tank_alerts)
+
+    return {
+        "sales":sales,
+        "cogs":cogs,
+        "gross_profit":gross_profit,
+        "expenses":expenses,
+        "employee_commission":variable_commission_earned,
+        "fixed_salary_recognized":fixed_salary_recognized,
+        "employee_compensation_expense":employee_compensation_expense,
+        "operating_profit":net_profit,
+        "net_profit":net_profit,
+        "farmers":approved_farmers,
+        "receivables":receivables,
+        "stock_liters":stock,
+        "stock_drums":stock_drums,
+        "stock_cost_value":stock_cost,
+        "stock_sale_value":stock_sale_value,
+        "stock_unrealized_margin":stock_unrealized_margin,
+        "stock_average_cost_per_liter":avg_stock_cost,
+        "stock_sale_price_per_liter":sale_price,
+        "capital_contributed":capital_contributed,
+        "allocated_capital":allocated_capital,
+        "unallocated_capital":max(capital_contributed-allocated_capital,ZERO),
+        "central_cash":central_cash,
+        "employee_cash":employee_cash,
+        "cash_available":cash_available,
+        "gross_margin_pct":(gross_profit/sales*Decimal("100")) if sales else ZERO,
+        "net_margin_pct":(net_profit/sales*Decimal("100")) if sales else ZERO,
+        "employee_rows":employee_compensation_rows,
+        "tank_rows":tank_rows,
+        "alerts":alerts,
+    }
+
 
 def farmer_debts():
     rows=[]
     for farmer in Farmer.query.filter(Farmer.status.in_(["approved","suspended"])).order_by(Farmer.name):
-        sold=db.session.query(func.coalesce(func.sum(FuelDispense.total_amount),0)).filter(FuelDispense.farmer_id==farmer.id,FuelDispense.status=="approved").scalar() or 0
-        credit=db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0)).filter(FuelDispense.farmer_id==farmer.id,FuelDispense.status=="approved").scalar() or 0
-        paid=(
+        sold=_decimal(db.session.query(func.coalesce(func.sum(FuelDispense.total_amount),0)).filter(
+            FuelDispense.farmer_id==farmer.id,FuelDispense.status=="approved"
+        ).scalar())
+        credit=_decimal(db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0)).filter(
+            FuelDispense.farmer_id==farmer.id,FuelDispense.status=="approved"
+        ).scalar())
+        paid=_decimal(
             db.session.query(func.coalesce(func.sum(FarmerPayment.amount),0))
             .join(Document,FarmerPayment.document_id==Document.id)
             .filter(FarmerPayment.farmer_id==farmer.id,Document.status!="reversed")
-            .scalar() or 0
+            .scalar()
         )
-        outstanding=max(Decimal(str(credit))-Decimal(str(paid)),Decimal("0"))
-        if outstanding>0: rows.append({"farmer":farmer,"sales":Decimal(str(sold)),"outstanding":outstanding})
+        outstanding=max(credit-paid,ZERO)
+        if outstanding>ZERO:
+            rows.append({"farmer":farmer,"sales":sold,"outstanding":outstanding})
     return rows
+
 
 def employee_performance():
     rows=[]
-    for employee in User.query.filter_by(is_employee=True,active=True).order_by(User.display_name):
-        sales=db.session.query(func.coalesce(func.sum(FuelDispense.total_amount),0)).filter(FuelDispense.employee_id==employee.id,FuelDispense.status=="approved").scalar() or 0
-        cogs=db.session.query(func.coalesce(func.sum(FuelDispense.cost_amount),0)).filter(FuelDispense.employee_id==employee.id,FuelDispense.status=="approved").scalar() or 0
+    employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name)
+    for employee in employees:
+        totals=_employee_dispense_aggregate(employee.id)
+        comp=calculate_employee_compensation(
+            employee.employee_profile,
+            totals["sales"],totals["cogs"],totals["liters"],totals["drums"],
+            ProjectSettings.get().currency,
+        )
         box=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
+        paid=_approved_settlement_total([employee.id])
         farmer_count=Farmer.query.filter_by(assigned_employee_id=employee.id,status="approved").count()
-        rows.append({"employee":employee,"sales":Decimal(str(sales)),"cogs":Decimal(str(cogs)),"profit":Decimal(str(sales))-Decimal(str(cogs)),"cashbox_balance":balance(box.id) if box else Decimal("0"),"farmer_count":farmer_count})
+        outstanding=max(comp["earned"]-paid,ZERO) if comp["salary_type"]!="fixed" else ZERO
+        rows.append({
+            "employee":employee,
+            "sales":totals["sales"],
+            "cogs":totals["cogs"],
+            "profit":totals["sales"]-totals["cogs"],
+            "gross_profit":totals["sales"]-totals["cogs"],
+            "liters":totals["liters"],
+            "drums":totals["drums"],
+            "employee_commission":comp["earned"] if comp["salary_type"]!="fixed" else ZERO,
+            "salary":comp["earned"] if comp["salary_type"]=="fixed" else ZERO,
+            "compensation_earned":comp["earned"],
+            "compensation_paid":paid,
+            "compensation_outstanding":outstanding,
+            "net_contribution":totals["sales"]-totals["cogs"]-comp["earned"],
+            "commission_label":comp["label"],
+            "salary_type":comp["salary_type"],
+            "cashbox_balance":balance(box.id) if box else ZERO,
+            "farmer_count":farmer_count,
+        })
     return rows
 
 
 def employee_finance_summary(employee,operations=None):
-    from ..models import CapitalAllocation,FuelStockLayer,ProjectSettings
     if operations is None:
         operations=employee_operations(employee.id)
-    profile=employee.employee_profile
-    salary_type=(profile.salary_type if profile else "fixed") or "fixed"
-    value=Decimal(str(profile.salary_value or 0)) if profile else Decimal("0")
-    gross_profit=Decimal(str(operations["sales"]))-sum(
-        (Decimal(str(row.cost_amount or 0)) for row in operations["dispenses"] if row.status=="approved"),
-        Decimal("0"),
-    )
-    if salary_type=="per_liter":
-        commission=Decimal(str(operations["liters"]))*value
-        commission_label=f"{value} {ProjectSettings.get().currency}/لتر"
-    elif salary_type=="per_drum":
-        commission=Decimal(str(operations["drums"]))*value
-        commission_label=f"{value} {ProjectSettings.get().currency}/دبة"
-    elif salary_type in {"percent_profit","commission"}:
-        commission=max(gross_profit,Decimal("0"))*value/Decimal("100")
-        commission_label=f"{value}% من الربح"
-    else:
-        commission=value
-        commission_label=f"راتب ثابت {value}"
-    capital=db.session.query(func.coalesce(func.sum(CapitalAllocation.amount),0)).filter(CapitalAllocation.employee_id==employee.id).scalar() or 0
-    box=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
-    employee_box_balance=balance(box.id) if box else Decimal("0")
-    stock=current_stock_liters()
     settings=ProjectSettings.get()
-    drum=Decimal(str(settings.drum_liters))
-    sale_price=Decimal(str(settings.default_sale_price_per_liter or 0))
-    remaining_cost=db.session.query(func.coalesce(func.sum(FuelStockLayer.remaining_liters*FuelStockLayer.unit_cost),0)).scalar() or 0
-    average_stock_cost=Decimal(str(remaining_cost))/stock if stock else Decimal("0")
+    comp=calculate_employee_compensation(
+        employee.employee_profile,
+        operations["sales"],
+        operations["cogs"],
+        operations["liters"],
+        operations["drums"],
+        settings.currency,
+    )
+    from ..models import CapitalAllocation
+    capital=_decimal(
+        db.session.query(func.coalesce(func.sum(CapitalAllocation.amount),0))
+        .filter(CapitalAllocation.employee_id==employee.id).scalar()
+    )
+    box=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
+    employee_box_balance=balance(box.id) if box else ZERO
+
+    stock=current_stock_liters()
+    drum=_decimal(settings.drum_liters)
+    sale_price=_decimal(settings.default_sale_price_per_liter)
+    remaining_cost=_decimal(
+        db.session.query(func.coalesce(func.sum(FuelStockLayer.remaining_liters*FuelStockLayer.unit_cost),0)).scalar()
+    )
+    average_stock_cost=remaining_cost/stock if stock else ZERO
     forecast_sales=stock*sale_price
-    forecast_gross_profit=max(stock*(sale_price-average_stock_cost),Decimal("0"))
-    purchased_cost=sum((Decimal(str(row.landed_cost or 0)) for row in operations["supplies"] if row.status=="approved"),Decimal("0"))
+    forecast_gross_profit=stock*(sale_price-average_stock_cost)
+    purchased_cost=sum((row.landed_cost for row in operations["supplies"] if row.status=="approved"),ZERO)
+
     return {
-        "capital_delivered":Decimal(str(capital)),
+        "capital_delivered":capital,
         "cashbox_balance":employee_box_balance,
-        "gross_profit":gross_profit,
-        "employee_commission":commission,
-        "project_profit_estimate":max(gross_profit-commission,Decimal("0")),
-        "commission_label":commission_label,
-        "salary_type":salary_type,
-        "salary_value":value,
+        "gross_profit":operations["sales"]-operations["cogs"],
+        "employee_commission":comp["earned"] if comp["salary_type"]!="fixed" else ZERO,
+        "salary":comp["earned"] if comp["salary_type"]=="fixed" else ZERO,
+        "compensation_earned":comp["earned"],
+        "project_profit_estimate":operations["sales"]-operations["cogs"]-comp["earned"],
+        "commission_label":comp["label"],
+        "salary_type":comp["salary_type"],
+        "salary_value":comp["salary_value"],
         "purchased_cost":purchased_cost,
         "stock_liters":stock,
-        "stock_drums":stock/drum if drum else Decimal("0"),
-        "sold_liters":Decimal(str(operations["liters"])),
-        "sold_drums":Decimal(str(operations["drums"])),
+        "stock_drums":stock/drum if drum else ZERO,
+        "sold_liters":operations["liters"],
+        "sold_drums":operations["drums"],
         "forecast_sales_value":forecast_sales,
         "forecast_gross_profit":forecast_gross_profit,
-        "note":"رأس المال المُسلَّم ليس بالضرورة نقدًا متبقيًا؛ قد يتحول إلى مخزون أو مشتريات. حصة المشروع هنا تقديرية قبل المصروفات الأخرى.",
+        "forecast_stock_cost":remaining_cost,
+        "note":"الراتب/العمولة محسوب حسب إعداد الموظف. رأس المال المُسلَّم ليس بالضرورة نقدًا متبقيًا؛ قد يتحول إلى مخزون أو مشتريات.",
     }
 
+
 def inventory_commitment():
-    committed=db.session.query(func.coalesce(func.sum(Farmer.quota_drums),0)).filter(Farmer.status=="approved").scalar() or 0
-    consumed=db.session.query(func.coalesce(func.sum(FuelDispense.drums),0)).filter(FuelDispense.status=="approved").scalar() or 0
-    drum=Decimal(str(__import__("app.models",fromlist=["ProjectSettings"]).ProjectSettings.get().drum_liters))
-    remaining_drums=max(Decimal(str(committed))-Decimal(str(consumed)),Decimal("0"))
-    stock=current_stock_liters();committed_liters=remaining_drums*drum
-    return {"stock_liters":stock,"committed_liters":committed_liters,"free_liters":max(stock-committed_liters,Decimal("0")),"shortage_liters":max(committed_liters-stock,Decimal("0"))}
+    settings=ProjectSettings.get()
+    committed=_decimal(
+        db.session.query(func.coalesce(func.sum(Farmer.quota_drums),0))
+        .filter(Farmer.status=="approved").scalar()
+    )
+    consumed=_decimal(
+        db.session.query(func.coalesce(func.sum(FuelDispense.drums),0))
+        .filter(FuelDispense.status=="approved").scalar()
+    )
+    drum=_decimal(settings.drum_liters)
+    remaining_drums=max(committed-consumed,ZERO)
+    stock=current_stock_liters()
+    committed_liters=remaining_drums*drum
+    return {
+        "stock_liters":stock,
+        "committed_drums":remaining_drums,
+        "committed_liters":committed_liters,
+        "free_liters":max(stock-committed_liters,ZERO),
+        "shortage_liters":max(committed_liters-stock,ZERO),
+        "minimum_stock_liters":_decimal(settings.minimum_stock_liters),
+    }
 
 
 def employee_operations(employee_id,start=None,end=None):
-    from datetime import datetime,timezone,time
     from ..models import FuelPurchase
-    result={"dispenses":[],"payments":[],"supplies":[],"sales":Decimal("0"),"liters":Decimal("0"),"drums":Decimal("0"),"collected":Decimal("0"),"payment_collected":Decimal("0"),"instant_collected":Decimal("0"),"credit":Decimal("0"),"supplied_liters":Decimal("0")}
-    dq=FuelDispense.query.filter_by(employee_id=employee_id).order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc())
-    pq=FarmerPayment.query.join(Document,FarmerPayment.document_id==Document.id).filter(FarmerPayment.employee_id==employee_id).order_by(FarmerPayment.created_at.desc(),FarmerPayment.id.desc())
-    sq=FuelPurchase.query.filter_by(employee_id=employee_id).order_by(FuelPurchase.submitted_at.desc(),FuelPurchase.id.desc())
+    result={
+        "dispenses":[],"payments":[],"supplies":[],
+        "sales":ZERO,"cogs":ZERO,"liters":ZERO,"drums":ZERO,
+        "collected":ZERO,"payment_collected":ZERO,"instant_collected":ZERO,
+        "credit":ZERO,"supplied_liters":ZERO,
+    }
+    conditions=_date_window(start,end)
+    dq=FuelDispense.query.filter(FuelDispense.employee_id==employee_id).order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc())
+    pq=(FarmerPayment.query.join(Document,FarmerPayment.document_id==Document.id)
+        .filter(FarmerPayment.employee_id==employee_id)
+        .order_by(FarmerPayment.created_at.desc(),FarmerPayment.id.desc()))
+    sq=FuelPurchase.query.filter(FuelPurchase.employee_id==employee_id).order_by(FuelPurchase.submitted_at.desc(),FuelPurchase.id.desc())
     if start:
         dt=datetime.combine(start,time.min).replace(tzinfo=timezone.utc)
         dq=dq.filter(FuelDispense.created_at>=dt);pq=pq.filter(FarmerPayment.created_at>=dt);sq=sq.filter(FuelPurchase.submitted_at>=dt)
     if end:
         dt=datetime.combine(end,time.max).replace(tzinfo=timezone.utc)
         dq=dq.filter(FuelDispense.created_at<=dt);pq=pq.filter(FarmerPayment.created_at<=dt);sq=sq.filter(FuelPurchase.submitted_at<=dt)
+
     result["dispenses"]=dq.limit(300).all()
     result["payments"]=pq.limit(300).all()
     result["supplies"]=sq.limit(300).all()
-    approved=[row for row in result["dispenses"] if row.status=="approved"]
-    approved_supplies=[row for row in result["supplies"] if row.status=="approved"]
-    result["sales"]=sum((Decimal(str(row.total_amount)) for row in approved),Decimal("0"))
-    result["liters"]=sum((Decimal(str(row.liters)) for row in approved),Decimal("0"))
-    result["drums"]=sum((Decimal(str(row.drums)) for row in approved),Decimal("0"))
-    result["credit"]=sum((Decimal(str(row.credit_amount)) for row in approved),Decimal("0"))
-    result["instant_collected"]=sum((Decimal(str(row.paid_amount)) for row in approved),Decimal("0"))
-    result["payment_collected"]=sum((Decimal(str(row.amount)) for row in result["payments"] if row.document.status!="reversed"),Decimal("0"))
+
+    totals=_employee_dispense_aggregate(employee_id,start,end)
+    result.update(totals)
+
+    approved_payment_query=(db.session.query(func.coalesce(func.sum(FarmerPayment.amount),0))
+        .join(Document,FarmerPayment.document_id==Document.id)
+        .filter(FarmerPayment.employee_id==employee_id,Document.status!="reversed"))
+    if start:
+        approved_payment_query=approved_payment_query.filter(FarmerPayment.created_at>=datetime.combine(start,time.min).replace(tzinfo=timezone.utc))
+    if end:
+        approved_payment_query=approved_payment_query.filter(FarmerPayment.created_at<=datetime.combine(end,time.max).replace(tzinfo=timezone.utc))
+    result["payment_collected"]=_decimal(approved_payment_query.scalar())
     result["collected"]=result["instant_collected"]+result["payment_collected"]
-    result["supplied_liters"]=sum((Decimal(str(row.liters)) for row in approved_supplies),Decimal("0"))
+
+    supply_query=db.session.query(func.coalesce(func.sum(FuelPurchase.liters),0)).filter(
+        FuelPurchase.employee_id==employee_id,FuelPurchase.status=="approved"
+    )
+    if start:
+        supply_query=supply_query.filter(FuelPurchase.submitted_at>=datetime.combine(start,time.min).replace(tzinfo=timezone.utc))
+    if end:
+        supply_query=supply_query.filter(FuelPurchase.submitted_at<=datetime.combine(end,time.max).replace(tzinfo=timezone.utc))
+    result["supplied_liters"]=_decimal(supply_query.scalar())
     return result
 
+
 def sales_report(start=None,end=None):
-    from datetime import datetime,time,timezone
     query=FuelDispense.query.filter_by(status="approved").order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc())
     if start:
         query=query.filter(FuelDispense.created_at>=datetime.combine(start,time.min).replace(tzinfo=timezone.utc))
     if end:
         query=query.filter(FuelDispense.created_at<=datetime.combine(end,time.max).replace(tzinfo=timezone.utc))
-    rows=query.limit(500).all()
-    sales=sum((Decimal(str(row.total_amount)) for row in rows),Decimal("0"))
-    cogs=sum((Decimal(str(row.cost_amount)) for row in rows),Decimal("0"))
-    liters=sum((Decimal(str(row.liters)) for row in rows),Decimal("0"))
-    drums=sum((Decimal(str(row.drums)) for row in rows),Decimal("0"))
-    collected=sum((Decimal(str(row.paid_amount)) for row in rows),Decimal("0"))
-    return {"rows":rows,"sales":sales,"cogs":cogs,"gross_profit":sales-cogs,"liters":liters,"drums":drums,"collected":collected}
+    rows=query.limit(500).all()  # presentation limit only
+
+    q=db.session.query(
+        func.coalesce(func.sum(FuelDispense.total_amount),0),
+        func.coalesce(func.sum(FuelDispense.cost_amount),0),
+        func.coalesce(func.sum(FuelDispense.liters),0),
+        func.coalesce(func.sum(FuelDispense.drums),0),
+        func.coalesce(func.sum(FuelDispense.paid_amount),0),
+    ).filter(FuelDispense.status=="approved")
+    if start:
+        q=q.filter(FuelDispense.created_at>=datetime.combine(start,time.min).replace(tzinfo=timezone.utc))
+    if end:
+        q=q.filter(FuelDispense.created_at<=datetime.combine(end,time.max).replace(tzinfo=timezone.utc))
+    sales,cogs,liters,drums,collected=q.one()
+
+    return {
+        "rows":rows,
+        "sales":_decimal(sales),
+        "cogs":_decimal(cogs),
+        "gross_profit":_decimal(sales)-_decimal(cogs),
+        "liters":_decimal(liters),
+        "drums":_decimal(drums),
+        "collected":_decimal(collected),
+        "row_count":query.count(),
+    }
+
 
 def dispense_report(start=None,end=None):
-    data=sales_report(start,end)
-    return data
+    return sales_report(start,end)
