@@ -78,56 +78,6 @@ def create_app(config_object=None):
     def root():
         return redirect(url_for("dashboard.index" if current_user.is_authenticated else "auth.login"))
 
-    @app.get("/pwa/launch")
-    def pwa_launch():
-        # Session-independent so it can be safely precached as the PWA start URL.
-        # /dashboard/ handles authentication/redirects after launch.
-        html="""<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1877F2">
-<link rel="manifest" href="/manifest.webmanifest">
-<title>Dizal</title>
-<style>html,body{height:100%;margin:0}body{display:grid;place-items:center;background:#f6f8fc;color:#172033;font-family:Arial,sans-serif}.box{text-align:center;padding:32px}.logo{width:76px;height:76px;border-radius:22px;background:#1877F2;color:#fff;display:grid;place-items:center;margin:0 auto 18px;font-size:34px;font-weight:800}.spinner{width:24px;height:24px;border:3px solid #d9e0ec;border-top-color:#1877F2;border-radius:50%;animation:spin .8s linear infinite;margin:18px auto}@keyframes spin{to{transform:rotate(360deg)}}p{margin:0;color:#68758b;font-size:14px}</style>
-</head>
-<body><main class="box" aria-live="polite"><div class="logo">D</div><h1>Dizal</h1><div class="spinner" aria-hidden="true"></div><p>جاري فتح النظام…</p></main>
-<script>window.setTimeout(function(){window.location.replace("/dashboard/");},150);</script>
-</body></html>"""
-        response=Response(html,mimetype="text/html")
-        response.headers["Cache-Control"]="no-cache, no-store, must-revalidate"
-        response.headers["X-Content-Type-Options"]="nosniff"
-        return response
-
-    @app.get("/pwa/debug")
-    def pwa_debug():
-        html="""<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1877F2">
-<link rel="manifest" href="/manifest.webmanifest?v=20260930-6">
-<title>Dizal · تشخيص PWA</title>
-<style>
-:root{font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;color:#172033;background:#f4f7fb}*{box-sizing:border-box}body{margin:0;padding:16px}main{max-width:760px;margin:0 auto}.card{background:#fff;border:1px solid #e0e7f0;border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 5px 18px rgba(20,35,65,.05)}h1{font-size:22px;margin:0 0 6px}h2{font-size:17px;margin:0 0 12px}p{color:#67748a;margin:0 0 12px;line-height:1.7}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.item{border:1px solid #e5ebf3;border-radius:12px;padding:10px;background:#fbfcfe;min-width:0}.item b{display:block;font-size:12px;color:#657287;margin-bottom:5px}.item span{display:block;font-size:14px;word-break:break-word}.ok{color:#187a45;font-weight:800}.bad{color:#b42318;font-weight:800}.warn{color:#9a6700;font-weight:800}button{border:0;border-radius:12px;background:#1877F2;color:#fff;font:inherit;font-weight:800;padding:11px 14px;margin:4px;cursor:pointer}button.secondary{background:#eef3fb;color:#24334d}pre{white-space:pre-wrap;word-break:break-word;background:#111827;color:#e5eefc;border-radius:12px;padding:12px;font-size:12px;direction:ltr;text-align:left;overflow:auto}small{color:#77849a}.icon-test{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid #e5ebf3;border-radius:12px;margin:7px 0}.icon-test img{width:56px;height:56px;object-fit:contain;border-radius:12px;background:#f2f5fa}@media(max-width:560px){.grid{grid-template-columns:1fr}body{padding:10px}}</style>
-</head>
-<body><main>
-<section class="card"><h1>تشخيص Dizal PWA</h1><p>الفحص يعمل من هذا الجهاز نفسه. لا يحتاج كمبيوتر أو F12.</p><button id="refresh">إعادة الفحص</button><button class="secondary" id="install">تجربة التثبيت</button></section>
-<section class="card"><h2>الحالة الأساسية</h2><div class="grid" id="state"></div></section>
-<section class="card"><h2>فحص الملفات</h2><div class="grid" id="resources"></div></section>
-<section class="card"><h2>Service Worker</h2><div id="sw"></div></section>
-<section class="card"><h2>الأيقونات</h2><div id="icons"></div></section>
-<section class="card"><h2>التفاصيل</h2><pre id="details">جاري الفحص…</pre></section>
-</main>
-<script src="/static/js/pwa-debug.js?v=20260930-6" defer></script>
-</body></html>"""
-        response=Response(html,mimetype="text/html")
-        response.headers["Cache-Control"]="no-cache, no-store, must-revalidate"
-        response.headers["X-Content-Type-Options"]="nosniff"
-        return response
-
     @app.get("/manifest.webmanifest")
     def web_manifest():
         response=send_from_directory(app.static_folder,"manifest.webmanifest",mimetype="application/manifest+json")
