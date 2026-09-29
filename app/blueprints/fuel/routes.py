@@ -25,7 +25,7 @@ def supply():
                     raise ValueError("الموظف المحدد غير صالح.")
             tank_id=int(request.form.get("tank_id") or 0)
             if not tank_id:
-                first_tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).first()
+                first_tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id).first()
                 if not first_tank:
                     raise ValueError("لا يوجد خزان فعال. أضف خزانًا أولًا.")
                 tank_id=first_tank.id
@@ -63,7 +63,7 @@ def supply():
         if current_user.has_role("manager")
         else FuelPurchase.query.filter_by(employee_id=current_user.id).order_by(FuelPurchase.id.desc()).limit(50).all()
     )
-    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).all()
+    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id).all()
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
     selected_tank_id=request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
     return render_template("fuel/supply.html",purchases=purchases,tanks=tanks,employees=employees,today=date.today().isoformat(),selected_tank_id=selected_tank_id)
