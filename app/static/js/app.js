@@ -340,7 +340,7 @@ async function registerDizalServiceWorker(){
     await Promise.all(registrations
       .filter((registration)=>registration.active?.scriptURL.includes("/static/sw.js"))
       .map((registration)=>registration.unregister()));
-    const registration=await navigator.serviceWorker.register("/sw.js?v=20260930-2",{scope:"/",updateViaCache:"none"});
+    const registration=await navigator.serviceWorker.register("/sw.js?v=20260930-3",{scope:"/",updateViaCache:"none"});
     await registration.update();
     await navigator.serviceWorker.ready;
     window.DizalPWA.registration=registration;
