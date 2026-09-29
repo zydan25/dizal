@@ -5,7 +5,7 @@ from .navigation import build_navigation
 from .permissions import user_has_permission
 
 AUDIT_ACTION_LABELS={
-    "auth.login":"تسجيل دخول","auth.login_failed":"محاولة دخول فاشلة","settings.updated":"تحديث الإعدادات",
+    "auth.login":"تسجيل دخول","auth.login_failed":"محاولة دخول فاشلة","account.updated":"تحديث الحساب","settings.updated":"تحديث الإعدادات",
     "farmer.created":"إضافة مزارع","farmer.updated":"تعديل مزارع","farmer.document.deleted":"حذف مرفق مزارع","farmer.quota.changed":"تعديل سقف المزارع",
     "farmer.approve":"اعتماد مزارع","farmer.changes":"طلب استكمال المزارع","farmer.reject":"رفض مزارع","farmer.suspend":"إيقاف مزارع","farmer.activate":"تفعيل مزارع","farmer.delete":"أرشفة مزارع",
     "fuel.purchase.created":"إضافة توريد ديزل","fuel.purchase.reviewed":"مراجعة توريد ديزل","fuel.dispense.created":"صرف ديزل","general.sale.created":"بيع عام","farmer.payment.created":"تحصيل من مزارع",
