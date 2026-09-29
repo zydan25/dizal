@@ -30,5 +30,21 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/pwa/dizal-mobile.png?v=20260929-pwa2",
+      "sizes": "360x640",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "واجهة Dizal على الهاتف"
+    },
+    {
+      "src": "/static/pwa/dizal-desktop.png?v=20260929-pwa2",
+      "sizes": "640x400",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "واجهة Dizal على الكمبيوتر"
+    }
   ]
 }

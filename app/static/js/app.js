@@ -248,6 +248,7 @@ async function triggerInstall(){
 window.addEventListener("beforeinstallprompt",event=>{
   event.preventDefault();
   deferredInstallPrompt=event;
+  console.info("Dizal PWA install prompt is ready",{platforms:event.platforms||[]});
   refreshInstallButton();
 });
 window.addEventListener("appinstalled",()=>{
