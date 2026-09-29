@@ -63,13 +63,13 @@ def test_pwa_assets_use_one_consistent_registration_and_cache_version():
     js=(root/"app/static/js/app.js").read_text(encoding="utf-8")
     sw=(root/"app/static/sw.js").read_text(encoding="utf-8")
     manifest=(root/"app/static/manifest.webmanifest").read_text(encoding="utf-8")
-    assert "app.js',v='20260930-2'" in base
+    assert "app.js',v='20260930-3'" in base
     assert "app.js',v='20260929-2'" not in base
     assert js.count("navigator.serviceWorker.register(")==1
     assert "20260929-2" not in js
-    assert 'register("/sw.js?v=20260930-2"' in js
-    assert 'const VERSION="20260930-2";' in sw
-    assert "/static/js/app.js?v=20260930-2" in sw
+    assert 'register("/sw.js?v=20260930-3"' in js
+    assert 'const VERSION="20260930-3";' in sw
+    assert "/static/js/app.js?v=20260930-3" in sw
     assert '"id": "/dashboard/"' in manifest
     assert '"start_url": "/dashboard/"' in manifest
 
