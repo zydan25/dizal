@@ -49,11 +49,42 @@ def test_root_and_manifest_pwa_endpoints_are_install_ready():
     assert "/auth/login" in root.headers["Location"]
     assert manifest.status_code==200
     assert "manifest+json" in (manifest.headers.get("Content-Type") or "")
-    assert manifest.get_json()["start_url"]=="/"
+    assert manifest.get_json()["id"]=="/dashboard/"
+    assert manifest.get_json()["start_url"]=="/dashboard/"
     assert manifest.get_json()["scope"]=="/"
     assert sw.status_code==200
     assert sw.headers.get("Service-Worker-Allowed")=="/"
     assert "/static/offline.html" in sw.get_data(as_text=True)
+
+def test_pwa_assets_use_one_consistent_registration_and_cache_version():
+    from pathlib import Path
+    root=Path(__file__).resolve().parents[1]
+    base=(root/"app/templates/base.html").read_text(encoding="utf-8")
+    js=(root/"app/static/js/app.js").read_text(encoding="utf-8")
+    sw=(root/"app/static/sw.js").read_text(encoding="utf-8")
+    manifest=(root/"app/static/manifest.webmanifest").read_text(encoding="utf-8")
+    assert "app.js',v='20260930-2'" in base
+    assert "app.js',v='20260929-2'" not in base
+    assert js.count("navigator.serviceWorker.register(")==1
+    assert "20260929-2" not in js
+    assert 'register("/sw.js?v=20260930-2"' in js
+    assert 'const VERSION="20260930-2";' in sw
+    assert "/static/js/app.js?v=20260930-2" in sw
+    assert '"id": "/dashboard/"' in manifest
+    assert '"start_url": "/dashboard/"' in manifest
+
+
+def test_pwa_icon_files_are_valid_pngs_with_declared_dimensions():
+    app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite://","WTF_CSRF_ENABLED":False,"SECRET_KEY":"test","SECURITY_PASSWORD_SALT":"test"})
+    client=app.test_client()
+    for name,expected in [("dizal-192.png",192),("dizal-512.png",512)]:
+        response=client.get("/static/icons/"+name)
+        assert response.status_code==200
+        data=response.data
+        assert data[:8]==b"\\x89PNG\\r\\n\\x1a\\n"
+        assert int.from_bytes(data[16:20],"big")==expected
+        assert int.from_bytes(data[20:24],"big")==expected
+
 
 def test_reset_clears_operational_data_but_preserves_manager():
     app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite://","WTF_CSRF_ENABLED":False,"SECRET_KEY":"test","SECURITY_PASSWORD_SALT":"test"})
