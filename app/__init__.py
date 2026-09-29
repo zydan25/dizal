@@ -76,7 +76,21 @@ def create_app(config_object=None):
 
     @app.get("/")
     def root():
-        return redirect(url_for("dashboard.index" if current_user.is_authenticated else "auth.login"))
+        # Keep the origin root as a cacheable 200 response, like the working
+        # Alkas PWA. The dashboard route remains responsible for auth/permissions.
+        response=Response("""<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="refresh" content="0;url=/dashboard/">
+<title>Dizal</title>
+</head>
+<body>
+<script>window.location.replace("/dashboard/");</script>
+</body>
+</html>""",mimetype="text/html")
+        return response
 
     @app.get("/manifest.webmanifest")
     def web_manifest():
