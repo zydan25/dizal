@@ -116,6 +116,17 @@ def reset_project_data():
             continue
         db.session.execute(table.delete())
 
+    # Cashbox transactions are already gone; now remove every non-preserved cashbox.
+    if cashbox_table is not None:
+        if keep_cashbox_ids:
+            db.session.execute(
+                delete(cashbox_table).where(
+                    cashbox_table.c.id.notin_(keep_cashbox_ids)
+                )
+            )
+        else:
+            db.session.execute(delete(cashbox_table))
+
     # Keep role links only for administrator accounts.
     roles_users=db.metadata.tables.get("roles_users")
     if roles_users is not None:
