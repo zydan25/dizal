@@ -92,8 +92,8 @@ def payment():
             selected_employee_id=str(selected_farmer.assigned_employee_id or "")
     return render_template("sales/payment.html",farmers=farmers,accounts=accounts,accounts_json=accounts_json,employees=employees,selected_farmer_id=selected_farmer_id,selected_employee_id=selected_employee_id)
 
-@sales_bp.route("/point-of-sale",methods=["GET","POST"])
-@sales_bp.route("/pos",methods=["GET","POST"])
+@sales_bp.route("/point-of-sale",methods=["GET","POST"],endpoint="point_of_sale")
+@sales_bp.route("/pos",methods=["GET","POST"],endpoint="point_of_sale_short")
 @permission_required("fuel.dispense")
 def point_of_sale():
     if request.method=="POST":

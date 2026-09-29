@@ -2,7 +2,7 @@
 {% block content %}
 <div class="page-heading-row">
   <div class="page-heading"><h1>نقطة بيع عامة</h1><p>بيع فوري بدون ربط بمزارع، مع خصم الديزل من الخزان وقبض المبلغ في صندوق الموظف.</p></div>
-  <a class="secondary-btn" href="{{url_for('reports.sales_report')}}"><i class="bi bi-bar-chart"></i><span>تقرير المبيعات</span></a>
+  <a class="secondary-btn" href="{{url_for('reports.sales_report_view')}}"><i class="bi bi-bar-chart"></i><span>تقرير المبيعات</span></a>
 </div>
 <form method="post" class="mobile-form card-form" id="pos-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
