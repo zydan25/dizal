@@ -1,6 +1,6 @@
 from decimal import Decimal,InvalidOperation
 import math
-from flask import Flask,render_template,redirect,request,url_for
+from flask import Flask,render_template,redirect,request,url_for,send_from_directory
 from .config import Config
 from .extensions import db,migrate,csrf,security
 
@@ -71,6 +71,13 @@ def create_app(config_object=None):
         reports_bp,documents_bp,notifications_bp,audit_bp,roles_bp,whatsapp_bp,media_bp
     ):
         app.register_blueprint(blueprint)
+
+    @app.get("/sw.js")
+    def service_worker():
+        response=send_from_directory(app.static_folder,"sw.js",mimetype="application/javascript")
+        response.headers["Service-Worker-Allowed"]="/"
+        response.headers["Cache-Control"]="no-cache, no-store, must-revalidate"
+        return response
 
     @app.errorhandler(401)
     def unauthorized(_error): return redirect(url_for("auth.login", next=request.full_path))
