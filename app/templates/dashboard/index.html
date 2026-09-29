@@ -9,44 +9,77 @@
   <div class="hero-icon"><i class="bi bi-fuel-pump-fill"></i></div>
 </div>
 
+{% if manager %}
+<div class="dashboard-actions">
+  <div class="dashboard-actions-head">
+    <div><strong>اختصارات المدير</strong><span>نفّذ أهم العمليات من شاشة واحدة</span></div>
+    <i class="bi bi-lightning-charge-fill" aria-hidden="true"></i>
+  </div>
+  <div class="quick-grid dashboard-shortcuts">
+    <a class="quick-card quick-primary" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet-fill"></i><strong>صرف ديزل</strong></a>
+    <a class="quick-card quick-primary" href="{{url_for('sales.point_of_sale')}}"><i class="bi bi-shop"></i><strong>بيع عام</strong></a>
+    <a class="quick-card quick-primary" href="{{url_for('sales.payment')}}"><i class="bi bi-cash-coin"></i><strong>تحصيل</strong></a>
+    <a class="quick-card quick-primary" href="{{url_for('reports.index')}}"><i class="bi bi-bar-chart-line-fill"></i><strong>التقارير</strong></a>
+    <a class="quick-card" href="{{url_for('farmers.index')}}"><i class="bi bi-people-fill"></i><strong>المزارعون</strong></a>
+    <a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong></a>
+    <a class="quick-card" href="{{url_for('documents.index')}}"><i class="bi bi-receipt"></i><strong>السندات</strong></a>
+    <a class="quick-card" href="{{url_for('employees.index')}}"><i class="bi bi-person-gear"></i><strong>الموظفون</strong></a>
+  </div>
+</div>
+{% endif %}
+
 {% if manager and summary %}
-<div class="section-title"><h2>الربحية</h2><span>الأرقام مبنية على جميع العمليات المعتمدة</span></div>
-<div class="stats-grid dashboard-kpis">
-  <div class="dashboard-kpi"><small>إجمالي المبيعات</small><strong>{{summary.sales|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>تكلفة الديزل المباع</small><strong>{{summary.cogs|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>مجمل الربح</small><strong>{{summary.gross_profit|clean_number}}</strong><span>{{summary.gross_margin_pct|round(1)|clean_number}}%</span></div>
-  <div class="dashboard-kpi"><small>المصروفات التشغيلية</small><strong>{{summary.expenses|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>عمولات الموظفين المكتسبة</small><strong>{{summary.employee_commission|clean_number}}</strong><span>لتر/دبة/نسبة</span></div>
-  <div class="dashboard-kpi"><small>رواتب معتمدة</small><strong>{{summary.fixed_salary_recognized|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi is-success"><small>الربح الصافي</small><strong>{{summary.net_profit|clean_number}}</strong><span>{{summary.net_margin_pct|round(1)|clean_number}}%</span></div>
-  <div class="dashboard-kpi is-danger"><small>ذمم المزارعين</small><strong>{{summary.receivables|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+<div class="dashboard-section">
+  <div class="section-title"><h2>الربحية</h2><span>الأرقام مبنية على جميع العمليات المعتمدة</span></div>
+  <div class="stats-grid dashboard-kpis">
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></div><div class="kpi-body"><small>إجمالي المبيعات</small><strong>{{summary.sales|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-fuel-pump"></i></div><div class="kpi-body"><small>تكلفة الديزل المباع</small><strong>{{summary.cogs|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-pie-chart"></i></div><div class="kpi-body"><small>مجمل الربح</small><strong>{{summary.gross_profit|clean_number}}</strong><span>{{summary.gross_margin_pct|round(1)|clean_number}}%</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-receipt-cutoff"></i></div><div class="kpi-body"><small>المصروفات التشغيلية</small><strong>{{summary.expenses|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-person-check"></i></div><div class="kpi-body"><small>عمولات الموظفين المكتسبة</small><strong>{{summary.employee_commission|clean_number}}</strong><span>لتر / دبة / نسبة</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-person-badge"></i></div><div class="kpi-body"><small>رواتب معتمدة</small><strong>{{summary.fixed_salary_recognized|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+    <div class="dashboard-kpi is-success dashboard-kpi-featured"><div class="kpi-icon"><i class="bi bi-wallet2"></i></div><div class="kpi-body"><small>الربح الصافي</small><strong>{{summary.net_profit|clean_number}}</strong><span>{{summary.net_margin_pct|round(1)|clean_number}}% صافي الهامش</span></div></div>
+    <div class="dashboard-kpi is-danger"><div class="kpi-icon"><i class="bi bi-person-exclamation"></i></div><div class="kpi-body"><small>ذمم المزارعين</small><strong>{{summary.receivables|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  </div>
 </div>
 
-<div class="section-title"><h2>السيولة ورأس المال</h2><span>لا نخلط النقد بالربح</span></div>
-<div class="stats-grid dashboard-kpis">
-  <div class="dashboard-kpi"><small>رأس المال المسجل</small><strong>{{summary.capital_contributed|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>رأس المال غير المحول للموظفين</small><strong>{{summary.unallocated_capital|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>الصندوق الرئيسي</small><strong>{{summary.central_cash|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>صناديق الموظفين</small><strong>{{summary.employee_cash|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>إجمالي النقد المتوفر</small><strong>{{summary.cash_available|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+<div class="dashboard-section">
+  <div class="section-title"><h2>السيولة ورأس المال</h2><span>النقد المتاح منفصل عن الربح</span></div>
+  <div class="stats-grid dashboard-kpis">
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-safe2"></i></div><div class="kpi-body"><small>رأس المال المسجل</small><strong>{{summary.capital_contributed|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-arrow-down-circle"></i></div><div class="kpi-body"><small>رأس المال غير المحول</small><strong>{{summary.unallocated_capital|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-cash-stack"></i></div><div class="kpi-body"><small>الصندوق الرئيسي</small><strong>{{summary.central_cash|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-wallet"></i></div><div class="kpi-body"><small>صناديق الموظفين</small><strong>{{summary.employee_cash|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+    <div class="dashboard-kpi is-primary dashboard-kpi-featured"><div class="kpi-icon"><i class="bi bi-currency-exchange"></i></div><div class="kpi-body"><small>إجمالي النقد المتوفر</small><strong>{{summary.cash_available|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  </div>
 </div>
 
-<div class="section-title"><h2>المخزون</h2><span>التكلفة والقيمة المتوقعة منفصلتان</span></div>
-<div class="stats-grid dashboard-kpis">
-  <div class="dashboard-kpi"><small>المخزون الحالي</small><strong>{{summary.stock_drums|round(1)|clean_number}}</strong><span>دبة · {{summary.stock_liters|clean_number}} لتر</span></div>
-  <div class="dashboard-kpi"><small>قيمة المخزون بالتكلفة</small><strong>{{summary.stock_cost_value|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>قيمته بسعر البيع الحالي</small><strong>{{summary.stock_sale_value|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>الهامش غير المحقق في المخزون</small><strong>{{summary.stock_unrealized_margin|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>المخزون الحر</small><strong>{{((inventory.free_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{inventory.free_liters|clean_number}} لتر</span></div>
-  <div class="dashboard-kpi"><small>الملتزم للمزارعين</small><strong>{{((inventory.committed_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{inventory.committed_liters|clean_number}} لتر</span></div>
+<div class="dashboard-section">
+  <div class="section-title"><h2>المخزون</h2><span>الكمية والقيمة والهامش غير المحقق</span></div>
+  <div class="stats-grid dashboard-kpis">
+    <div class="dashboard-kpi is-primary dashboard-kpi-featured"><div class="kpi-icon"><i class="bi bi-fuel-pump-fill"></i></div><div class="kpi-body"><small>المخزون الحالي</small><strong>{{summary.stock_drums|round(1)|clean_number}}</strong><span>دبة · {{summary.stock_liters|clean_number}} لتر</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-box-seam"></i></div><div class="kpi-body"><small>قيمة المخزون بالتكلفة</small><strong>{{summary.stock_cost_value|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-tag"></i></div><div class="kpi-body"><small>قيمته بسعر البيع الحالي</small><strong>{{summary.stock_sale_value|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-bar-chart-fill"></i></div><div class="kpi-body"><small>الهامش غير المحقق</small><strong>{{summary.stock_unrealized_margin|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-unlock"></i></div><div class="kpi-body"><small>المخزون الحر</small><strong>{{((inventory.free_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{inventory.free_liters|clean_number}} لتر</span></div></div>
+    <div class="dashboard-kpi"><div class="kpi-icon"><i class="bi bi-person-lock"></i></div><div class="kpi-body"><small>الملتزم للمزارعين</small><strong>{{((inventory.committed_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{inventory.committed_liters|clean_number}} لتر</span></div></div>
+  </div>
 </div>
 
 {% if summary.alerts %}
-<div class="section-title"><h2>تنبيهات المخزون</h2><span>{{summary.alerts|length}} تنبيه</span></div>
-<div class="entity-list">
+<div class="dashboard-section dashboard-alerts">
+  <div class="section-title"><h2>تنبيهات المخزون</h2><span>{{summary.alerts|length}} تنبيه</span></div>
+  <div class="entity-list">
 {% for alert in summary.alerts %}
 <a class="entity-row" href="{{alert.url or url_for('fuel.stock')}}">
   <div class="avatar"><i class="bi {% if alert.type=='danger' %}bi-exclamation-octagon{% else %}bi-exclamation-triangle{% endif %}"></i></div>
+  <div class="entity-main"><strong>{{alert.title}}</strong><span>{{alert.message}}</span></div>
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% endfor %}
+  </div>
+</div>
+{% endif %}{% else %}bi-exclamation-triangle{% endif %}"></i></div>
   <div class="entity-main"><strong>{{alert.title}}</strong><span>{{alert.message}}</span></div>
   <i class="bi bi-chevron-left"></i>
 </a>
@@ -99,28 +132,16 @@
   </section>
 </div>
 
-{% if manager %}
-<div class="section-title"><h2>إجراءات سريعة</h2><span>وصول مباشر</span></div>
-<div class="quick-grid compact-quick-grid dashboard-shortcuts">
-  <a class="quick-card" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet"></i><strong>صرف ديزل</strong><small>تسجيل صرف جديد</small></a>
-  <a class="quick-card" href="{{url_for('sales.point_of_sale')}}"><i class="bi bi-shop"></i><strong>نقطة بيع عامة</strong><small>بيع فوري وقبض مباشر</small></a>
-  <a class="quick-card" href="{{url_for('sales.payment')}}"><i class="bi bi-cash"></i><strong>تحصيل</strong><small>سداد مزارع</small></a>
-  <a class="quick-card" href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><strong>المزارعون</strong><small>السقوف والديون</small></a>
-  <a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong><small>مراجعة وإضافة</small></a>
-  <a class="quick-card" href="{{url_for('documents.index')}}"><i class="bi bi-receipt"></i><strong>السندات</strong><small>طباعة وPDF</small></a>
-  <a class="quick-card" href="{{url_for('employees.index')}}"><i class="bi bi-person-gear"></i><strong>الموظفون</strong><small>الحسابات والصلاحيات</small></a>
-  <a class="quick-card" href="{{url_for('reports.index')}}"><i class="bi bi-graph-up-arrow"></i><strong>تقارير الأرباح</strong><small>الربح والعمولات والسيولة والمخزون</small></a>
-</div>
 {% else %}
 <div class="section-title"><h2>إجراءاتك</h2><span>بدون ازدحام</span></div>
-<div class="quick-grid compact-quick-grid dashboard-shortcuts">
-  <a class="quick-card" href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><strong>المزارعون</strong><small>بطاقاتك وسقوفهم</small></a>
-  <a class="quick-card" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet"></i><strong>صرف ديزل</strong><small>تسجيل سحب</small></a>
-  <a class="quick-card" href="{{url_for('sales.point_of_sale')}}"><i class="bi bi-shop"></i><strong>نقطة بيع عامة</strong><small>بيع فوري وقبض مباشر</small></a>
-  <a class="quick-card" href="{{url_for('sales.payment')}}"><i class="bi bi-cash"></i><strong>تحصيل</strong><small>سداد مزارع</small></a>
-  <a class="quick-card" href="{{url_for('reports.my_operations')}}"><i class="bi bi-clipboard-data"></i><strong>تقريري</strong><small>السحب والتحصيل</small></a>
-  <a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong><small>إضافة ومتابعة</small></a>
-  <a class="quick-card" href="{{url_for('employees.my_password')}}"><i class="bi bi-key"></i><strong>كلمة المرور</strong><small>تحديث الحساب</small></a>
+<div class="quick-grid dashboard-shortcuts">
+  <a class="quick-card quick-primary" href="{{url_for('farmers.index')}}"><i class="bi bi-people-fill"></i><strong>المزارعون</strong></a>
+  <a class="quick-card quick-primary" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet-fill"></i><strong>صرف ديزل</strong></a>
+  <a class="quick-card quick-primary" href="{{url_for('sales.point_of_sale')}}"><i class="bi bi-shop"></i><strong>بيع عام</strong></a>
+  <a class="quick-card quick-primary" href="{{url_for('sales.payment')}}"><i class="bi bi-cash-coin"></i><strong>تحصيل</strong></a>
+  <a class="quick-card" href="{{url_for('reports.my_operations')}}"><i class="bi bi-clipboard-data"></i><strong>تقريري</strong></a>
+  <a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong></a>
+  <a class="quick-card" href="{{url_for('employees.my_password')}}"><i class="bi bi-key"></i><strong>كلمة المرور</strong></a>
 </div>
 
 <div class="section-title"><h2>مزارعيني</h2><span>{{employee_farmers|length|clean_number}} من {{employee_farmers_total|clean_number}}</span></div>
