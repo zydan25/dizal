@@ -23,9 +23,15 @@ def supply():
                 employee=User.query.filter_by(id=employee_id,is_employee=True,active=True).first()
                 if not employee:
                     raise ValueError("الموظف المحدد غير صالح.")
+            tank_id=int(request.form.get("tank_id") or 0)
+            if not tank_id:
+                first_tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).first()
+                if not first_tank:
+                    raise ValueError("لا يوجد خزان فعال. أضف خزانًا أولًا.")
+                tank_id=first_tank.id
             row=create_purchase(
                 employee_id=employee_id,
-                tank_id=int(request.form.get("tank_id") or (FuelTank.query.filter_by(is_active=True).order_by(FuelTank.name).first().id if FuelTank.query.filter_by(is_active=True).first() else 0)),
+                tank_id=tank_id,
                 purchase_date=date.fromisoformat(request.form.get("purchase_date") or date.today().isoformat()),
                 supplier_name=request.form.get("supplier_name"),
                 liters=request.form.get("liters"),
