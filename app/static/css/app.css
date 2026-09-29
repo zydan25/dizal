@@ -312,3 +312,48 @@ body.install-sheet-open{overflow:hidden}
 .document-live-preview{margin-top:10px;border:1px solid #dfe7f1;border-radius:18px;background:#eef3f8;padding:10px}.document-preview-toolbar{display:flex;justify-content:space-between;gap:10px;font-size:.72rem;color:#64748b;margin:0 2px 7px}.document-preview-sheet{background:#fff;border-radius:13px;box-shadow:0 8px 25px rgba(25,45,75,.07);padding:13px}.document-preview-top{display:grid;grid-template-columns:42px 1fr auto;gap:9px;align-items:center}.preview-logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;display:grid;place-items:center}.document-preview-top strong,.document-preview-top small{display:block}.document-preview-top strong{font-size:.88rem}.document-preview-top small{color:#7c899d;font-size:.68rem;margin-top:2px;white-space:pre-wrap}.preview-meta{font-size:.63rem;color:#8b97a8}.document-preview-line{height:2px;background:var(--primary);opacity:.75;margin:11px 0}.document-preview-body{display:flex;flex-direction:column;gap:5px;font-size:.66rem;color:#69768a}.document-preview-body b{font-size:.78rem;color:#27364d;margin-top:4px}.document-preview-footer{border-top:1px dashed #d8e1ec;margin-top:15px;padding-top:8px;color:#7d899b;font-size:.66rem;white-space:pre-wrap}
 .pos-heading-row{align-items:flex-start}.pos-eyebrow{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;color:var(--primary);font-weight:800;background:#eaf2ff;padding:5px 8px;border-radius:999px;margin-bottom:5px}.pos-rule-banner{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e0e8f1;border-radius:16px;padding:11px 12px;margin:10px 0}.pos-rule-banner>i{width:35px;height:35px;border-radius:11px;background:#edf9f1;color:#26784c;display:grid;place-items:center}.pos-rule-banner strong,.pos-rule-banner span{display:block}.pos-rule-banner strong{font-size:.8rem}.pos-rule-banner span{font-size:.68rem;color:#8190a3;margin-top:2px}.pos-form{border-top:3px solid var(--primary)}.pos-form .calculation-card{margin-top:2px}.pos-info{display:flex;align-items:flex-start;gap:9px;background:#f8fbff}.pos-info>i{color:var(--primary);margin-top:2px}.pos-info strong,.pos-info span{display:block}.pos-info strong{font-size:.78rem}.pos-info span{font-size:.7rem;color:#7d899b;margin-top:2px;line-height:1.5}.install-help-warning{border-color:#edd9a3!important;background:#fffaf0!important}.install-sheet-primary:disabled{opacity:.7;cursor:not-allowed}
 @media(max-width:700px){.document-settings-grid{grid-template-columns:1fr}.pricing-policy-fields{grid-template-columns:1fr}.pos-heading-row .secondary-btn{flex:0 0 auto}}
+
+
+
+/* Login screen: footer stays in the viewport; the login card centers in the remaining space. */
+body:has(main.login-screen-shell){
+  height:100dvh!important;
+  min-height:100dvh!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+}
+body:has(main.login-screen-shell) .guest-main{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  margin:0!important;
+  padding:0 8px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+}
+main.login-screen-shell .guest-content{
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+}
+main.login-screen-shell .auth-page.login-page{
+  min-height:0!important;
+  height:auto!important;
+  margin:0!important;
+  padding:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+main.login-screen-shell .login-page .login-card{
+  margin:0!important;
+}
+/* Restore the programming footer's original internal padding and keep it fixed in the flex viewport. */
+body:has(main.login-screen-shell) .app-footer{
+  flex:0 0 auto!important;
+  margin:0!important;
+  padding:38px 16px calc(28px + env(safe-area-inset-bottom, 0px))!important;
+}

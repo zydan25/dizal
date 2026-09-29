@@ -88,8 +88,8 @@ def create_app(config_object=None):
     def web_manifest():
         return Response(
             """{
-  "name": "Dizal - إدارة توزيع الديزل",
-  "short_name": "Dizal",
+  "name": "ديزل",
+  "short_name": "ديزل",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "/",
