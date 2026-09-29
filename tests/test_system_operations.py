@@ -72,15 +72,17 @@ def test_reset_clears_operational_data_but_preserves_manager():
         db.session.add(Cashbox(name="صندوق الموظف",box_type="employee",owner_user_id=employee.id,is_active=True))
         farmer=Farmer(code="F-000001",name="مزارع اختبار",phone="700000001",quota_drums=5,credit_limit_drums=5,assigned_employee_id=employee.id,created_by_id=employee.id,status="approved")
         db.session.add(farmer);db.session.commit()
+        employee_id=employee.id
+        manager_id=manager.id
         from app.services.system_admin import reset_project_data
         reset_project_data()
         db.session.commit()
         db.session.expire_all()
-        assert User.query.filter_by(username="manager").one().id==manager.id
+        assert User.query.filter_by(username="manager").one().id==manager_id
         assert User.query.filter_by(username="employee").first() is None
         assert Farmer.query.count()==0
-        assert EmployeeProfile.query.filter_by(user_id=employee.id).first() is None
-        assert Cashbox.query.filter_by(box_type="employee",owner_user_id=employee.id).first() is None
+        assert EmployeeProfile.query.filter_by(user_id=employee_id).first() is None
+        assert Cashbox.query.filter_by(box_type="employee",owner_user_id=employee_id).first() is None
         assert Cashbox.query.filter_by(box_type="central",is_active=True).first() is not None
         assert ProjectSettings.query.count()==1
         assert settings.id==ProjectSettings.get().id
