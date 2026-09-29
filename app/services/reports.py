@@ -45,6 +45,56 @@ def employee_performance():
         rows.append({"employee":employee,"sales":Decimal(str(sales)),"cogs":Decimal(str(cogs)),"profit":Decimal(str(sales))-Decimal(str(cogs)),"cashbox_balance":balance(box.id) if box else Decimal("0"),"farmer_count":farmer_count})
     return rows
 
+
+def employee_finance_summary(employee,operations=None):
+    from ..models import CapitalAllocation,FuelDispense,FuelPurchase
+    from ..models import ProjectSettings
+    if operations is None:
+        operations=employee_operations(employee.id)
+    profile=employee.employee_profile
+    if profile:
+        salary_type=profile.salary_type or "fixed"
+        value=Decimal(str(profile.salary_value or 0))
+    else:
+        salary_type="fixed"; value=Decimal("0")
+    gross_profit=Decimal(str(operations["sales"]))-sum((Decimal(str(row.cost_amount or 0)) for row in operations["dispenses"] if row.status=="approved"),Decimal("0"))
+    if salary_type=="per_liter":
+        commission=Decimal(str(operations["liters"]))*value
+        commission_label=f"{value} {ProjectSettings.get().currency}/لتر"
+    elif salary_type=="per_drum":
+        commission=Decimal(str(operations["drums"]))*value
+        commission_label=f"{value} {ProjectSettings.get().currency}/دبة"
+    elif salary_type in {"percent_profit","commission"}:
+        commission=max(gross_profit,Decimal("0"))*value/Decimal("100")
+        commission_label=f"{value}% من الربح"
+    else:
+        commission=value
+        commission_label=f"راتب ثابت {value}"
+    capital=db.session.query(func.coalesce(func.sum(CapitalAllocation.amount),0)).filter(CapitalAllocation.employee_id==employee.id).scalar() or 0
+    purchases_cost=sum((Decimal(str(row.landed_cost or 0)) for row in operations["supplies"] if row.status=="approved"),Decimal("0"))
+    settings=ProjectSettings.get()
+    stock=current_stock_liters()
+    sale_price=Decimal(str(settings.default_sale_price_per_liter or 0))
+    forecast_sales=stock*sale_price
+    return {
+        "capital_delivered":Decimal(str(capital)),
+        "cashbox_balance":balance(Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first().id) if Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first() else Decimal("0"),
+        "gross_profit":gross_profit,
+        "employee_commission":commission,
+        "project_profit_estimate":max(gross_profit-commission,Decimal("0")),
+        "commission_label":commission_label,
+        "salary_type":salary_type,
+        "salary_value":value,
+        "purchased_cost":purchases_cost,
+        "stock_liters":stock,
+        "stock_drums":stock/Decimal(str(settings.drum_liters)),
+        "sold_liters":Decimal(str(operations["liters"])),
+        "sold_drums":Decimal(str(operations["drums"])),
+        "forecast_sales_value":forecast_sales,
+        "forecast_gross_profit":max(forecast_sales-(stock*Decimal(str(operations["sales"])/operations["liters"]) if operations["liters"] else 0),Decimal("0")),
+        "note":"رأس المال المُسلَّم ليس بالضرورة نقدًا متبقيًا؛ قد يتحول إلى مخزون أو مشتريات. حصة المشروع هنا تقديرية قبل المصروفات الأخرى.",
+    }
+
 def inventory_commitment():
     committed=db.session.query(func.coalesce(func.sum(Farmer.quota_drums),0)).filter(Farmer.status=="approved").scalar() or 0
     consumed=db.session.query(func.coalesce(func.sum(FuelDispense.drums),0)).filter(FuelDispense.status=="approved").scalar() or 0
