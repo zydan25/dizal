@@ -39,7 +39,7 @@
 {% endfor %}
 </div>
 <a class="sidebar-account" href="{{url_for('auth.account')}}"><i class="bi bi-person-circle"></i><span>حسابي وإعدادات الحساب</span></a>
-<form class="sidebar-logout" method="post" action="{{url_for('auth.logout')}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button><i class="bi bi-box-arrow-right"></i> تسجيل الخروج</button></form>
+<form class="sidebar-logout" method="post" action="{{url_for('auth.logout')}}" onsubmit="return confirm('هل أنت متأكد من تسجيل الخروج؟');"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button type="submit"><i class="bi bi-box-arrow-right"></i> تسجيل الخروج</button></form>
 <div class="sidebar-credit" aria-label="حقوق التصميم والبرمجة">
   <span class="credit-kicker">برمجة وتصميم</span>
   <strong><bdi>م. زيدان العطاب</bdi></strong>
