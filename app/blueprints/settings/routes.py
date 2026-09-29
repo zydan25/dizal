@@ -32,6 +32,7 @@ def index():
         settings.max_credit_drums_per_farmer=request.form.get("max_credit_drums_per_farmer") or settings.max_credit_drums_per_farmer
         settings.max_dispense_liters_per_day=request.form.get("max_dispense_liters_per_day") or settings.max_dispense_liters_per_day
         settings.default_sale_price_per_liter=request.form.get("default_sale_price_per_liter") or settings.default_sale_price_per_liter
+        settings.employee_can_change_sale_price=request.form.get("employee_can_change_sale_price")=="1"
         settings.primary_color=(request.form.get("primary_color") or settings.primary_color).strip()
         settings.secondary_color=(request.form.get("secondary_color") or settings.secondary_color).strip()
         settings.accent_color=(request.form.get("accent_color") or settings.accent_color).strip()
@@ -58,7 +59,7 @@ def index():
             settings.logo_path=save_image(logo,current_app.config["UPLOAD_FOLDER"],"branding")
         if signature and signature.filename:
             settings.manager_signature_path=save_image(signature,current_app.config["UPLOAD_FOLDER"],"branding")
-        audit("settings.updated","project_settings",settings.id,after={"project_name":settings.project_name,"currency":settings.currency,"primary_color":settings.primary_color})
+        audit("settings.updated","project_settings",settings.id,after={"project_name":settings.project_name,"currency":settings.currency,"primary_color":settings.primary_color,"employee_can_change_sale_price":settings.employee_can_change_sale_price})
         db.session.commit()
         flash("تم حفظ إعدادات المشروع والثيم والسندات.","success")
         return redirect(url_for("settings.index"))
@@ -103,10 +104,10 @@ def reset():
         flash("اكتب كلمة «تصفير» لتأكيد العملية.","danger")
         return redirect(url_for("settings.index"))
     try:
-        reset_project_data()
-        audit("system.reset","system",0,after={"preserved":"manager/settings/roles/permissions"})
+        reset_project_data(preserve_user_id=current_user.id)
+        audit("system.reset","system",0,after={"preserved_user_id":current_user.id,"preserved":"current_manager/settings/roles/permissions"})
         db.session.commit()
-        flash("تم تصفير بيانات المشروع وحذف حسابات الموظفين، مع إبقاء حساب المدير والإعدادات الأساسية.","success")
+        flash("تم تصفير بيانات التشغيل بالكامل مع إبقاء حساب المدير والإعدادات الأساسية.","success")
     except Exception as exc:
         db.session.rollback()
         flash("فشل التصفير ولم تكتمل العملية: "+str(exc),"danger")
