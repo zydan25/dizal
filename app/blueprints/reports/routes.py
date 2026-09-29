@@ -31,7 +31,8 @@ def _report_dates():
     if end<start: abort(400,description="نهاية الفترة لا يمكن أن تسبق بدايتها.")
     return start,end
 
-@reports_bp.get("/sales")
+@reports_bp.get("/sales",endpoint="sales_report_view")
+@reports_bp.get("/sales",endpoint="sales_report")
 @permission_required("reports.view")
 def sales_report_view():
     start,end=_report_dates()
