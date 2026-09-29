@@ -1,8 +1,8 @@
 {
-  "id": "/",
+  "id": "/dashboard/",
   "name": "Dizal - إدارة توزيع الديزل",
   "short_name": "Dizal",
-  "start_url": "/",
+  "start_url": "/dashboard/",
   "scope": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone"],
