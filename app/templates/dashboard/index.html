@@ -126,7 +126,7 @@
   </section>
 </div>
 
-{% else %}
+{% if not manager %}
 <div class="section-title"><h2>إجراءاتك</h2><span>بدون ازدحام</span></div>
 <div class="quick-grid dashboard-shortcuts">
   <a class="quick-card quick-primary" href="{{url_for('farmers.index')}}"><i class="bi bi-people-fill"></i><strong>المزارعون</strong></a>
