@@ -76,25 +76,13 @@ def create_app(config_object=None):
 
     @app.get("/")
     def root():
-        # The manifest start_url is the origin root, so serve it as a real 200
-        # document like Alkas. Authenticated users get the dashboard directly.
+        # The manifest start_url is the origin root and must be a real 200
+        # document. Authenticated users see the dashboard; guests see the
+        # normal styled Dizal login screen instead of a plain fallback page.
         if current_user.is_authenticated:
             from .blueprints.dashboard.routes import index as dashboard_index
             return dashboard_index()
-        return Response("""<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Dizal - إدارة توزيع الديزل</title>
-</head>
-<body>
-<main>
-<h1>Dizal - إدارة توزيع الديزل</h1>
-<a href="/auth/login">تسجيل الدخول</a>
-</main>
-</body>
-</html>""",mimetype="text/html")
+        return render_template("auth/login.html")
 
     @app.get("/manifest.webmanifest")
     def web_manifest():
