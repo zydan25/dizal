@@ -117,15 +117,12 @@ def employee_compensation(employee,start=None,end=None):
     settings=ProjectSettings.get()
     salary_type=(profile.salary_type if profile else "fixed") or "fixed"
     value=_decimal(profile.salary_value if profile else 0)
-    if totals["commission_earned"]>ZERO:
-        earned=totals["commission_earned"]
-        label="عمولة/استحقاق مثبت بقيمة كل عملية"
-    elif salary_type=="fixed":
+    if salary_type=="fixed":
         earned=value
         label=compensation_label(salary_type,value,settings.currency)
     else:
-        earned=ZERO
-        label=compensation_label(salary_type,value,settings.currency)
+        earned=totals["commission_earned"]
+        label="عمولة/استحقاق مثبت بقيمة كل عملية"
     result={
         "salary_type":salary_type,
         "salary_value":value,
