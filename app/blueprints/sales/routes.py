@@ -36,7 +36,13 @@ def dispense():
         try:
             farmer=Farmer.query.get_or_404(int(request.form["farmer_id"]))
             employee=selected_employee(farmer)
-            tank=FuelTank.query.get_or_404(int(request.form["tank_id"]))
+            tank_id=request.form.get("tank_id")
+            if tank_id:
+                tank=FuelTank.query.get_or_404(int(tank_id))
+            else:
+                tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).first()
+                if not tank:
+                    raise ValueError("لا يوجد خزان فعال.")
             settings=ProjectSettings.get()
             if current_user.has_role("manager") or settings.allow_employee_sale_price_override:
                 price=request.form.get("sale_price_per_liter") or settings.default_sale_price_per_liter
