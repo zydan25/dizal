@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="{{project_settings.project_name}}">
-<link rel="manifest" href="{{url_for('web_manifest',v='20260929-pwa2')}}">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="{{url_for('static',filename='icons/dizal.svg',v='20260930-2')}}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +20,6 @@
 <title>{{project_settings.project_name}} | Dizal</title>
 </head>
 <body data-currency="{{project_settings.currency}}" data-drum-liters="{{project_settings.drum_liters|clean_number}}">
-<div class="offline-banner" id="offline-banner" hidden><i class="bi bi-wifi-off"></i><span>لا يوجد اتصال بالإنترنت. يمكنك تصفح الصفحات المحفوظة، وسيتم منع عمليات الحفظ حتى يعود الاتصال.</span></div>
 {% if current_user.is_authenticated %}
 <div class="app-shell">
 <aside class="sidebar" id="sidebar">
