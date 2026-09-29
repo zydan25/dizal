@@ -68,8 +68,9 @@ def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amou
     db.session.add(FuelStockMovement(tank_id=tank_id,direction="OUT",movement_type="dispense",liters=liters,unit_cost=(cost_amount/liters if liters else 0),source_type="fuel_dispense",source_id=str(row.id),document_id=document.id,created_by_id=employee.id))
     from .compensation import apply_employee_compensation_snapshot
     apply_employee_compensation_snapshot(row,employee.employee_profile)
-    from .accounting import post_sale
+    from .accounting import post_sale,post_commission_accrual
     post_sale(row,employee.id)
+    post_commission_accrual(row,employee.id)
     if paid>0:
         cashbox=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
         if not cashbox: raise ValueError("لا يوجد صندوق فعال للموظف.")
@@ -107,8 +108,9 @@ def create_general_sale(employee,tank_id,drums,sale_price_per_liter,customer_nam
     ))
     from .compensation import apply_employee_compensation_snapshot
     apply_employee_compensation_snapshot(row,employee.employee_profile)
-    from .accounting import post_sale
+    from .accounting import post_sale,post_commission_accrual
     post_sale(row,employee.id)
+    post_commission_accrual(row,employee.id)
     cashbox=Cashbox.query.filter_by(owner_user_id=employee.id,box_type="employee",is_active=True).first()
     if not cashbox:
         raise ValueError("لا يوجد صندوق فعال للموظف.")
