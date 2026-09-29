@@ -7,7 +7,7 @@
 <div class="login-kicker">DIZAL</div>
 <h1>مرحبًا بك</h1>
 <p>الدخول إلى نظام إدارة توزيع الديزل</p>
-<form method="post" class="mobile-form">
+<form method="post" action="{{ url_for('auth.login') }}" class="mobile-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>رقم الهاتف أو اسم المستخدم<input name="identifier" autocomplete="username" required></label>
 <label>كلمة المرور
