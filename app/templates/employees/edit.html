@@ -5,6 +5,11 @@
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>الاسم<input name="display_name" value="{{employee.display_name}}" required></label>
 <div class="two-col"><label>الهاتف<input name="phone" value="{{employee.phone or ''}}"></label><label>البريد<input name="email" value="{{employee.email or ''}}" type="email"></label></div>
+<label>دور الحساب
+<select name="role" required>
+{% for role in roles %}<option value="{{role.name}}" {% if (employee.has_role("manager") and role.name=="manager") or (not employee.has_role("manager") and role.name=="employee") %}selected{% endif %}>{{role.label or role.name}}{% if role.name=="manager" %} · صلاحية مدير كاملة{% endif %}</option>{% endfor %}
+</select>
+<small class="field-help">يمكن للمدير نقل الحساب بين دور الموظف ودور المدير. لا يمكنك إزالة دور المدير من حسابك الحالي.</small></label>
 <label class="check-row"><input type="checkbox" name="active" value="1" {% if employee.active %}checked{% endif %}> الحساب فعال</label>
 {% if profile %}
 <div class="section-title"><h2>التشغيل</h2><span>Overrides</span></div>
