@@ -1,7 +1,6 @@
-// ALKAS PWA service worker is intentionally disabled.
-// Previous versions cached HTML/assets and could leave stale booking screens.
-// Keep this file as a self-cleaning worker so installations from old releases
-// remove themselves safely.
+// Dizal PWA service worker is intentionally disabled.
+// Previous versions cached HTML/assets and could leave stale pages.
+// Keep this file as a self-cleaning worker so old registrations remove themselves safely.
 self.addEventListener("install", event => {
   event.waitUntil(self.skipWaiting());
 });
