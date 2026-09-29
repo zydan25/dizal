@@ -173,3 +173,88 @@ def test_pos_page_renders_with_default_tank_and_price_policy():
         db.session.commit()
     employee_page=employee_client.get("/sales/point-of-sale")
     assert 'readonly' not in employee_page.get_data(as_text=True)
+
+
+def test_clean_pwa_manifest_is_install_only():
+    app = create_app({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite://",
+        "WTF_CSRF_ENABLED": False,
+        "SECRET_KEY": "test",
+        "SECURITY_PASSWORD_SALT": "test",
+    })
+    client = app.test_client()
+    response = client.get("/manifest.webmanifest")
+
+    assert response.status_code == 200
+    assert "manifest+json" in (response.headers.get("Content-Type") or "")
+    assert response.headers.get("Cache-Control") == "no-cache, no-store, must-revalidate"
+
+    manifest = response.get_json()
+    assert manifest["id"] == "/"
+    assert manifest["start_url"] == "/"
+    assert manifest["scope"] == "/"
+    assert manifest["display"] == "standalone"
+    assert manifest["prefer_related_applications"] is False
+    assert manifest["icons"] == [{
+        "src": "/static/icons/dizal.svg",
+        "sizes": "any",
+        "type": "image/svg+xml",
+        "purpose": "any",
+    }]
+
+
+def test_clean_pwa_has_no_service_worker_or_offline_bootstrap():
+    app = create_app({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite://",
+        "WTF_CSRF_ENABLED": False,
+        "SECRET_KEY": "test",
+        "SECURITY_PASSWORD_SALT": "test",
+    })
+    client = app.test_client()
+    assert client.get("/sw.js").status_code == 404
+    assert client.get("/pwa/launch").status_code == 404
+
+
+def test_clean_pwa_install_client_has_one_prompt_and_no_service_worker():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    base = (root / "app/templates/base.html").read_text(encoding="utf-8")
+    js = (root / "app/static/js/app.js").read_text(encoding="utf-8")
+
+    assert base.count("data-install-app") == 1
+    assert "web_manifest" in base
+    assert "20260930-pwa1" in base
+    assert js.count("beforeinstallprompt") == 1
+    assert js.count(".prompt()") == 1
+    assert "navigator.serviceWorker" not in js
+    assert "caches." not in js
+    assert "offline.html" not in js
+
+
+def test_clean_pwa_original_logo_exists():
+    app = create_app({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite://",
+        "WTF_CSRF_ENABLED": False,
+        "SECRET_KEY": "test",
+        "SECURITY_PASSWORD_SALT": "test",
+    })
+    response = app.test_client().get("/static/icons/dizal.svg")
+
+    assert response.status_code == 200
+    assert "image/svg+xml" in (response.headers.get("Content-Type") or "")
+    assert b"<svg" in response.data
+    assert b"#1877F2" in response.data
+
+
+def test_clean_pwa_related_files_are_absent_from_repository():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    assert not (root / "app/static/sw.js").exists()
+    assert not (root / "app/static/offline.html").exists()
+    assert not (root / "app/static/icons/dizal-192.png").exists()
+    assert not (root / "app/static/icons/dizal-512.png").exists()
