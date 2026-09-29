@@ -187,7 +187,7 @@ def project_summary():
             "cogs":totals["cogs"],
             "liters":totals["liters"],
             "drums":totals["drums"],
-            "gross_profit":comp["gross_profit"],
+            "gross_profit":totals["sales"]-totals["cogs"],
             "commission_earned":totals["commission_earned"],
             "earned":earned,
             "salary_type":salary_type,
@@ -347,7 +347,7 @@ def employee_performance():
 
             "compensation_paid":paid,
             "compensation_outstanding":outstanding,
-            "net_contribution":totals["sales"]-totals["cogs"]-comp["earned"],
+            "net_contribution":totals["sales"]-totals["cogs"]-totals["commission_earned"],
             "commission_label":label,
             "salary_type":salary_type,
             "cashbox_balance":balance(box.id) if box else ZERO,
