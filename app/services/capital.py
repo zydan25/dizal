@@ -1,7 +1,7 @@
-from decimal import Decimal
+from decimal import Decimal,InvalidOperation
 from ..extensions import db
-from ..models import CapitalContribution,CapitalAllocation,Cashbox
-from .cashbox import post_transaction
+from ..models import CapitalContribution,CapitalAllocation,Cashbox,CashboxTransaction,Document,JournalEntry,JournalLine,Account
+from .cashbox import post_transaction,balance
 from .documents import create_document
 
 def central_cashbox():
@@ -25,6 +25,93 @@ def add_capital(amount,source,created_by_id,notes=None):
     from .accounting import post_capital
     post_capital(row,created_by_id)
     return row
+
+def update_capital_amount(contribution,new_amount,actor_id):
+    try:
+        new_amount=Decimal(str(new_amount))
+    except (InvalidOperation,ValueError,TypeError):
+        raise ValueError("مبلغ رأس المال غير صالح.")
+    if new_amount<=0:
+        raise ValueError("رأس المال يجب أن يكون أكبر من صفر.")
+
+    if contribution.status=="reversed" or (contribution.document and contribution.document.status=="reversed"):
+        raise ValueError("لا يمكن تعديل رأس مال معكوس.")
+    if contribution.document is None or contribution.document.status!="approved":
+        raise ValueError("لا يمكن تعديل إلا رأس المال المرتبط بسند معتمد.")
+    if contribution.cashbox_id is None:
+        raise ValueError("عملية رأس المال لا ترتبط بصندوق صالح.")
+
+    box=Cashbox.query.get(contribution.cashbox_id)
+    if not box or box.box_type!="central":
+        raise ValueError("رأس المال يجب أن يكون مثبتًا في الصندوق الرئيسي.")
+
+    old_amount=Decimal(str(contribution.amount))
+    if new_amount==old_amount:
+        return contribution
+
+    cash_rows=(
+        CashboxTransaction.query
+        .filter_by(document_id=contribution.document_id,transaction_type="capital_contribution")
+        .all()
+    )
+    if len(cash_rows)!=1:
+        raise ValueError("تعذر تعديل رأس المال لأن حركة الصندوق المرتبطة بالسند غير سليمة.")
+    cash_row=cash_rows[0]
+    if cash_row.cashbox_id!=box.id or cash_row.direction!="IN":
+        raise ValueError("حركة رأس المال لا تطابق الصندوق الرئيسي أو اتجاهها غير صحيح.")
+    if Decimal(str(cash_row.amount))!=old_amount:
+        raise ValueError("مبلغ حركة الصندوق لا يطابق مبلغ رأس المال الحالي.")
+
+    entries=(
+        JournalEntry.query
+        .filter_by(document_id=contribution.document_id,source_type="capital",source_id=str(contribution.id))
+        .all()
+    )
+    if len(entries)!=1:
+        raise ValueError("تعذر تعديل رأس المال لأن القيد المحاسبي المرتبط بالسند غير سليم.")
+    entry=entries[0]
+    lines=JournalLine.query.filter_by(journal_entry_id=entry.id).all()
+    if len(lines)!=2:
+        raise ValueError("القيد المحاسبي لرأس المال يجب أن يتكون من طرفين فقط.")
+
+    account_1100=Account.query.filter_by(code="1100").first()
+    account_3000=Account.query.filter_by(code="3000").first()
+    if not account_1100 or not account_3000:
+        raise ValueError("الحسابات المحاسبية الأساسية لرأس المال غير مكتملة.")
+
+    debit_line=next((line for line in lines if line.account_id==account_1100.id and Decimal(str(line.debit))==old_amount and Decimal(str(line.credit or 0))==0),None)
+    credit_line=next((line for line in lines if line.account_id==account_3000.id and Decimal(str(line.credit))==old_amount and Decimal(str(line.debit or 0))==0),None)
+    if not debit_line or not credit_line:
+        raise ValueError("القيد المحاسبي لا يطابق مبلغ رأس المال الحالي.")
+
+    allocated=(
+        db.session.query(db.func.coalesce(db.func.sum(CapitalAllocation.amount),0))
+        .join(Document,CapitalAllocation.document_id==Document.id)
+        .filter(Document.status!="reversed")
+        .scalar() or 0
+    )
+    allocated=Decimal(str(allocated))
+    total_contributed=(
+        db.session.query(db.func.coalesce(db.func.sum(CapitalContribution.amount),0))
+        .filter(CapitalContribution.status=="approved")
+        .scalar() or 0
+    )
+    total_contributed=Decimal(str(total_contributed))
+    projected_total=total_contributed-old_amount+new_amount
+    if projected_total < allocated:
+        raise ValueError("لا يمكن خفض رأس المال عن إجمالي المبالغ التي تم تسليمها للموظفين.")
+
+    current_balance=Decimal(str(balance(box.id)))
+    projected_balance=current_balance-old_amount+new_amount
+    if projected_balance<0:
+        raise ValueError("لا يمكن خفض رأس المال لأن الصندوق الرئيسي لا يملك رصيدًا كافيًا بعد التعديل.")
+
+    cash_row.amount=new_amount
+    debit_line.debit=new_amount
+    credit_line.credit=new_amount
+    contribution.amount=new_amount
+    db.session.flush()
+    return contribution
 
 def allocate_to_employee(employee,amount,created_by_id,notes=None):
     amount=Decimal(str(amount))
