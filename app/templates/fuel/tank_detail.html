@@ -5,7 +5,7 @@
 <div class="stat-card"><div><small>إجمالي الداخل</small><strong>{{((stats.inbound|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{stats.inbound|clean_number}} لتر</span></div></div>
 <div class="stat-card"><div><small>إجمالي المصروف</small><strong>{{((stats.outbound|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{stats.outbound|clean_number}} لتر</span></div></div>
 <div class="stat-card"><div><small>المتبقي</small><strong>{{((stats.stock|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{stats.stock|clean_number}} لتر</span></div></div>
-<div class="stat-card"><div><small>السعة</small><strong>{{((tank.capacity_liters / (project_settings.drum_liters|float))|round(1)) if tank.capacity_liters else "—"}}</strong><span>دبة · {{(tank.capacity_liters or 0)|clean_number}} لتر</span></div></div>
+<div class="stat-card"><div><small>السعة</small><strong>{{(((tank.capacity_liters|float) / (project_settings.drum_liters|float))|round(1)) if tank.capacity_liters else "—"}}</strong><span>دبة · {{(tank.capacity_liters or 0)|clean_number}} لتر</span></div></div>
 </div>
 <div class="info-card mt-3"><div class="detail-line"><strong>الملاحظات</strong><span>{{tank.notes or "لا توجد ملاحظات"}}</span></div></div>
 <div class="section-title"><h2>آخر التوريدات</h2><span>{{purchases|length}} عملية</span></div>
