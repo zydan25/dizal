@@ -4,7 +4,8 @@
   <div class="page-heading"><h1>رأس المال</h1><p>الإضافة والتسليم والحركات مع تقرير الفترة، مع بقاء التصحيح المالي عبر عكس السند.</p></div>
   <div class="header-actions">
     {% if current_user.has_role("manager") %}
-    <button class="primary-btn" type="button" data-bs-toggle="modal" data-bs-target="#capitalAdd"><i class="bi bi-plus-lg"></i><span>إضافة رأس مال</span></button>
+    <button class="primary-btn" type="button" data-bs-toggle="modal" data-bs-target="#capitalAdd"><i class="bi bi-plus-lg"></i><span>إضافة نقد</span></button>
+    <button class="secondary-btn" type="button" data-bs-toggle="modal" data-bs-target="#capitalAssetAdd"><i class="bi bi-building-add"></i><span>إضافة أصل كرأس مال</span></button>
     <button class="secondary-btn" type="button" data-bs-toggle="modal" data-bs-target="#capitalAllocate"><i class="bi bi-send"></i><span>تسليم لموظف</span></button>
     {% endif %}
     <a class="secondary-btn" href="{{url_for('capital.report',period=period)}}"><i class="bi bi-printer"></i><span>تقرير وطباعة</span></a>
@@ -33,7 +34,7 @@
 {% for row in contributions %}
 <div class="entity-row finance-transaction capital-item" data-search="{{(row.source or '') ~ ' رأس مال ' ~ (row.document.number if row.document else '') ~ ' ' ~ (row.amount|string)|lower}}">
   <div class="avatar finance-in"><i class="bi bi-bank"></i></div>
-  <div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number if row.document else "CAP"}}</a> · إضافة رأس مال</strong><span>{{row.source or "بدون مصدر"}}</span><small>{{row.contribution_date}} · {{row.status}}</small></div>
+  <div class="entity-main"><strong><a href="{{url_for('documents.view',document_id=row.document_id)}}">{{row.document.number if row.document else "CAP"}}</a> · {% if row.contribution_type=="asset" %}إضافة أصل كرأس مال{% else %}إضافة رأس مال نقدي{% endif %}</strong><span>{% if row.asset %}<a href="{{url_for('assets.detail',asset_id=row.asset.id)}}">{{row.asset.name}}</a> · {% endif %}{{row.source or "بدون مصدر"}}</span><small>{{row.contribution_date}} · {{row.status}}</small></div>
   <div class="money-value">{{row.amount|clean_number}}</div>
   <div class="entity-actions">
     {% if current_user.has_role("manager") %}<a class="small-icon-btn" href="{{url_for('capital.edit_contribution',contribution_id=row.id)}}" title="تعديل البيانات" aria-label="تعديل البيانات"><i class="bi bi-pencil-square"></i></a>{% endif %}
@@ -61,6 +62,17 @@
 <form method="post" action="{{url_for('capital.add')}}" class="mobile-form card-form"><div class="modal-body"><input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>المبلغ<input name="amount" type="number" step="0.001" min="0.001" required></label><label>المصدر<input name="source" placeholder="رأس مال المستثمر"></label><label>البيان<textarea name="notes" rows="2"></textarea></label>
 </div><div class="modal-footer"><button type="button" class="secondary-btn" data-bs-dismiss="modal">إلغاء</button><button class="primary-btn submit-loading" type="submit" data-loading-text="جارٍ تسجيل رأس المال…"><i class="bi bi-check2"></i><span>تسجيل</span></button></div></form>
+</div></div></div>
+<div class="modal fade" id="capitalAssetAdd" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+<div class="modal-header"><h5 class="modal-title">إضافة أصل كرأس مال</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button></div>
+<form method="post" action="{{url_for('capital.add_asset_capital')}}" class="mobile-form card-form"><div class="modal-body"><input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<label>اسم الأصل<input name="name" required placeholder="مثال: سيارة أو مولد"></label>
+<div class="two-col"><label>الفئة<select name="category"><option value="أصل ثابت">أصل ثابت</option><option value="مضخة / معدة">مضخة / معدة</option><option value="خزان ديزل">خزان ديزل</option></select></label><label>القيمة<input name="amount" type="number" step="0.001" min="0.001" required></label></div>
+<div class="two-col"><label>تاريخ الإضافة<input name="contribution_date" type="date" value="{{today}}" required></label><label>المصدر/المالك<input name="source" placeholder="مساهمة المالك"></label></div>
+<div class="two-col"><label>المسؤول<select name="custodian_user_id"><option value="">بدون</option>{% for e in employees_for_capital %}<option value="{{e.id}}">{{e.display_name}}</option>{% endfor %}</select></label><label>الموقع<input name="location"></label></div>
+<label>البيان<textarea name="notes" rows="2"></textarea></label>
+<div class="info-card"><i class="bi bi-shield-check"></i><span>لن تُسجل أي حركة نقدية. سيُثبت الأصل مدينًا في الأصول الثابتة، ويُثبت رأس المال دائنًا بالقيمة نفسها.</span></div>
+</div><div class="modal-footer"><button type="button" class="secondary-btn" data-bs-dismiss="modal">إلغاء</button><button class="primary-btn submit-loading" type="submit" data-loading-text="جارٍ تسجيل الأصل كرأس مال…"><i class="bi bi-check2"></i><span>تسجيل الأصل</span></button></div></form>
 </div></div></div>
 <div class="modal fade" id="capitalAllocate" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
 <div class="modal-header"><h5 class="modal-title">تسليم رأس مال للموظف</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button></div>
