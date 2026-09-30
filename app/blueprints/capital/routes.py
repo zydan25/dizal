@@ -132,6 +132,7 @@ def edit_contribution(contribution_id):
                 asset.name=(request.form.get("asset_name") or asset.name).strip()
                 asset.category=(request.form.get("asset_category") or asset.category).strip()
                 asset.acquisition_date=date.fromisoformat(request.form.get("contribution_date") or asset.acquisition_date.isoformat())
+                row.contribution_date=asset.acquisition_date
                 asset.custodian_user_id=int(request.form["custodian_user_id"]) if request.form.get("custodian_user_id") else None
                 asset.location=(request.form.get("location") or "").strip() or None
                 asset.notes=row.notes
