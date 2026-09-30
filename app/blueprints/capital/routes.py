@@ -4,9 +4,9 @@ from flask_security import current_user
 from sqlalchemy import func
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import CapitalAllocation,CapitalContribution,Cashbox,Document,User
+from ...models import Asset,CapitalAllocation,CapitalContribution,Cashbox,CashboxTransaction,Document,JournalEntry,User
 from ...services.audit import audit
-from ...services.capital import add_capital,allocate_to_employee,central_cashbox
+from ...services.capital import add_capital,add_capital_asset,allocate_to_employee,central_cashbox,update_capital_asset_contribution
 from ...services.cashbox import balance
 from . import capital_bp
 
@@ -76,6 +76,29 @@ def add():
         db.session.rollback();flash(str(exc),"danger")
     return redirect(url_for("capital.index"))
 
+@capital_bp.post("/add-asset")
+@permission_required("capital.create")
+def add_asset_capital():
+    try:
+        contribution_date=date.fromisoformat(request.form.get("contribution_date") or date.today().isoformat())
+        row=add_capital_asset(
+            name=(request.form.get("name") or "").strip(),
+            category=(request.form.get("category") or "أصل ثابت").strip(),
+            cost=request.form.get("amount"),
+            contribution_date=contribution_date,
+            source=(request.form.get("source") or "").strip() or None,
+            created_by_id=current_user.id,
+            custodian_user_id=int(request.form["custodian_user_id"]) if request.form.get("custodian_user_id") else None,
+            location=(request.form.get("location") or "").strip() or None,
+            notes=(request.form.get("notes") or "").strip() or None,
+        )
+        audit("capital.asset_added","capital_contribution",row.id,after={"amount":str(row.amount),"asset_id":row.asset_id,"document_id":row.document_id})
+        db.session.commit()
+        flash("تم تسجيل الأصل كمساهمة في رأس المال دون حركة نقدية، وإنشاء القيد المحاسبي المقابل.","success")
+    except (ValueError,TypeError) as exc:
+        db.session.rollback();flash(str(exc),"danger")
+    return redirect(url_for("capital.index"))
+
 @capital_bp.post("/allocate")
 @permission_required("capital.allocate")
 def allocate():
@@ -96,14 +119,33 @@ def edit_contribution(contribution_id):
         flash("لا يمكن تعديل عملية رأس مال معكوسة.","danger")
         return redirect(url_for("capital.index"))
     if request.method=="POST":
-        before={"source":row.source,"notes":row.notes}
-        row.source=(request.form.get("source") or "").strip() or None
-        row.notes=(request.form.get("notes") or "").strip() or None
-        audit("capital.contribution.updated","capital_contribution",row.id,before=before,after={"source":row.source,"notes":row.notes})
-        db.session.commit()
-        flash("تم تحديث بيانات رأس المال. لتصحيح المبلغ استخدم عكس السند.","success")
-        return redirect(url_for("capital.index"))
-    return render_template("capital/edit_contribution.html",row=row)
+        before={"source":row.source,"notes":row.notes,"amount":str(row.amount),"contribution_type":row.contribution_type,"asset_id":row.asset_id}
+        try:
+            row.source=(request.form.get("source") or "").strip() or None
+            row.notes=(request.form.get("notes") or "").strip() or None
+            if row.contribution_type=="asset":
+                new_cost=(request.form.get("amount") or "").strip()
+                if not new_cost:
+                    raise ValueError("قيمة الأصل مطلوبة.")
+                old_cost,new_cost=update_capital_asset_contribution(row,new_cost,current_user.id)
+                asset=row.asset
+                asset.name=(request.form.get("asset_name") or asset.name).strip()
+                asset.category=(request.form.get("asset_category") or asset.category).strip()
+                asset.acquisition_date=date.fromisoformat(request.form.get("contribution_date") or asset.acquisition_date.isoformat())
+                asset.custodian_user_id=int(request.form["custodian_user_id"]) if request.form.get("custodian_user_id") else None
+                asset.location=(request.form.get("location") or "").strip() or None
+                asset.notes=row.notes
+                audit("capital.asset_contribution.updated","capital_contribution",row.id,before=before,after={"amount":str(new_cost),"asset_id":row.asset_id,"asset_name":asset.name})
+                db.session.commit()
+                flash("تم تحديث قيمة الأصل المساهم به والأصل نفسه وقيد رأس المال معًا.","success")
+            else:
+                audit("capital.contribution.updated","capital_contribution",row.id,before=before,after={"source":row.source,"notes":row.notes})
+                db.session.commit()
+                flash("تم تحديث بيانات رأس المال.","success")
+            return redirect(url_for("capital.index"))
+        except (ValueError,TypeError) as exc:
+            db.session.rollback();flash(str(exc),"danger")
+    return render_template("capital/edit_contribution.html",row=row,asset=row.asset)
 
 @capital_bp.route("/allocation/<int:allocation_id>/edit",methods=["GET","POST"])
 @permission_required("capital.allocate")
