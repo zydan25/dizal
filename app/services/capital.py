@@ -1,4 +1,5 @@
 from decimal import Decimal,InvalidOperation
+from sqlalchemy import func
 from ..extensions import db
 from ..models import CapitalContribution,CapitalAllocation,Cashbox,CashboxTransaction,Document,JournalEntry,JournalLine,Account
 from .cashbox import post_transaction,balance
@@ -85,14 +86,14 @@ def update_capital_amount(contribution,new_amount,actor_id):
         raise ValueError("القيد المحاسبي لا يطابق مبلغ رأس المال الحالي.")
 
     allocated=(
-        db.session.query(db.func.coalesce(db.func.sum(CapitalAllocation.amount),0))
+        db.session.query(func.coalesce(func.sum(CapitalAllocation.amount),0))
         .join(Document,CapitalAllocation.document_id==Document.id)
         .filter(Document.status!="reversed")
         .scalar() or 0
     )
     allocated=Decimal(str(allocated))
     total_contributed=(
-        db.session.query(db.func.coalesce(db.func.sum(CapitalContribution.amount),0))
+        db.session.query(func.coalesce(func.sum(CapitalContribution.amount),0))
         .filter(CapitalContribution.status=="approved")
         .scalar() or 0
     )
