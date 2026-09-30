@@ -1,6 +1,6 @@
 from decimal import Decimal
 from ..extensions import db
-from ..models import Asset,CapitalContribution,CapitalAllocation,Cashbox
+from ..models import CapitalContribution,CapitalAllocation,Cashbox
 from .cashbox import post_transaction
 from .documents import create_document
 
@@ -42,86 +42,3 @@ def allocate_to_employee(employee,amount,created_by_id,notes=None):
     from .accounting import post_employee_transfer
     post_employee_transfer(row,created_by_id)
     return row
-
-
-def add_capital_asset(name,category,cost,contribution_date,source,created_by_id,custodian_user_id=None,location=None,notes=None):
-    from datetime import date
-
-    amount=Decimal(str(cost))
-    if amount<=0:
-        raise ValueError("قيمة الأصل المساهم به يجب أن تكون أكبر من صفر.")
-    document=create_document(
-        "CAP",
-        "إثبات أصل كرأس مال",
-        created_by_id,
-        source_type="capital_asset",
-    )
-    code=f"AST-{Asset.query.count()+1:06d}"
-    while Asset.query.filter_by(asset_code=code).first():
-        code=f"AST-{Asset.query.count()+1:06d}"
-    asset=Asset(
-        asset_code=code,
-        name=name,
-        category=category,
-        acquisition_cost=amount,
-        acquisition_date=contribution_date or date.today(),
-        payer_cashbox_id=None,
-        custodian_user_id=custodian_user_id,
-        location=location,
-        notes=notes,
-        document_id=document.id,
-    )
-    db.session.add(asset)
-    db.session.flush()
-    row=CapitalContribution(
-        contribution_date=contribution_date,
-        amount=amount,
-        source=source,
-        cashbox_id=None,
-        document_id=document.id,
-        created_by_id=created_by_id,
-        notes=notes,
-        status="approved",
-        contribution_type="asset",
-        asset_id=asset.id,
-    )
-    db.session.add(row)
-    db.session.flush()
-    document.source_id=str(row.id)
-    from .accounting import post_capital
-    post_capital(row,created_by_id)
-    return row
-
-
-def update_capital_asset_contribution(row,new_cost,actor_id):
-    from decimal import Decimal
-    from ..models import JournalEntry
-
-    if row.contribution_type != "asset" or not row.asset:
-        raise ValueError("هذه ليست مساهمة أصل في رأس المال.")
-    if row.status == "reversed" or not row.document or row.document.status != "approved":
-        raise ValueError("لا يمكن تعديل مساهمة أصل غير معتمدة أو معكوسة.")
-    amount=Decimal(str(new_cost or 0))
-    if amount<=0:
-        raise ValueError("قيمة الأصل يجب أن تكون أكبر من صفر.")
-    entries=JournalEntry.query.filter_by(
-        document_id=row.document_id,
-        source_type="capital",
-        source_id=str(row.id),
-    ).order_by(JournalEntry.id).with_for_update().all()
-    if len(entries)!=1:
-        raise ValueError("القيد الأصلي لمساهمة الأصل غير موجود أو غير فريد؛ لم يتم التعديل.")
-    entry=entries[0]
-    if len(entry.lines)!=2:
-        raise ValueError("القيد الأصلي لمساهمة الأصل غير قياسي؛ لم يتم التعديل.")
-    asset_line=next((line for line in entry.lines if line.account and line.account.code=="1300"),None)
-    capital_line=next((line for line in entry.lines if line.account and line.account.code=="3000"),None)
-    if not asset_line or not capital_line:
-        raise ValueError("لم يتم العثور على سطري الأصل ورأس المال في القيد الأصلي.")
-    old=Decimal(str(row.amount))
-    row.amount=amount
-    row.asset.acquisition_cost=amount
-    asset_line.debit=amount
-    capital_line.credit=amount
-    entry.description=f"إضافة أصل كرأس مال: {row.asset.name}"
-    return old,amount
