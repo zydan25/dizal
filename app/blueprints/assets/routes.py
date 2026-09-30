@@ -29,16 +29,9 @@ def detail(asset_id):
 @permission_required("assets.create")
 def edit(asset_id):
     asset=Asset.query.get_or_404(asset_id)
-    financial_editable=(
-        current_user.has_role("manager")
-        and asset.document is not None
-        and asset.document.status=="approved"
-        and CashboxTransaction.query.filter_by(
-            document_id=asset.document_id,
-            transaction_type="asset_purchase",
-            direction="OUT",
-        ).count()==1
-    )
+    # Show the financial field to managers; the service performs the strict
+    # document/transaction integrity checks when the value is actually saved.
+    financial_editable=current_user.has_role("manager")
     if request.method=="POST":
         before={
             "name":asset.name,
