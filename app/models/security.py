@@ -12,6 +12,9 @@ class User(db.Model, fsqla.FsUserMixin):
     __tablename__ = "user"
     username = db.Column(db.String(80), unique=True, nullable=True, index=True)
     phone = db.Column(db.String(32), unique=True, nullable=True, index=True)
+    # Email is optional in Dizal; phone/username are the primary employee identifiers.
+    # Override Flask-Security's default non-null email column to keep the model aligned with the database migration.
+    email = db.Column(db.String(255), unique=True, nullable=True)
     display_name = db.Column(db.String(160), nullable=True)
     locale = db.Column(db.String(10), nullable=False, default="ar")
     is_employee = db.Column(db.Boolean, nullable=False, default=False)
