@@ -4,7 +4,7 @@ from flask_login import current_user
 from sqlalchemy import func
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import Asset,Cashbox,CashboxTransaction,CapitalContribution,FuelTank,User
+from ...models import Asset,Cashbox,CapitalContribution,FuelTank,User
 from ...services.assets import create_asset,update_asset_cost
 from ...services.audit import audit
 from ...services.fuel import current_stock_liters
