@@ -9,7 +9,7 @@ AUDIT_ACTION_LABELS={
     "farmer.created":"إضافة مزارع","farmer.updated":"تعديل مزارع","farmer.document.deleted":"حذف مرفق مزارع","farmer.quota.changed":"تعديل سقف المزارع",
     "farmer.approve":"اعتماد مزارع","farmer.changes":"طلب استكمال المزارع","farmer.reject":"رفض مزارع","farmer.suspend":"إيقاف مزارع","farmer.activate":"تفعيل مزارع","farmer.delete":"أرشفة مزارع",
     "fuel.purchase.created":"إضافة توريد ديزل","fuel.purchase.reviewed":"مراجعة توريد ديزل","fuel.dispense.created":"صرف ديزل","general.sale.created":"بيع عام","farmer.payment.created":"تحصيل من مزارع",
-    "capital.added":"إضافة رأس مال","capital.allocated":"تسليم رأس مال لموظف","asset.created":"إضافة أصل","asset.updated":"تعديل أصل",
+    "capital.added":"إضافة رأس مال","capital.asset_added":"إضافة أصل كرأس مال","capital.asset_contribution.updated":"تعديل أصل مساهم في رأس المال","capital.allocated":"تسليم رأس مال لموظف","asset.created":"إضافة أصل","asset.updated":"تعديل أصل",
     "document.reversed":"عكس سند","employee.created":"إضافة موظف","employee.updated":"تعديل موظف","employee.deleted":"حذف موظف","employee.activated":"تفعيل موظف","employee.suspended":"تعطيل موظف","employee.password.reset":"تغيير كلمة مرور موظف","system.backup.created":"إنشاء نسخة احتياطية","system.reset":"تصفير النظام",
 }
 
