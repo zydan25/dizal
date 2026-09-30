@@ -44,7 +44,7 @@
 <a class="entity-card-main" href="{{url_for('fuel.tank_detail',tank_id=tank.id)}}">
   <div class="entity-card-head"><div class="avatar"><i class="bi bi-fuel-pump-fill"></i></div><div class="entity-main"><strong>{{tank.name}}</strong><span>{{tank.location or "بدون موقع"}} · {{tank.code}}</span></div><span class="status-chip {% if tank.is_active %}status-approved{% else %}status-suspended{% endif %}">{{"فعال" if tank.is_active else "متوقف"}}</span></div>
   <div class="entity-card-metrics">
-    <div><small>السعة</small><strong>{{((tank.capacity_liters / (project_settings.drum_liters|float))|round(1)) if tank.capacity_liters else "—"}}</strong><span>دبة · {{(tank.capacity_liters or 0)|clean_number}} لتر</span></div>
+    <div><small>السعة</small><strong>{{(((tank.capacity_liters|float) / (project_settings.drum_liters|float))|round(1)) if tank.capacity_liters else "—"}}</strong><span>دبة · {{(tank.capacity_liters or 0)|clean_number}} لتر</span></div>
     <div><small>المتبقي</small><strong>{{((s.stock|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{s.stock|clean_number}} لتر</span></div>
     <div><small>المصروف</small><strong>{{((s.outbound|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{s.outbound|clean_number}} لتر</span></div>
   </div>
