@@ -1,38 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row"><div class="page-heading"><h1>{% if row.contribution_type=="asset" %}تعديل أصل مساهم في رأس المال{% else %}تعديل رأس المال{% endif %}</h1><p>{% if row.contribution_type=="asset" %}تعديل الأصل وقيمته وقيد رأس المال المرتبط به في عملية واحدة، دون إنشاء حركة نقدية جديدة.{% else %}تعديل بيانات رأس المال النقدي.{% endif %}</p></div><a class="secondary-btn" href="{{url_for('capital.index')}}"><i class="bi bi-arrow-right"></i><span>رأس المال</span></a></div>
-<div class="info-card finance-edit-summary">
-<div class="detail-line"><strong>السند</strong><span>{{row.document.number if row.document else "CAP"}}</span></div>
-<div class="detail-line"><strong>النوع</strong><span>{% if row.contribution_type=="asset" %}أصل مساهم به{% else %}رأس مال نقدي{% endif %}</span></div>
-<div class="detail-line"><strong>القيمة الحالية</strong><span>{{row.amount|clean_number}} {{project_settings.currency}}</span></div>
-<div class="detail-line"><strong>التاريخ</strong><span>{{row.contribution_date}}</span></div>
-</div>
-<form method="post" class="mobile-form card-form">
-<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-{% if row.contribution_type=="asset" and asset %}
-<label>اسم الأصل<input name="asset_name" value="{{asset.name}}" required></label>
-<div class="two-col">
-<label>الفئة<select name="asset_category">
-<option value="أصل ثابت" {% if asset.category=="أصل ثابت" %}selected{% endif %}>أصل ثابت</option>
-<option value="مضخة / معدة" {% if asset.category=="مضخة / معدة" %}selected{% endif %}>مضخة / معدة</option>
-<option value="خزان ديزل" {% if asset.category=="خزان ديزل" %}selected{% endif %}>خزان ديزل</option>
-</select></label>
-<label>القيمة<input name="amount" type="number" step="0.001" min="0.001" value="{{asset.acquisition_cost}}" required></label>
-</div>
-<div class="two-col">
-<label>تاريخ الإضافة<input name="contribution_date" type="date" value="{{asset.acquisition_date}}" required></label>
-<label>المصدر/المالك<input name="source" value="{{row.source or ''}}"></label>
-</div>
-<div class="two-col">
-<label>المسؤول<select name="custodian_user_id"><option value="">بدون</option>{% for e in employees_for_capital %}<option value="{{e.id}}" {% if asset.custodian_user_id==e.id %}selected{% endif %}>{{e.display_name}}</option>{% endfor %}</select></label>
-<label>الموقع<input name="location" value="{{asset.location or ''}}"></label>
-</div>
-<label>البيان<textarea name="notes" rows="4">{{row.notes or ''}}</textarea></label>
-<div class="info-card"><i class="bi bi-shield-check"></i><span>التعديل المالي سيغير قيمة الأصل والحساب 1300 وحساب رأس المال 3000 معًا. لا توجد حركة صندوق لهذا النوع، ولذلك لن يتغير رصيد الصندوق.</span></div>
-{% else %}
-<label>المصدر<input name="source" value="{{row.source or ''}}"></label>
-<label>البيان<textarea name="notes" rows="4">{{row.notes or ''}}</textarea></label>
-{% endif %}
-<button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ التعديل</span></button>
-</form>
+<div class="page-heading-row"><div class="page-heading"><h1>تعديل رأس المال</h1><p>تعديل المصدر والبيان فقط؛ تعديل المبلغ يتم عبر عكس السند وتصحيح العملية.</p></div><a class="secondary-btn" href="{{url_for('capital.index')}}"><i class="bi bi-arrow-right"></i><span>رأس المال</span></a></div>
+<div class="info-card finance-edit-summary"><div class="detail-line"><strong>السند</strong><span>{{row.document.number if row.document else "CAP"}}</span></div><div class="detail-line"><strong>المبلغ</strong><span>{{row.amount|clean_number}} {{project_settings.currency}}</span></div><div class="detail-line"><strong>التاريخ</strong><span>{{row.contribution_date}}</span></div></div>
+<form method="post" class="mobile-form card-form"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><label>المصدر<input name="source" value="{{row.source or ''}}"></label><label>البيان<textarea name="notes" rows="4">{{row.notes or ''}}</textarea></label><button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ التعديل</span></button></form>
 {% endblock %}
