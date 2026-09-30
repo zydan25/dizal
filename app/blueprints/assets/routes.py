@@ -1,10 +1,11 @@
 from datetime import date
 from flask import flash,redirect,render_template,request,url_for
+from flask_login import current_user
 from sqlalchemy import func
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import Asset,Cashbox,CapitalContribution,FuelTank,User
-from ...services.assets import create_asset
+from ...models import Asset,Cashbox,CashboxTransaction,CapitalContribution,FuelTank,User
+from ...services.assets import create_asset,update_asset_cost
 from ...services.audit import audit
 from ...services.fuel import current_stock_liters
 from . import assets_bp
@@ -28,20 +29,73 @@ def detail(asset_id):
 @permission_required("assets.create")
 def edit(asset_id):
     asset=Asset.query.get_or_404(asset_id)
+    financial_editable=(
+        current_user.has_role("manager")
+        and asset.document is not None
+        and asset.document.status=="approved"
+        and CashboxTransaction.query.filter_by(
+            document_id=asset.document_id,
+            transaction_type="asset_purchase",
+            direction="OUT",
+        ).count()==1
+    )
     if request.method=="POST":
-        before={"name":asset.name,"category":asset.category,"location":asset.location,"status":asset.status}
-        asset.name=(request.form.get("name") or asset.name).strip()
-        asset.category=(request.form.get("category") or asset.category).strip()
-        asset.acquisition_date=date.fromisoformat(request.form.get("acquisition_date") or asset.acquisition_date.isoformat())
-        asset.custodian_user_id=int(request.form["custodian_user_id"]) if request.form.get("custodian_user_id") else None
-        asset.location=(request.form.get("location") or "").strip() or None
-        asset.status=(request.form.get("status") or asset.status).strip()
-        asset.notes=request.form.get("notes")
-        audit("asset.updated","asset",asset.id,before=before,after={"name":asset.name,"category":asset.category,"location":asset.location,"status":asset.status})
-        db.session.commit()
-        flash("تم تحديث بيانات الأصل.","success")
-        return redirect(url_for("assets.detail",asset_id=asset.id))
-    return render_template("assets/form.html",asset=asset,editing=True,cashboxes=[],employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all(),today=asset.acquisition_date.isoformat())
+        before={
+            "name":asset.name,
+            "category":asset.category,
+            "cost":str(asset.acquisition_cost),
+            "location":asset.location,
+            "status":asset.status,
+        }
+        try:
+            asset.name=(request.form.get("name") or asset.name).strip()
+            asset.category=(request.form.get("category") or asset.category).strip()
+            asset.acquisition_date=date.fromisoformat(request.form.get("acquisition_date") or asset.acquisition_date.isoformat())
+            asset.custodian_user_id=int(request.form["custodian_user_id"]) if request.form.get("custodian_user_id") else None
+            asset.location=(request.form.get("location") or "").strip() or None
+            asset.status=(request.form.get("status") or asset.status).strip()
+            asset.notes=request.form.get("notes")
+
+            cost_raw=(request.form.get("cost") or "").strip()
+            financial_changed=False
+            if cost_raw:
+                if not current_user.has_role("manager"):
+                    raise ValueError("تعديل القيمة المالية للأصل متاح للمدير فقط.")
+                old_cost=str(asset.acquisition_cost)
+                new_cost=str(cost_raw)
+                if new_cost != old_cost:
+                    update_asset_cost(asset,cost_raw,current_user.id)
+                    financial_changed=True
+
+            audit(
+                "asset.updated",
+                "asset",
+                asset.id,
+                before=before,
+                after={
+                    "name":asset.name,
+                    "category":asset.category,
+                    "cost":str(asset.acquisition_cost),
+                    "location":asset.location,
+                    "status":asset.status,
+                    "financial_changed":financial_changed,
+                },
+            )
+            db.session.commit()
+            flash("تم تحديث بيانات الأصل والقيمة المالية والحركات المرتبطة بها." if financial_changed else "تم تحديث بيانات الأصل.","success")
+            return redirect(url_for("assets.detail",asset_id=asset.id))
+        except (ValueError,TypeError) as exc:
+            db.session.rollback()
+            flash(str(exc),"danger")
+    return render_template(
+        "assets/form.html",
+        asset=asset,
+        editing=True,
+        financial_editable=financial_editable,
+        cashboxes=[],
+        employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all(),
+        today=asset.acquisition_date.isoformat(),
+    )
 
 @assets_bp.route("/new",methods=["GET","POST"])
 @permission_required("assets.create")
