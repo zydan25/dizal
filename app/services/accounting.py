@@ -45,48 +45,12 @@ def post_journal(source_type,source_id,description,created_by_id,lines,document_
     return entry
 
 def post_capital(contribution,created_by_id):
-    if contribution.contribution_type == "asset":
-        if not contribution.asset_id:
-            raise ValueError("مساهمة الأصل في رأس المال غير مرتبطة بأصل.")
-        return post_journal(
-            "capital",
-            contribution.id,
-            f"إضافة أصل كرأس مال: {contribution.asset.name}",
-            created_by_id,
-            [
-                {"account_code":"1300","debit":contribution.amount},
-                {"account_code":"3000","credit":contribution.amount},
-            ],
-            contribution.document_id,
-        )
-    return post_journal(
-        "capital",
-        contribution.id,
-        "إضافة رأس مال",
-        created_by_id,
-        [
-            {"account_code":"1100","debit":contribution.amount},
-            {"account_code":"3000","credit":contribution.amount},
-        ],
-        contribution.document_id,
-    )
+    return post_journal("capital",contribution.id,"إضافة رأس مال",created_by_id,[{"account_code":"1100","debit":contribution.amount},{"account_code":"3000","credit":contribution.amount}],contribution.document_id)
 
 def post_employee_transfer(allocation,created_by_id):
     return post_journal("capital_allocation",allocation.id,"تحويل رأس مال لعهدة الموظف",created_by_id,[{"account_code":"1110","debit":allocation.amount,"employee_id":allocation.employee_id},{"account_code":"1100","credit":allocation.amount}],allocation.document_id)
 
 def post_asset(asset,created_by_id):
-    if asset.payer_cashbox_id is None and asset.document and asset.document.source_type == "capital_asset":
-        return post_journal(
-            "capital_asset",
-            asset.id,
-            f"إثبات أصل مساهم به: {asset.name}",
-            created_by_id,
-            [
-                {"account_code":"1300","debit":asset.acquisition_cost},
-                {"account_code":"3000","credit":asset.acquisition_cost},
-            ],
-            asset.document_id,
-        )
     payer = asset.payer_cashbox
     credit_account = "1110" if payer and payer.box_type=="employee" else "1100"
     line={"account_code":credit_account,"credit":asset.acquisition_cost}
