@@ -47,7 +47,7 @@ def index():
         "period_contributed":sum((row.amount for row in contributions if row.status=="approved"),0),
         "period_allocated":sum((row.amount for row in allocations if row.document and row.document.status!="reversed"),0),
     }
-    return render_template("capital/index.html",central=central,central_balance=balance(central.id),contributions=contributions,allocations=allocations,totals=totals,period=period)
+    return render_template("capital/index.html",central=central,central_balance=balance(central.id),contributions=contributions,allocations=allocations,totals=totals,period=period,today=date.today().isoformat())
 
 @capital_bp.get("/report")
 @permission_required("capital.view")
