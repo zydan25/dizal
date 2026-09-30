@@ -6,7 +6,7 @@ from ...decorators import permission_required
 from ...extensions import db
 from ...models import CapitalAllocation,CapitalContribution,Cashbox,Document,User
 from ...services.audit import audit
-from ...services.capital import add_capital,allocate_to_employee,central_cashbox
+from ...services.capital import add_capital,allocate_to_employee,central_cashbox,update_capital_amount
 from ...services.cashbox import balance
 from . import capital_bp
 
@@ -96,12 +96,19 @@ def edit_contribution(contribution_id):
         flash("لا يمكن تعديل عملية رأس مال معكوسة.","danger")
         return redirect(url_for("capital.index"))
     if request.method=="POST":
-        before={"source":row.source,"notes":row.notes}
-        row.source=(request.form.get("source") or "").strip() or None
-        row.notes=(request.form.get("notes") or "").strip() or None
-        audit("capital.contribution.updated","capital_contribution",row.id,before=before,after={"source":row.source,"notes":row.notes})
-        db.session.commit()
-        flash("تم تحديث بيانات رأس المال. لتصحيح المبلغ استخدم عكس السند.","success")
+        before={"amount":str(row.amount),"source":row.source,"notes":row.notes}
+        try:
+            amount_raw=(request.form.get("amount") or "").strip()
+            if not amount_raw:
+                raise ValueError("مبلغ رأس المال مطلوب.")
+            update_capital_amount(row,amount_raw,current_user.id)
+            row.source=(request.form.get("source") or "").strip() or None
+            row.notes=(request.form.get("notes") or "").strip() or None
+            audit("capital.contribution.updated","capital_contribution",row.id,before=before,after={"amount":str(row.amount),"source":row.source,"notes":row.notes})
+            db.session.commit()
+            flash("تم تحديث رأس المال والمبلغ والقيد وحركة الصندوق معًا.","success")
+        except ValueError as exc:
+            db.session.rollback();flash(str(exc),"danger")
         return redirect(url_for("capital.index"))
     return render_template("capital/edit_contribution.html",row=row)
 
