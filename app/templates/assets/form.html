@@ -11,7 +11,7 @@
 <option value="خزان ديزل" {% if asset and "خزان" in asset.category %}selected{% endif %}>خزان ديزل</option>
 <option value="مضخة / معدة" {% if asset and "مضخة" in asset.category %}selected{% endif %}>مضخة / معدة</option>
 </select></label>
-{% if not editing %}<label>قيمة الشراء<input name="cost" type="number" step="0.001" min="0.001" required></label>{% else %}<label>القيمة المسجلة<input value="{{asset.acquisition_cost|clean_number}}" readonly></label>{% endif %}
+{% if not editing %}<label>قيمة الشراء<input name="cost" type="number" step="0.001" min="0.001" required></label>{% else %}<label>القيمة المسجلة{% if financial_editable %}<input name="cost" type="number" step="0.001" min="0.001" value="{{asset.acquisition_cost}}" required>{% else %}<input value="{{asset.acquisition_cost|clean_number}}" readonly>{% endif %}</label>{% endif %}
 </div>
 <div id="tank-details" class="asset-tank-details" {% if not asset or "خزان" not in asset.category %}hidden{% endif %}>
 <label>سعة الخزان باللتر<input name="tank_capacity_liters" type="number" step="0.001" min="1" value="{{asset.tank.capacity_liters|clean_number if asset and asset.tank else ''}}" data-unit="liter"></label>
@@ -22,7 +22,7 @@
 <label>المسؤول<select name="custodian_user_id"><option value="">بدون</option>{% for e in employees %}<option value="{{e.id}}" {% if asset and asset.custodian_user_id==e.id %}selected{% endif %}>{{e.display_name}}</option>{% endfor %}</select></label>
 <div class="two-col"><label>الموقع<input name="location" value="{{asset.location if asset else ''}}"></label>{% if editing %}<label>الحالة<select name="status"><option value="active" {% if asset.status=="active" %}selected{% endif %}>فعال</option><option value="maintenance" {% if asset.status=="maintenance" %}selected{% endif %}>صيانة</option><option value="retired" {% if asset.status=="retired" %}selected{% endif %}>متقاعد</option></select></label>{% endif %}</div>
 <label>ملاحظات<textarea name="notes" rows="3">{{asset.notes if asset else ''}}</textarea></label>
-<div class="info-card"><i class="bi bi-info-circle"></i><span>شراء الخزان هنا يسجل كأصل ثابت، يخصم من الصندوق المختار، وينشئ خزانًا تشغيليًا يظهر أيضًا في «الخزانات» إذا كان خيار الربط مفعّلًا.</span></div>
+<div class="info-card"><i class="bi bi-info-circle"></i><span>شراء الخزان هنا يسجل كأصل ثابت، يخصم من الصندوق المختار، وينشئ خزانًا تشغيليًا يظهر أيضًا في «الخزانات» إذا كان خيار الربط مفعّلًا.</span></div>{% if editing and financial_editable %}<div class="info-card"><i class="bi bi-shield-check"></i><span>القيمة المالية قابلة للتعديل لأن سند شراء الأصل معتمد وحركة الصرف الأصلية موجودة. عند تغييرها سيُحدّث النظام قيمة الأصل وحركة الصندوق والقيد المحاسبي معًا، ويُرفض رفع القيمة إذا لم يكن رصيد الصندوق الحالي كافيًا بعد احتساب الصرف الأصلي.</span></div>{% elif editing %}<div class="info-card"><i class="bi bi-lock"></i><span>القيمة المالية غير قابلة للتعديل من هذه الشاشة لأن السند غير معتمد أو حركة الصرف الأصلية غير موجودة. يمكن تعديل البيانات التشغيلية فقط.</span></div>{% endif %}
 {% if not editing %}<script>
 (function(){
  const s=document.getElementById("asset-category"),box=document.getElementById("tank-details");
