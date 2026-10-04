@@ -81,16 +81,16 @@
 </div>
 {% endif %}
 {% else %}
-<div class="stats-grid dashboard-kpis">
-  <div class="dashboard-kpi"><small>صندوقي</small><strong>{{(employee_cashbox.balance if employee_cashbox else 0)|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>المزارعون</small><strong>{{employee_stats.farmers|clean_number}}</strong><span>معتمد</span></div>
-  <div class="dashboard-kpi is-danger"><small>ديون للتحصيل</small><strong>{{employee_stats.debt_amount|clean_number}}</strong><span>{{employee_stats.debts_count|clean_number}} حساب</span></div>
-  <div class="dashboard-kpi"><small>صرف اليوم</small><strong>{{employee_stats.today_drums|clean_number}}</strong><span>دبة</span></div>
-  <div class="dashboard-kpi"><small>لترات اليوم</small><strong>{{((employee_stats.today_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{employee_stats.today_liters|clean_number}} لتر</span></div>
-  <div class="dashboard-kpi"><small>تحصيل اليوم</small><strong>{{employee_stats.today_collected|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
-  <div class="dashboard-kpi"><small>الديزل المتاح</small><strong>{{((employee_stats.available_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{employee_stats.available_liters|clean_number}} لتر</span></div>
-  <div class="dashboard-kpi {% if employee_stats.pending_supplies %}is-warning{% endif %}"><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies|clean_number}}</strong><span>متابعة</span></div>
-</div>
+<div class="section-title"><h2>إجراءاتك</h2><span>بدون ازدحام</span></div>
+<div class="quick-grid dashboard-shortcuts">
+  <a class="quick-card quick-primary" href="{{url_for('farmers.index')}}"><i class="bi bi-people-fill"></i><strong>المزارعون</strong></a>
+  <a class="quick-card quick-primary" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet-fill"></i><strong>صرف ديزل</strong></a>
+  <a class="quick-card quick-primary" href="{{url_for('sales.point_of_sale')}}"><i class="bi bi-shop"></i><strong>بيع عام</strong></a>
+  <a class="quick-card quick-primary" href="{{url_for('sales.payment')}}"><i class="bi bi-cash-coin"></i><strong>تحصيل</strong></a>
+  <a class="quick-card" href="{{url_for('reports.my_operations')}}"><i class="bi bi-clipboard-data"></i><strong>تقريري</strong></a>
+  <a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong></a>
+  <a class="quick-card" href="{{url_for('employees.my_password')}}"><i class="bi bi-key"></i><strong>كلمة المرور</strong></a>
+</div
 {% endif %}
 
 <div class="dashboard-ops-grid">
@@ -127,16 +127,16 @@
 </div>
 
 {% if not manager %}
-<div class="section-title"><h2>إجراءاتك</h2><span>بدون ازدحام</span></div>
-<div class="quick-grid dashboard-shortcuts">
-  <a class="quick-card quick-primary" href="{{url_for('farmers.index')}}"><i class="bi bi-people-fill"></i><strong>المزارعون</strong></a>
-  <a class="quick-card quick-primary" href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet-fill"></i><strong>صرف ديزل</strong></a>
-  <a class="quick-card quick-primary" href="{{url_for('sales.point_of_sale')}}"><i class="bi bi-shop"></i><strong>بيع عام</strong></a>
-  <a class="quick-card quick-primary" href="{{url_for('sales.payment')}}"><i class="bi bi-cash-coin"></i><strong>تحصيل</strong></a>
-  <a class="quick-card" href="{{url_for('reports.my_operations')}}"><i class="bi bi-clipboard-data"></i><strong>تقريري</strong></a>
-  <a class="quick-card" href="{{url_for('fuel.supply')}}"><i class="bi bi-truck"></i><strong>التوريدات</strong></a>
-  <a class="quick-card" href="{{url_for('employees.my_password')}}"><i class="bi bi-key"></i><strong>كلمة المرور</strong></a>
-</div>
+<div class="stats-grid dashboard-kpis">
+  <div class="dashboard-kpi"><small>صندوقي</small><strong>{{(employee_cashbox.balance if employee_cashbox else 0)|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi"><small>المزارعون</small><strong>{{employee_stats.farmers|clean_number}}</strong><span>معتمد</span></div>
+  <div class="dashboard-kpi is-danger"><small>ديون للتحصيل</small><strong>{{employee_stats.debt_amount|clean_number}}</strong><span>{{employee_stats.debts_count|clean_number}} حساب</span></div>
+  <div class="dashboard-kpi"><small>صرف اليوم</small><strong>{{employee_stats.today_drums|clean_number}}</strong><span>دبة</span></div>
+  <div class="dashboard-kpi"><small>لترات اليوم</small><strong>{{((employee_stats.today_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{employee_stats.today_liters|clean_number}} لتر</span></div>
+  <div class="dashboard-kpi"><small>تحصيل اليوم</small><strong>{{employee_stats.today_collected|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+  <div class="dashboard-kpi"><small>الديزل المتاح</small><strong>{{((employee_stats.available_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number}}</strong><span>دبة · {{employee_stats.available_liters|clean_number}} لتر</span></div>
+  <div class="dashboard-kpi {% if employee_stats.pending_supplies %}is-warning{% endif %}"><small>توريدات معلقة</small><strong>{{employee_stats.pending_supplies|clean_number}}</strong><span>متابعة</span></div>
+</div>>
 
 <div class="section-title"><h2>مزارعيني</h2><span>{{employee_farmers|length|clean_number}} من {{employee_farmers_total|clean_number}}</span></div>
 <div class="entity-list">
