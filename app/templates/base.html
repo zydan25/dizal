@@ -52,6 +52,7 @@
 <button class="icon-btn" data-sidebar-open aria-label="فتح القائمة" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
 <a class="top-user" href="{{url_for('auth.account')}}" aria-label="حسابي"><small>{% if current_user.has_role('manager') %}المدير{% else %}الموظف{% endif %}</small><strong>{{current_user.display_name or current_user.username}}</strong></a>
 <a class="icon-btn notification-btn" href="{{url_for('notifications.index')}}" aria-label="الإشعارات"><i class="bi bi-bell"></i>{% if unread_notifications %}<span class="notification-badge">{{unread_notifications}}</span>{% endif %}</a>
+<button class="icon-btn top-install-btn d-none" type="button" data-dizal-install aria-label="تثبيت التطبيق" title="تثبيت Dizal كتطبيق"><i class="bi bi-download"></i></button>
 <a class="icon-btn" href="{{url_for('dashboard.index')}}" aria-label="الرئيسية"><i class="bi bi-house"></i></a>
 </header>
 <section class="page-wrap">
@@ -99,12 +100,47 @@
 </footer>
 {% endif %}
 <style>
+.top-install-btn{display:inline-flex!important;align-items:center;justify-content:center}
+.top-install-btn.d-none{display:none!important}
 .submit-loading{position:relative;overflow:hidden}
 .submit-loading.is-loading{cursor:wait;pointer-events:none;opacity:.92}
 .submit-loading .submit-loading-spinner{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 18px;border:2px solid rgba(255,255,255,.34);border-top-color:#fff;border-radius:50%;animation:submit-loading-spin .72s linear infinite}
 @keyframes submit-loading-spin{to{transform:rotate(360deg)}}
 </style>
 <script>
+(function(){
+  var installButton=document.querySelector("[data-dizal-install]");
+  var deferredPrompt=null;
+  if(!installButton) return;
+
+  window.addEventListener("beforeinstallprompt",function(event){
+    event.preventDefault();
+    deferredPrompt=event;
+    installButton.classList.remove("d-none");
+  });
+
+  installButton.addEventListener("click",async function(){
+    if(!deferredPrompt) return;
+    installButton.disabled=true;
+    try{
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+    }catch(e){}
+    deferredPrompt=null;
+    installButton.classList.add("d-none");
+    installButton.disabled=false;
+  });
+
+  window.addEventListener("appinstalled",function(){
+    deferredPrompt=null;
+    installButton.classList.add("d-none");
+  });
+
+  if(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches){
+    installButton.classList.add("d-none");
+  }
+})();
+
 document.querySelectorAll("form").forEach(function(form){
   form.addEventListener("submit",function(){
     var button=form.querySelector("button.submit-loading");
