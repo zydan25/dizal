@@ -1,15 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>صلاحيات {{role.label or role.name}}</h1><p>الصلاحيات التي سيحصل عليها كل مستخدم في هذا الدور.</p></div>
-<form method="post" class="mobile-form card-form">
-<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-{% for module in permissions.values()|map(attribute=1)|unique %}
-<div class="permission-group"><h2>{{module}}</h2>
-{% for key,meta in permissions.items() if meta[1]==module %}
-<label class="permission-row"><input type="checkbox" name="permission" value="{{key}}" {% if key in current %}checked{% endif %}><span><strong>{{meta[0]}}</strong><small>{{key}}</small></span></label>
-{% endfor %}
+<div class="page-heading-row">
+  <div class="page-heading">
+    <h1>صلاحيات {{ role.label or role.name }}</h1>
+    <p>{{ role.description or 'حدد الصلاحيات الفعلية التي يحتاجها مستخدمو هذا الدور.' }}</p>
+  </div>
+  <a class="secondary-btn" href="{{ url_for('roles.index') }}"><i class="bi bi-arrow-right"></i><span>الأدوار</span></a>
 </div>
-{% endfor %}
-<button class="primary-btn"><i class="bi bi-shield-check"></i> حفظ الدور</button>
+<div class="info-card settings-help">
+  <i class="bi bi-shield-lock"></i>
+  <span>الاسم البرمجي: <bdi>{{ role.name }}</bdi>. عدد الصلاحيات المحددة حاليًا: {{ current|length }}.</span>
+</div>
+<form method="post" class="mobile-form card-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% set module_labels = {'dashboard':'لوحة المتابعة','settings':'الإعدادات','users':'المستخدمون والأدوار','employees':'الموظفون','cashbox':'الصناديق','capital':'رأس المال','assets':'الأصول','fuel':'الديزل والتوريدات','farmers':'المزارعون','expenses':'المصروفات','settlements':'التسويات','reports':'التقارير','documents':'السندات','notifications':'الإشعارات','audit':'التدقيق','whatsapp':'واتساب'} %}
+  {% for module in permissions.values()|map(attribute=1)|unique %}
+  <section class="permission-group">
+    <h2>{{ module_labels.get(module,module) }}</h2>
+    {% for key,meta in permissions.items() if meta[1]==module %}
+    <label class="permission-row"><input type="checkbox" name="permission" value="{{ key }}" {% if key in current %}checked{% endif %}><span><strong>{{ meta[0] }}</strong><small>{{ key }}</small></span></label>
+    {% endfor %}
+  </section>
+  {% endfor %}
+  <button class="primary-btn submit-loading" type="submit" data-loading-text="جارٍ حفظ الصلاحيات…"><i class="bi bi-shield-check"></i><span>حفظ الصلاحيات</span></button>
 </form>
+{% if not role.is_system and role.name not in ['manager','employee'] %}
+<form method="post" action="{{ url_for('roles.delete',role_id=role.id) }}" onsubmit="return confirm('هل تريد حذف هذا الدور؟ لن يمكن حذفه إذا كان مسندًا إلى مستخدمين.')">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="secondary-danger" type="submit"><i class="bi bi-trash3"></i><span>حذف الدور</span></button>
+</form>
+{% endif %}
 {% endblock %}
