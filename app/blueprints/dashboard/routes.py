@@ -3,7 +3,7 @@ from sqlalchemy import func
 from flask import render_template
 from flask_login import current_user
 from ...decorators import permission_required
-from ...models import AuditLog,Cashbox,Document,Farmer,FarmerPayment,FuelDispense,FuelPurchase,FuelTank,Notification,User
+from ...models import AuditLog,Cashbox,Document,Farmer,FarmerPayment,FuelDispense,FuelPurchase,FuelTank,Notification,ProjectSettings,User
 from ...permissions import user_has_permission
 from ...services.cashbox import balance
 from ...services.sales import farmer_account
@@ -21,6 +21,7 @@ def index():
     unread_all=Notification.query.filter_by(read_at=None).count()
     employee_cashbox=None
     employee_stats=None
+    employee_debtors=[]
     employee_farmers=[]
     employee_farmers_total=0
     employee_notifications=[]
@@ -42,6 +43,7 @@ def index():
         if box:
             employee_cashbox={"name":box.name,"balance":balance(box.id)}
         debt_rows=[row for row in farmer_debts() if row["farmer"].assigned_employee_id==current_user.id]
+        employee_debtors=sorted(debt_rows,key=lambda row:float(row.get("outstanding") or 0),reverse=True)[:5]
         employee_farmers=[
             {"farmer":farmer,"account":farmer_account(farmer)}
             for farmer in Farmer.query.filter_by(assigned_employee_id=current_user.id).filter(
@@ -67,7 +69,9 @@ def index():
             "pending_supplies":FuelPurchase.query.filter_by(employee_id=current_user.id,status="submitted").count(),
             "available_liters":inventory_commitment()["stock_liters"],
         }
-    return render_template("dashboard/index.html",manager=manager,employee_count=employee_count,recent_audits=recent_audits,employee_cashbox=employee_cashbox,employee_stats=employee_stats,employee_farmers=employee_farmers,employee_farmers_total=employee_farmers_total,employee_notifications=employee_notifications,summary=summary,inventory=inventory,pending_supplies=pending_supplies,pending_farmers=pending_farmers,unread_all=unread_all,trend_rows=trend_rows,tank_overview=tank_overview)
+    settings=ProjectSettings.get()
+    dashboard_template="dashboard/employee_theme2.html" if (not manager and current_user.is_employee and settings.employee_dashboard_theme=="water") else "dashboard/index.html"
+    return render_template(dashboard_template,manager=manager,employee_count=employee_count,recent_audits=recent_audits,employee_cashbox=employee_cashbox,employee_stats=employee_stats,employee_debtors=employee_debtors,employee_farmers=employee_farmers,employee_farmers_total=employee_farmers_total,employee_notifications=employee_notifications,summary=summary,inventory=inventory,pending_supplies=pending_supplies,pending_farmers=pending_farmers,unread_all=unread_all,trend_rows=trend_rows,tank_overview=tank_overview)
 
 def db_sum(column,*conditions):
     return float(__import__("app.extensions",fromlist=["db"]).db.session.query(func.coalesce(func.sum(column),0)).filter(*conditions).scalar() or 0)
