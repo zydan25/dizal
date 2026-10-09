@@ -24,6 +24,7 @@ def index():
     employee_stats=None
     employee_debtors=[]
     employee_farmers=[]
+    employee_followups=[]
     employee_farmers_total=0
     employee_notifications=[]
     summary=None
@@ -54,6 +55,9 @@ def index():
         employee_farmers_total=Farmer.query.filter_by(assigned_employee_id=current_user.id).filter(
             Farmer.status.in_(["approved","suspended"])
         ).count()
+        employee_followups=Farmer.query.filter_by(
+            assigned_employee_id=current_user.id,status="changes_requested"
+        ).order_by(Farmer.updated_at.desc(),Farmer.id.desc()).limit(10).all()
         employee_notifications=Notification.query.filter_by(user_id=current_user.id).order_by(
             Notification.created_at.desc()
         ).limit(5).all()
@@ -73,7 +77,7 @@ def index():
     settings=ProjectSettings.get()
     dashboard_template="dashboard/employee_theme2.html" if (not manager and current_user.is_employee and settings.employee_dashboard_theme=="water") else "dashboard/index.html"
     project_capacity=project_diesel_capacity() if dashboard_template=="dashboard/employee_theme2.html" else None
-    return render_template(dashboard_template,manager=manager,employee_count=employee_count,recent_audits=recent_audits,employee_cashbox=employee_cashbox,employee_stats=employee_stats,employee_debtors=employee_debtors,employee_farmers=employee_farmers,employee_farmers_total=employee_farmers_total,employee_notifications=employee_notifications,summary=summary,inventory=inventory,pending_supplies=pending_supplies,pending_farmers=pending_farmers,unread_all=unread_all,trend_rows=trend_rows,tank_overview=tank_overview,project_capacity=project_capacity)
+    return render_template(dashboard_template,manager=manager,employee_count=employee_count,recent_audits=recent_audits,employee_cashbox=employee_cashbox,employee_stats=employee_stats,employee_debtors=employee_debtors,employee_farmers=employee_farmers,employee_farmers_total=employee_farmers_total,employee_followups=employee_followups,employee_notifications=employee_notifications,summary=summary,inventory=inventory,pending_supplies=pending_supplies,pending_farmers=pending_farmers,unread_all=unread_all,trend_rows=trend_rows,tank_overview=tank_overview,project_capacity=project_capacity)
 
 def db_sum(column,*conditions):
     return float(__import__("app.extensions",fromlist=["db"]).db.session.query(func.coalesce(func.sum(column),0)).filter(*conditions).scalar() or 0)
