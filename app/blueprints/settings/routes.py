@@ -43,6 +43,9 @@ def index():
         font_scale=request.form.get("font_scale") or settings.font_scale or "1"
         if font_scale not in FONT_SCALES: font_scale="1"
         settings.font_scale=font_scale
+        employee_dashboard_theme=request.form.get("employee_dashboard_theme",settings.employee_dashboard_theme or "classic")
+        if employee_dashboard_theme not in {"classic","water"}: employee_dashboard_theme="classic"
+        settings.employee_dashboard_theme=employee_dashboard_theme
         selected_palette=request.form.get("color_preset") or ""
         if selected_palette in PALETTES:
             colors=PALETTES[selected_palette]
