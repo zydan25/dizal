@@ -103,10 +103,15 @@ def test_new_employee_theme_templates_compile():
     app=make_app()
     with app.app_context():
         for template_name in (
+            "base.html",
             "fuel/supply_theme2.html",
             "fuel/supply_edit.html",
             "dashboard/employee_theme2.html",
             "roles/new.html",
             "roles/edit.html",
+            "farmers/detail.html",
+            "sales/dispense.html",
+            "sales/payment.html",
+            "fuel/stock.html",
         ):
             app.jinja_env.get_template(template_name)
