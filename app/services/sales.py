@@ -1,7 +1,7 @@
 from decimal import Decimal
 from sqlalchemy import func
 from ..extensions import db
-from ..models import Cashbox,Document,Farmer,FarmerPayment,FarmerPaymentAllocation,FuelDispense,FuelStockMovement,FuelTank,ProjectSettings,User
+from ..models import Account,Cashbox,Document,Farmer,FarmerPayment,FarmerPaymentAllocation,FuelDispense,FuelStockMovement,FuelTank,JournalEntry,JournalLine,ProjectSettings,User
 from .cashbox import post_transaction
 from .documents import create_document
 from .farmers import validate_project_diesel_sale
@@ -12,7 +12,43 @@ def farmer_consumed_drums(farmer_id):
     return Decimal(str(value))
 
 def farmer_outstanding_amount(farmer_id):
-    dispensed=db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0)).filter(FuelDispense.farmer_id==farmer_id,FuelDispense.status=="approved").scalar() or 0
+    """Get the farmer's current receivable balance from the accounting ledger.
+
+    Historical records predating journal posting are handled by the legacy
+    calculation only when this farmer has no receivable journal lines at all.
+    """
+    from sqlalchemy import or_
+    ledger_query=(
+        db.session.query(func.coalesce(func.sum(JournalLine.debit-JournalLine.credit),0))
+        .join(JournalEntry,JournalLine.journal_entry_id==JournalEntry.id)
+        .join(Account,JournalLine.account_id==Account.id)
+        .outerjoin(Document,JournalEntry.document_id==Document.id)
+        .filter(
+            JournalLine.farmer_id==farmer_id,
+            Account.code=="1400",
+            or_(JournalEntry.document_id.is_(None),Document.status!="reversed"),
+        )
+    )
+    ledger_line_count=(
+        db.session.query(func.count(JournalLine.id))
+        .join(JournalEntry,JournalLine.journal_entry_id==JournalEntry.id)
+        .join(Account,JournalLine.account_id==Account.id)
+        .outerjoin(Document,JournalEntry.document_id==Document.id)
+        .filter(
+            JournalLine.farmer_id==farmer_id,
+            Account.code=="1400",
+            or_(JournalEntry.document_id.is_(None),Document.status!="reversed"),
+        )
+        .scalar() or 0
+    )
+    if ledger_line_count:
+        balance=Decimal(str(ledger_query.scalar() or 0))
+        return max(balance,Decimal("0"))
+
+    # One-time compatibility for old accounts which have no journal postings.
+    dispensed=db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0)).filter(
+        FuelDispense.farmer_id==farmer_id,FuelDispense.status=="approved"
+    ).scalar() or 0
     paid=(
         db.session.query(func.coalesce(func.sum(FarmerPayment.amount),0))
         .join(Document,FarmerPayment.document_id==Document.id)
