@@ -4,6 +4,16 @@
   <div class="page-heading"><span class="pos-eyebrow"><i class="bi bi-lightning-charge-fill"></i> بيع مباشر</span><h1>نقطة البيع العامة</h1></div>
   <a class="secondary-btn" href="{{url_for('reports.sales_report_view')}}"><i class="bi bi-bar-chart"></i><span>تقرير المبيعات</span></a>
 </div>
+<div class="info-card settings-help" id="pos-project-capacity"
+     data-remaining-liters="{{project_capacity.remaining_liters}}"
+     data-drum-liters="{{project_capacity.drum_liters}}">
+  <i class="bi bi-fuel-pump"></i>
+  <span><strong>حد ديزل المشروع:</strong> {{project_capacity.limit_liters|clean_number}} لتر.
+    حجوزات المزارعين: {{project_capacity.farmer_quota_liters|clean_number}} لتر.
+    بيع عام سابق: {{project_capacity.general_sale_liters|clean_number}} لتر.
+    <strong>الفائض الحالي للبيع:</strong> <b>{{project_capacity.remaining_liters|clean_number}}</b> لتر.
+  </span>
+</div>
 <form method="post" class="mobile-form card-form pos-form" id="pos-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 {% if current_user.has_role("manager") %}
@@ -16,7 +26,8 @@
 </label>
 <label>اسم العميل <span class="field-optional">اختياري</span><input name="customer_name" placeholder="عميل نقدي / اسم اختياري"></label>
 <div class="two-col">
-<label>عدد الدباب<input name="drums" id="pos-drums" type="number" step="0.1" min="0.1" inputmode="decimal" required data-unit="drum"></label>
+<label>عدد الدباب<input name="drums" id="pos-drums" type="number" step="0.1" min="0.1" max="{{project_capacity.remaining_drums|round(3)}}" inputmode="decimal" required data-unit="drum">
+<small class="field-help" id="pos-capacity-hint" aria-live="polite">لا يمكن أن تتجاوز كمية البيع فائض المشروع المتاح بعد حجز كميات المزارعين.</small></label>
 <label>سعر اللتر<input name="sale_price_per_liter" id="pos-price" type="number" step="0.001" min="0.001" inputmode="decimal" value="{{settings.default_sale_price_per_liter|clean_number}}" {% if not current_user.has_role("manager") and not settings.allow_employee_sale_price_override %}readonly{% endif %} required>
 <small class="field-help price-policy-note">{% if current_user.has_role("manager") %}يمكنك تغيير السعر.{% elif settings.allow_employee_sale_price_override %}التعديل مسموح للموظف حسب إعدادات المشروع.{% else %}السعر ثابت من إعدادات المدير.{% endif %}</small></label>
 </div>
@@ -43,8 +54,28 @@
 <script>
 (function(){
 const drumLiters={{project_settings.drum_liters|float}},d=document.getElementById("pos-drums"),p=document.getElementById("pos-price");
-function fmt(v,digits){const n=Number(v||0);return n.toFixed(digits||2).replace(/.?0+$/,"");}
-function recalc(){const liters=Number(d?.value||0)*drumLiters,total=liters*Number(p?.value||0);document.getElementById("pos-liters").textContent=fmt(liters,1);document.getElementById("pos-total").textContent=fmt(total,2);}
+const capacityBox=document.getElementById("pos-project-capacity"),capacityHint=document.getElementById("pos-capacity-hint"),submitButton=document.getElementById("pos-submit");
+const availableLiters=Number(capacityBox?.dataset.remainingLiters||0);
+function fmt(v,digits){return Number(v||0).toLocaleString("en-US",{maximumFractionDigits:digits??2});}
+function recalc(){
+  const liters=Number(d?.value||0)*drumLiters,total=liters*Number(p?.value||0);
+  document.getElementById("pos-liters").textContent=fmt(liters,1);
+  document.getElementById("pos-total").textContent=fmt(total,2);
+  const over=liters>availableLiters+0.0005;
+  const noSurplus=availableLiters<=0.0005;
+  if(noSurplus){
+    capacityHint.textContent="لا يوجد فائض للبيع العام؛ كميات المزارعين حجزت حد ديزل المشروع بالكامل.";
+  }else if(d?.value && over){
+    capacityHint.textContent="الكمية المطلوبة "+fmt(liters,3)+" لتر وتتجاوز الفائض المتاح "+fmt(availableLiters,3)+" لتر.";
+  }else if(d?.value){
+    capacityHint.textContent="سيبقى بعد البيع "+fmt(Math.max(availableLiters-liters,0),3)+" لتر من حد المشروع.";
+  }else{
+    capacityHint.textContent="الفائض المتاح للبيع العام "+fmt(availableLiters,3)+" لتر.";
+  }
+  capacityHint.classList.toggle("text-danger",over||noSurplus);
+  capacityHint.classList.toggle("text-success",!!d?.value&&!over&&!noSurplus);
+  if(submitButton)submitButton.disabled=noSurplus||!!d?.value&&over;
+}
 ["input","change"].forEach(e=>[d,p].forEach(x=>x?.addEventListener(e,recalc)));recalc();
 
 const form=document.getElementById("pos-form");
