@@ -5,7 +5,7 @@ body.employee-theme-water {
   background: #f4f7fb;
   color: #111827;
   overflow-x: hidden;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
 }
 .employee-theme-water .app-shell {
   display: block !important;
@@ -157,7 +157,7 @@ body.employee-theme-water {
 .employee-theme-water .water-actions-shell {
   padding: 20px;
   border: 1px solid #e5e7eb;
-  border-radius: 20px;
+  border-radius: 16px;
   background: transparent;
 }
 .employee-theme-water .water-quick-actions {
@@ -348,7 +348,7 @@ body.employee-theme-water {
   .employee-theme-water .water-brand h1 { font-size: clamp(1rem, 4.1vw, 1.22rem); }
   .employee-theme-water .water-back { flex-basis: 42px; width: 42px; height: 42px; border-radius: 15px; }
   .employee-theme-water .water-dashboard { padding: 20px 24px 25px; }
-  .employee-theme-water .water-actions-shell { padding: 18px; border-radius: 18px; }
+  .employee-theme-water .water-actions-shell { padding: 18px; border-radius: 16px; }
   .employee-theme-water .water-quick-actions { padding: 8px; border-radius: 14px; }
   .employee-theme-water .inline-action-btn { gap: 3px; padding: .5rem .27rem; border-radius: 13px; font-size: .75rem; }
   .employee-theme-water .inline-action-btn .plus-icon { font-size: 1rem; }
