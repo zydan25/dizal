@@ -450,6 +450,62 @@ body.employee-theme-water {
   margin-top: 3px;
 }
 
+.employee-theme-water .water-followups-panel {
+  border-color: #f1d6a8;
+  background: #fffaf1;
+}
+.employee-theme-water .water-followups-intro {
+  margin: -5px 0 12px;
+  color: #78623f;
+  font-size: .85rem;
+  line-height: 1.7;
+}
+.employee-theme-water .water-followup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  border-top: 1px solid #f0e4d2;
+}
+.employee-theme-water .water-followup-main {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+.employee-theme-water .water-followup-main strong {
+  overflow-wrap: anywhere;
+  color: #292524;
+  font-weight: 900;
+}
+.employee-theme-water .water-followup-main span,
+.employee-theme-water .water-followup-main small {
+  color: #7a6c58;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+.employee-theme-water .water-followup-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid #edc985;
+  border-radius: 12px;
+  background: #fff;
+  color: #80520d;
+  font-size: .78rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.employee-theme-water .water-followup-button:hover {
+  background: #fff2d8;
+  color: #684209;
+}
 @media (max-width: 480px) {
   .employee-theme-water .water-header-inner { padding: 6px 13px 8px; }
   .employee-theme-water .water-title-row { gap: 8px; min-height: 42px; }
