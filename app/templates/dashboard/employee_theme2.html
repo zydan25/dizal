@@ -32,6 +32,7 @@
 </header>
 
 <main class="water-dashboard">
+  <section class="water-actions-shell">
   <section class="water-quick-actions" aria-label="إجراءات سريعة">
     <div class="quick-actions-inline" dir="rtl">
       <a href="{{ url_for('sales.dispense') }}" class="inline-action-btn"><i class="bi bi-plus plus-icon" aria-hidden="true"></i><span>صرف ديزل</span></a>
@@ -49,6 +50,7 @@
     <a class="water-action-card" href="{{ url_for('cashbox.index') }}"><i class="bi bi-wallet2" aria-hidden="true"></i><strong>صندوقي</strong></a>
     <a class="water-action-card" href="{{ url_for('reports.my_operations') }}"><i class="bi bi-calendar-check" aria-hidden="true"></i><strong>تقرير العمليات</strong></a>
     <a class="water-action-card" href="{{ url_for('fuel.supply') }}"><i class="bi bi-truck" aria-hidden="true"></i><strong>التوريدات</strong></a>
+  </section>
   </section>
 
   <section class="water-dashboard-panel">
