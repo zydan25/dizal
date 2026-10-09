@@ -77,7 +77,6 @@
     <div class="water-menu-greeting">
       <span class="water-menu-avatar"><i class="bi bi-person-circle"></i></span>
       <div><strong>{{ current_user.display_name or current_user.username }}</strong><small>قائمة النظام حسب صلاحيات حسابك</small></div>
-      <a href="{{ url_for('auth.account') }}" aria-label="إعدادات حسابي" title="إعدادات حسابي"><i class="bi bi-gear"></i></a>
     </div>
     {% for section in navigation %}
     <section class="water-menu-section" data-water-nav-section="{{ section.key }}">
@@ -94,7 +93,7 @@
     {% endfor %}
     <div class="water-menu-footer">
       <a href="{{ url_for('auth.account') }}"><i class="bi bi-person-gear"></i><span>حسابي وإعدادات الحساب</span></a>
-      {% if user_has_permission(current_user,'notifications.view') %}<a href="{{ url_for('notifications.index') }}"><i class="bi bi-bell"></i><span>الإشعارات{% if unread_notifications %} ({{ unread_notifications }}){% endif %}</span></a>{% endif %}
+
     </div>
     <form method="post" action="{{ url_for('auth.logout') }}" onsubmit="return confirm('هل أنت متأكد من تسجيل الخروج؟');">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
