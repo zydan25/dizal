@@ -4,17 +4,43 @@ from flask_login import current_user
 from sqlalchemy import func
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import Asset,Cashbox,FuelPurchase,FuelStockMovement,FuelTank,User
+from ...models import Asset,Cashbox,FuelPurchase,FuelStockMovement,FuelTank,ProjectSettings,User
+from ...permissions import user_has_permission
 from ...services.audit import audit
+from ...services.cashbox import balance
 from ...services.files import save_attachment
-from ...services.fuel import approve_purchase,attach_proof,create_purchase,current_stock_liters
+from ...services.fuel import approve_purchase,attach_proof,create_purchase,current_stock_liters,update_purchase
 from ...services.assets import create_asset
 from ...services.notifications import notify_user
 from . import fuel_bp
 
+def _use_employee_water_theme():
+    settings=ProjectSettings.get()
+    return (
+        current_user.is_authenticated
+        and current_user.is_employee
+        and settings.employee_dashboard_theme=="water"
+        and not user_has_permission(current_user,"users.manage")
+    )
+
+
+def _notify_supply_reviewers(purchase,title,message):
+    for reviewer in User.query.filter_by(active=True).all():
+        if reviewer.id==current_user.id:
+            continue
+        if user_has_permission(reviewer,"fuel.supply.approve"):
+            notify_user(reviewer.id,title,message,"info",url_for("fuel.supply"))
+
+
+def _supply_cashbox_balance(user_id):
+    box=Cashbox.query.filter_by(owner_user_id=user_id,box_type="employee",is_active=True).first()
+    return balance(box.id) if box else None
+
+
 @fuel_bp.route("/supply",methods=["GET","POST"])
 @permission_required("fuel.supply.create")
 def supply():
+    form_error=False
     if request.method=="POST":
         try:
             employee_id=current_user.id
@@ -35,7 +61,7 @@ def supply():
                 employee_id=employee_id,
                 tank_id=tank_id,
                 purchase_date=date.fromisoformat(request.form.get("purchase_date") or date.today().isoformat()),
-                supplier_name=request.form.get("supplier_name"),
+                supplier_name=(request.form.get("supplier_name") or "").strip() or None,
                 liters=request.form.get("liters"),
                 diesel_amount=request.form.get("diesel_amount"),
                 delivery_fee=request.form.get("delivery_fee") or 0,
@@ -50,16 +76,19 @@ def supply():
             if current_user.has_role("manager"):
                 approve_purchase(row,current_user.id)
             audit("fuel.purchase.created","fuel_purchase",row.id,after={
-                "status":row.status,"employee_id":row.employee_id,"liters":str(row.liters),"amount":str(row.landed_cost),"document_id":row.document_id
+                "status":row.status,"employee_id":row.employee_id,"liters":str(row.liters),
+                "amount":str(row.landed_cost),"document_id":row.document_id
             })
-            if row.status=="submitted" and row.employee_id!=current_user.id:
-                notify_user(row.employee_id,"توريد جديد","تم رفع توريد ديزل ويحتاج مراجعة المدير.","info",url_for("fuel.supply"))
+            if row.status=="submitted":
+                _notify_supply_reviewers(row,"توريد ديزل جديد","رفع الموظف توريدًا جديدًا يحتاج إلى المراجعة والاعتماد.")
             db.session.commit()
-            flash("تم تسجيل التوريد." if row.status=="submitted" else "تم تسجيل التوريد واعتماده مباشرة.","success")
+            flash("تم تسجيل التوريد واعتماده مباشرة." if row.status=="approved" else "تم رفع التوريد بنجاح، وهو الآن بانتظار اعتماد المدير.","success")
             return redirect(url_for("fuel.supply"))
         except (ValueError,TypeError) as exc:
             db.session.rollback()
+            form_error=True
             flash(str(exc),"danger")
+
     purchases=(
         FuelPurchase.query.order_by(FuelPurchase.id.desc()).limit(50).all()
         if current_user.has_role("manager")
@@ -68,7 +97,76 @@ def supply():
     tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).all()
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
     selected_tank_id=request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
-    return render_template("fuel/supply.html",purchases=purchases,tanks=tanks,employees=employees,today=date.today().isoformat(),selected_tank_id=selected_tank_id)
+    settings=ProjectSettings.get()
+    themed=_use_employee_water_theme()
+    template="fuel/supply_theme2.html" if themed else "fuel/supply.html"
+    return render_template(
+        template,purchases=purchases,tanks=tanks,employees=employees,today=date.today().isoformat(),
+        selected_tank_id=selected_tank_id,editing=None,form_error=form_error,
+        supply_cashbox_balance=_supply_cashbox_balance(current_user.id) if current_user.is_employee else None,
+        supply_project_name=settings.project_name,
+    )
+
+
+@fuel_bp.route("/supply/<int:purchase_id>/edit",methods=["GET","POST"])
+@permission_required("fuel.supply.create")
+def edit_supply(purchase_id):
+    purchase=FuelPurchase.query.get_or_404(purchase_id)
+    can_manage_all=user_has_permission(current_user,"users.manage")
+    if not can_manage_all and purchase.employee_id!=current_user.id:
+        abort(403)
+    if purchase.status not in {"submitted","changes_requested"}:
+        flash("لا يمكن تعديل التوريد بعد اعتماده أو إغلاقه.","danger")
+        return redirect(url_for("fuel.supply"))
+
+    form_error=False
+    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).all()
+    if request.method=="POST":
+        try:
+            tank_id=int(request.form.get("tank_id") or 0)
+            new_row=update_purchase(
+                purchase=purchase,
+                tank_id=tank_id,
+                purchase_date=date.fromisoformat(request.form.get("purchase_date") or date.today().isoformat()),
+                liters=request.form.get("liters"),
+                diesel_amount=request.form.get("diesel_amount"),
+                delivery_fee=request.form.get("delivery_fee") or 0,
+                other_fee=request.form.get("other_fee") or 0,
+                notes=request.form.get("notes"),
+            )
+            proof=request.files.get("proof")
+            if proof and proof.filename:
+                attach_proof(new_row,save_attachment(proof,current_app.config["UPLOAD_FOLDER"],"fuel"))
+            audit("fuel.purchase.updated","fuel_purchase",new_row.id,after={
+                "status":new_row.status,"employee_id":new_row.employee_id,"tank_id":new_row.tank_id,
+                "liters":str(new_row.liters),"amount":str(new_row.landed_cost),"document_id":new_row.document_id
+            })
+            _notify_supply_reviewers(new_row,"تعديل توريد ديزل","تم تعديل توريد غير معتمد وإعادة إرساله للمراجعة.")
+            db.session.commit()
+            flash("تم حفظ تعديل التوريد وإعادة إرساله للمدير للاعتماد.","success")
+            return redirect(url_for("fuel.supply"))
+        except (ValueError,TypeError) as exc:
+            db.session.rollback()
+            form_error=True
+            flash(str(exc),"danger")
+            purchase=FuelPurchase.query.get_or_404(purchase_id)
+
+    purchases=(
+        FuelPurchase.query.order_by(FuelPurchase.id.desc()).limit(50).all()
+        if current_user.has_role("manager")
+        else FuelPurchase.query.filter_by(employee_id=current_user.id).order_by(FuelPurchase.id.desc()).limit(50).all()
+    )
+    employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
+    settings=ProjectSettings.get()
+    themed=_use_employee_water_theme()
+    template="fuel/supply_theme2.html" if themed else "fuel/supply_edit.html"
+    return render_template(
+        template,purchases=purchases,tanks=tanks,employees=employees,today=date.today().isoformat(),
+        selected_tank_id=str(purchase.tank_id),editing=purchase,form_error=form_error,
+        supply_cashbox_balance=_supply_cashbox_balance(purchase.employee_id),
+        supply_project_name=settings.project_name,
+    )
+
 
 @fuel_bp.post("/supply/<int:purchase_id>/review")
 @permission_required("fuel.supply.approve")
