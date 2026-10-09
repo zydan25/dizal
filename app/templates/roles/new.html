@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading">
+  <h1>إضافة دور جديد</h1>
+  <p>أنشئ اسمًا للدور وحدد صلاحياته من البداية. لن يحصل الدور إلا على الصلاحيات المحددة أدناه.</p>
+</div>
+<form method="post" class="mobile-form card-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="section-title"><h2>بيانات الدور</h2><span>التعريف</span></div>
+  <label>اسم الدور الظاهر<input name="label" value="{{ values.get('label','') }}" required placeholder="مثال: مشرف التوريدات"></label>
+  <label>الاسم البرمجي بالإنجليزية<input name="name" value="{{ values.get('name','') }}" required pattern="[a-z][a-z0-9_]{2,39}" autocomplete="off" placeholder="مثال: supply_supervisor"></label>
+  <small class="field-help">استخدم حروفًا إنجليزية صغيرة وأرقامًا وشرطة سفلية فقط، ويجب أن يبدأ الاسم بحرف.</small>
+  <label>وصف الدور<textarea name="description" rows="2" placeholder="ما المهام التي يؤديها هذا الدور؟">{{ values.get('description','') }}</textarea></label>
+  <div class="section-title"><h2>صلاحيات الدور</h2><span>حدد ما يحتاجه هذا الدور فقط</span></div>
+  {% set module_labels = {'dashboard':'لوحة المتابعة','settings':'الإعدادات','users':'المستخدمون والأدوار','employees':'الموظفون','cashbox':'الصناديق','capital':'رأس المال','assets':'الأصول','fuel':'الديزل والتوريدات','farmers':'المزارعون','expenses':'المصروفات','settlements':'التسويات','reports':'التقارير','documents':'السندات','notifications':'الإشعارات','audit':'التدقيق','whatsapp':'واتساب'} %}
+  {% for module in permissions.values()|map(attribute=1)|unique %}
+  <section class="permission-group">
+    <h2>{{ module_labels.get(module,module) }}</h2>
+    {% for key,meta in permissions.items() if meta[1]==module %}
+    <label class="permission-row">
+      <input type="checkbox" name="permission" value="{{ key }}" {% if key in request.form.getlist('permission') %}checked{% endif %}>
+      <span><strong>{{ meta[0] }}</strong><small>{{ key }}</small></span>
+    </label>
+    {% endfor %}
+  </section>
+  {% endfor %}
+  <button class="primary-btn submit-loading" type="submit" data-loading-text="جارٍ إنشاء الدور وحفظ الصلاحيات…"><i class="bi bi-shield-plus"></i><span>إنشاء الدور وحفظ الصلاحيات</span></button>
+  <a class="secondary-btn" href="{{ url_for('roles.index') }}">إلغاء والعودة</a>
+</form>
+{% endblock %}
