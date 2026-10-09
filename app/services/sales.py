@@ -12,12 +12,15 @@ def farmer_consumed_drums(farmer_id):
     return Decimal(str(value))
 
 def farmer_outstanding_amount(farmer_id,before_date=None):
-    """Get the farmer's current receivable balance from the accounting ledger.
+    """Calculate farmer receivable from journal account 1400.
 
-    Historical records predating journal posting are handled by the legacy
-    calculation only when this farmer has no receivable journal lines at all.
+    For historic transactions that have no journal posting, add only those
+    unposted dispenses and payments. This keeps older and newly posted data
+    together without double-counting entries that already exist in accounting.
     """
     from sqlalchemy import or_
+    from datetime import datetime,time,timezone
+
     ledger_query=(
         db.session.query(func.coalesce(func.sum(JournalLine.debit-JournalLine.credit),0))
         .join(JournalEntry,JournalLine.journal_entry_id==JournalEntry.id)
@@ -31,47 +34,43 @@ def farmer_outstanding_amount(farmer_id,before_date=None):
     )
     if before_date is not None:
         ledger_query=ledger_query.filter(JournalEntry.entry_date<before_date)
-    ledger_count_query=(
-        db.session.query(func.count(JournalLine.id))
-        .join(JournalEntry,JournalLine.journal_entry_id==JournalEntry.id)
-        .join(Account,JournalLine.account_id==Account.id)
-        .outerjoin(Document,JournalEntry.document_id==Document.id)
-        .filter(
-            JournalLine.farmer_id==farmer_id,
-            Account.code=="1400",
-            or_(JournalEntry.document_id.is_(None),Document.status!="reversed"),
-        )
-    )
-    if before_date is not None:
-        ledger_count_query=ledger_count_query.filter(JournalEntry.entry_date<before_date)
-    ledger_line_count=ledger_count_query.scalar() or 0
-    if ledger_line_count:
-        balance=Decimal(str(ledger_query.scalar() or 0))
-        return max(balance,Decimal("0"))
+    ledger_balance=Decimal(str(ledger_query.scalar() or 0))
 
-    # One-time compatibility for historical accounts not yet represented in the ledger.
-    dispensed_query=(
+    # Legacy dispense rows only count if their own fuel_dispense journal was not posted.
+    unposted_dispenses=(
         db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0))
         .join(Document,FuelDispense.document_id==Document.id)
         .filter(
             FuelDispense.farmer_id==farmer_id,
             FuelDispense.status=="approved",
             Document.status!="reversed",
+            ~db.session.query(JournalEntry.id).filter(
+                JournalEntry.document_id==FuelDispense.document_id,
+                JournalEntry.source_type=="fuel_dispense",
+            ).exists(),
         )
     )
-    paid_query=(
+    # Likewise, avoid counting a receipt again if its journal already reduced account 1400.
+    unposted_payments=(
         db.session.query(func.coalesce(func.sum(FarmerPayment.amount),0))
         .join(Document,FarmerPayment.document_id==Document.id)
-        .filter(FarmerPayment.farmer_id==farmer_id,Document.status!="reversed")
+        .filter(
+            FarmerPayment.farmer_id==farmer_id,
+            Document.status!="reversed",
+            ~db.session.query(JournalEntry.id).filter(
+                JournalEntry.document_id==FarmerPayment.document_id,
+                JournalEntry.source_type=="farmer_payment",
+            ).exists(),
+        )
     )
     if before_date is not None:
-        from datetime import datetime,time,timezone
         start_dt=datetime.combine(before_date,time.min).replace(tzinfo=timezone.utc)
-        dispensed_query=dispensed_query.filter(FuelDispense.created_at<start_dt)
-        paid_query=paid_query.filter(FarmerPayment.created_at<start_dt)
-    dispensed=dispensed_query.scalar() or 0
-    paid=paid_query.scalar() or 0
-    return max(Decimal(str(dispensed))-Decimal(str(paid)),Decimal("0"))
+        unposted_dispenses=unposted_dispenses.filter(FuelDispense.created_at<start_dt)
+        unposted_payments=unposted_payments.filter(FarmerPayment.created_at<start_dt)
+
+    legacy_debits=Decimal(str(unposted_dispenses.scalar() or 0))
+    legacy_credits=Decimal(str(unposted_payments.scalar() or 0))
+    return max(ledger_balance+legacy_debits-legacy_credits,Decimal("0"))
 
 def farmer_outstanding_credit_drums(farmer_id):
     dispenses=(FuelDispense.query.filter_by(farmer_id=farmer_id,status="approved").order_by(FuelDispense.created_at.asc(),FuelDispense.id.asc()).all())
