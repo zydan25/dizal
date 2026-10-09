@@ -1262,7 +1262,7 @@ body.employee-theme-water {
   margin: 10px auto 24px;
 }
 .employee-theme-water .page-wrap {
-  padding-bottom: 46px;
+  padding-bottom: calc(42px + env(safe-area-inset-bottom, 0px));
 }
 
 .employee-theme-water .water-menu-grid a {
