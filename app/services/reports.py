@@ -303,16 +303,8 @@ def farmer_debts():
         sold=_decimal(db.session.query(func.coalesce(func.sum(FuelDispense.total_amount),0)).filter(
             FuelDispense.farmer_id==farmer.id,FuelDispense.status=="approved"
         ).scalar())
-        credit=_decimal(db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0)).filter(
-            FuelDispense.farmer_id==farmer.id,FuelDispense.status=="approved"
-        ).scalar())
-        paid=_decimal(
-            db.session.query(func.coalesce(func.sum(FarmerPayment.amount),0))
-            .join(Document,FarmerPayment.document_id==Document.id)
-            .filter(FarmerPayment.farmer_id==farmer.id,Document.status!="reversed")
-            .scalar()
-        )
-        outstanding=max(credit-paid,ZERO)
+        from .sales import farmer_outstanding_amount
+        outstanding=farmer_outstanding_amount(farmer.id)
         if outstanding>ZERO:
             rows.append({"farmer":farmer,"sales":sold,"outstanding":outstanding})
     return rows
