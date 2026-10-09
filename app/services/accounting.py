@@ -30,6 +30,37 @@ def account(code):
     if not row: raise ValueError(f"الحساب {code} غير موجود.")
     return row
 
+
+def ensure_farmer_receivable_account(farmer_or_id):
+    """Return the dedicated receivable subaccount for one farmer."""
+    from ..models import Farmer
+
+    farmer_id=getattr(farmer_or_id,"id",farmer_or_id)
+    farmer=farmer_or_id if isinstance(farmer_or_id,Farmer) else Farmer.query.get(int(farmer_id))
+    if farmer is None:
+        raise ValueError("المزارع المطلوب إنشاء حسابه المحاسبي غير موجود.")
+
+    control=account("1400")
+    code=f"1400-F{farmer.id:06d}"
+    row=Account.query.filter_by(code=code).first()
+    if row is None:
+        row=Account(
+            code=code,
+            name=f"ذمم المزارع - {farmer.name}",
+            account_type="asset",
+            parent_id=control.id,
+            is_system=False,
+            active=True,
+        )
+        db.session.add(row)
+        db.session.flush()
+    else:
+        row.name=f"ذمم المزارع - {farmer.name}"
+        row.parent_id=control.id
+        row.account_type="asset"
+        row.active=True
+    return row
+
 def post_journal(source_type,source_id,description,created_by_id,lines,document_id=None,entry_date=None):
     entry_date=entry_date or date.today()
     debit_total=sum((Decimal(str(item.get("debit",0))) for item in lines),Decimal("0"))
@@ -40,7 +71,19 @@ def post_journal(source_type,source_id,description,created_by_id,lines,document_
     db.session.add(entry)
     db.session.flush()
     for item in lines:
-        db.session.add(JournalLine(journal_entry_id=entry.id,account_id=account(item["account_code"]).id,debit=Decimal(str(item.get("debit",0))),credit=Decimal(str(item.get("credit",0))),employee_id=item.get("employee_id"),farmer_id=item.get("farmer_id"),description=item.get("description")))
+        if item.get("account_code")=="1400" and item.get("farmer_id") is not None:
+            ledger_account=ensure_farmer_receivable_account(item["farmer_id"])
+        else:
+            ledger_account=account(item["account_code"])
+        db.session.add(JournalLine(
+            journal_entry_id=entry.id,
+            account_id=ledger_account.id,
+            debit=Decimal(str(item.get("debit",0))),
+            credit=Decimal(str(item.get("credit",0))),
+            employee_id=item.get("employee_id"),
+            farmer_id=item.get("farmer_id"),
+            description=item.get("description"),
+        ))
     db.session.flush()
     return entry
 
