@@ -80,6 +80,60 @@
     </div>
   </section>
   {% endif %}
+
+  {% if project_capacity %}
+  {% set capacity_percent = ((project_capacity.used_liters|float / project_capacity.limit_liters|float * 100) if project_capacity.limit_liters else 0) %}
+  {% if capacity_percent > 100 %}{% set capacity_percent = 100 %}{% endif %}
+  <section class="water-dashboard-panel water-project-capacity">
+    <div class="water-panel-heading">
+      <h2>حد الديزل للمشروع</h2>
+      <a href="{{ url_for('fuel.stock') }}">المخزون</a>
+    </div>
+    <div class="water-capacity-total">
+      <span>الحد الإجمالي المسموح</span>
+      <strong>{{ project_capacity.limit_liters|clean_number }} <small>لتر</small></strong>
+    </div>
+    <div class="water-capacity-progress" role="progressbar" aria-label="استخدام حد الديزل للمشروع"
+         aria-valuemin="0" aria-valuemax="{{ project_capacity.limit_liters|float }}"
+         aria-valuenow="{{ project_capacity.used_liters|float }}">
+      <span style="width: {{ capacity_percent }}%"></span>
+    </div>
+    <div class="water-capacity-progress-labels">
+      <span>المستخدم/المحجوز {{ project_capacity.used_liters|clean_number }} لتر</span>
+      <span>{{ capacity_percent|round(1) }}%</span>
+    </div>
+    <div class="water-stats-grid water-capacity-breakdown">
+      <div class="water-stat">
+        <span>محجوز للمزارعين</span>
+        <strong>{{ project_capacity.farmer_quota_liters|clean_number }} لتر</strong>
+        <small>{{ project_capacity.farmer_quota_drums|clean_number }} دبة متفق عليها</small>
+      </div>
+      <div class="water-stat">
+        <span>بيع عام سابق</span>
+        <strong>{{ project_capacity.general_sale_liters|clean_number }} لتر</strong>
+      </div>
+      <div class="water-stat water-capacity-remaining">
+        <span>الفائض المتاح</span>
+        <strong>{{ project_capacity.remaining_liters|clean_number }} لتر</strong>
+        <small>{{ project_capacity.remaining_drums|round(2)|clean_number }} دبة تقريبًا</small>
+      </div>
+      <div class="water-stat">
+        <span>لترات الدبة</span>
+        <strong>{{ project_capacity.drum_liters|clean_number }} لتر</strong>
+      </div>
+    </div>
+    <p class="water-capacity-note">
+      <i class="bi bi-info-circle"></i>
+      الكمية المتفق عليها للمزارع تُحجز من حد المشروع حتى إن لم يسحبها بعد. البيع العام مسموح من الفائض فقط.
+    </p>
+    {% if project_capacity.over_limit_liters > 0 %}
+    <div class="water-capacity-warning">
+      <i class="bi bi-exclamation-triangle"></i>
+      توجد كميات قديمة تتجاوز حد المشروع الحالي بمقدار {{ project_capacity.over_limit_liters|clean_number }} لتر. لن يسمح النظام بحجوزات أو مبيعات عامة إضافية حتى معالجة التجاوز.
+    </div>
+    {% endif %}
+  </section>
+  {% endif %}
 </main>
 
 <script>
