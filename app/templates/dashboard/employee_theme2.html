@@ -1,33 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<header class="water-header">
-  <div class="water-header-inner">
-    <div class="water-title-row">
-      <button class="water-menu-toggle" id="employee-theme-menu-toggle" type="button" aria-expanded="false" aria-controls="employee-theme-menu" aria-label="فتح القائمة"><i class="bi bi-list" aria-hidden="true"></i></button>
-      <div class="water-brand">
-        <span class="water-brand-mark"><i class="bi bi-fuel-pump-fill" aria-hidden="true"></i></span>
-        <h1>{{ project_settings.project_name }}</h1>
-      </div>
-      <button class="water-back d-none" id="employee-theme-install-proxy" data-dizal-install-proxy type="button" aria-label="تثبيت التطبيق" title="تثبيت التطبيق"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
-    </div>
-  </div>
-  <div class="water-menu-panel" id="employee-theme-menu" hidden>
-    <div class="water-menu-grid">
-      <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house"></i><span>الرئيسية</span></a>
-      <a href="{{ url_for('farmers.index') }}"><i class="bi bi-people"></i><span>المزارعون</span></a>
-      <a href="{{ url_for('sales.dispense') }}"><i class="bi bi-droplet-half"></i><span>صرف ديزل</span></a>
-      <a href="{{ url_for('sales.payment') }}"><i class="bi bi-cash-coin"></i><span>تسجيل سداد</span></a>
-      <a href="{{ url_for('fuel.stock') }}"><i class="bi bi-fuel-pump"></i><span>مخزون الديزل</span></a>
-      <a href="{{ url_for('reports.my_operations') }}"><i class="bi bi-clipboard-data"></i><span>تقريري التشغيلي</span></a>
-      <a href="{{ url_for('notifications.index') }}"><i class="bi bi-bell"></i><span>الإشعارات</span></a>
-      <a href="{{ url_for('auth.account') }}"><i class="bi bi-person-circle"></i><span>حسابي</span></a>
-    </div>
-    <form method="post" action="{{ url_for('auth.logout') }}" onsubmit="return confirm('هل أنت متأكد من تسجيل الخروج؟');">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button class="water-menu-logout" type="submit"><i class="bi bi-box-arrow-right"></i><span>تسجيل الخروج</span></button>
-    </form>
-  </div>
-</header>
+
 
 <main class="water-dashboard">
   <section class="water-actions-shell">
@@ -156,32 +129,5 @@
   {% endif %}
 </main>
 
-<script>
-(function () {
-  const button = document.getElementById("employee-theme-menu-toggle");
-  const menu = document.getElementById("employee-theme-menu");
-  const installProxy = document.getElementById("employee-theme-install-proxy");
-  if (installProxy) {
-    installProxy.addEventListener("click", function () {
-      const installButton = document.querySelector("[data-dizal-install]");
-      if (installButton) installButton.click();
-    });
-  }
-  if (!button || !menu) return;
 
-  button.addEventListener("click", function () {
-    const opening = menu.hasAttribute("hidden");
-    if (opening) menu.removeAttribute("hidden");
-    else menu.setAttribute("hidden", "");
-    button.setAttribute("aria-expanded", opening ? "true" : "false");
-  });
-
-  document.addEventListener("click", function (event) {
-    if (menu.hasAttribute("hidden")) return;
-    if (menu.contains(event.target) || button.contains(event.target)) return;
-    menu.setAttribute("hidden", "");
-    button.setAttribute("aria-expanded", "false");
-  });
-})();
-</script>
 {% endblock %}
