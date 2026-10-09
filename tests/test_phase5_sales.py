@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from app import create_app
 from app.extensions import db
-from app.models import User,Role,ProjectSettings,Cashbox,FuelTank,Farmer,EmployeeProfile,FarmerPaymentAllocation,JournalEntry
+from app.models import Account,JournalLine,User,Role,ProjectSettings,Cashbox,FuelTank,Farmer,EmployeeProfile,FarmerPaymentAllocation,JournalEntry
 from app.services.capital import add_capital,allocate_to_employee
 from app.services.fuel import create_purchase,approve_purchase,current_stock_liters
 from app.services.sales import create_dispense,create_general_sale,register_payment,farmer_account,farmer_outstanding_amount
@@ -135,6 +135,13 @@ def test_farmer_balance_combines_journals_with_older_unposted_sales_without_doub
         assert journal is not None
         db.session.delete(journal)
         db.session.commit()
+
+        # Receivable postings go to the individual farmer subaccount.
+        control=Account.query.filter_by(code="1400").first()
+        receivable=Account.query.filter_by(code=f"1400-F{farmer_id:06d}").first()
+        assert control is not None and receivable is not None
+        assert receivable.parent_id==control.id
+        assert JournalLine.query.filter_by(account_id=receivable.id,farmer_id=farmer_id).count()>0
 
         # 2 drums posted to the ledger + 1 drum not posted yet = 39,000.
         assert farmer_outstanding_amount(farmer_id)==Decimal("39000")
