@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="water-header">
+  <div class="water-header-inner">
+    <div class="water-title-row">
+      <div class="water-brand">
+        <span class="water-brand-mark"><i class="bi bi-fuel-pump-fill" aria-hidden="true"></i></span>
+        <h1>{{ project_settings.project_name }}</h1>
+      </div>
+      <a class="water-back" href="{{ url_for('auth.account') }}" aria-label="العودة إلى حسابي" title="حسابي"><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    <div class="water-menu-row">
+      <button class="water-menu-toggle" id="employee-theme-menu-toggle" type="button" aria-expanded="false" aria-controls="employee-theme-menu" aria-label="فتح القائمة"><i class="bi bi-list" aria-hidden="true"></i></button>
+    </div>
+  </div>
+  <div class="water-menu-panel" id="employee-theme-menu" hidden>
+    <div class="water-menu-grid">
+      <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house"></i><span>الرئيسية</span></a>
+      <a href="{{ url_for('farmers.index') }}"><i class="bi bi-people"></i><span>المزارعون</span></a>
+      <a href="{{ url_for('sales.dispense') }}"><i class="bi bi-droplet-half"></i><span>صرف ديزل</span></a>
+      <a href="{{ url_for('sales.payment') }}"><i class="bi bi-cash-coin"></i><span>تسجيل سداد</span></a>
+      <a href="{{ url_for('fuel.stock') }}"><i class="bi bi-fuel-pump"></i><span>مخزون الديزل</span></a>
+      <a href="{{ url_for('reports.my_operations') }}"><i class="bi bi-clipboard-data"></i><span>تقريري التشغيلي</span></a>
+      <a href="{{ url_for('notifications.index') }}"><i class="bi bi-bell"></i><span>الإشعارات</span></a>
+      <a href="{{ url_for('auth.account') }}"><i class="bi bi-person-circle"></i><span>حسابي</span></a>
+    </div>
+    <form method="post" action="{{ url_for('auth.logout') }}" onsubmit="return confirm('هل أنت متأكد من تسجيل الخروج؟');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="water-menu-logout" type="submit"><i class="bi bi-box-arrow-right"></i><span>تسجيل الخروج</span></button>
+    </form>
+  </div>
+</header>
+
+<main class="water-dashboard">
+  <section class="water-quick-actions" aria-label="إجراءات سريعة">
+    <div class="quick-actions-inline" dir="rtl">
+      <a href="{{ url_for('sales.dispense') }}" class="inline-action-btn"><i class="bi bi-plus plus-icon" aria-hidden="true"></i><span>صرف ديزل</span></a>
+      <a href="{{ url_for('sales.payment') }}" class="inline-action-btn"><i class="bi bi-plus plus-icon" aria-hidden="true"></i><span>تسجيل سداد</span></a>
+      <a href="{{ url_for('farmers.new') }}" class="inline-action-btn"><i class="bi bi-plus plus-icon" aria-hidden="true"></i><span>إضافة مزارع</span></a>
+    </div>
+  </section>
+
+  <section class="water-action-grid" aria-label="إجراءات الموظف">
+    <a class="water-action-card" href="{{ url_for('sales.payment') }}"><i class="bi bi-cash-coin" aria-hidden="true"></i><strong>تسجيل سداد</strong></a>
+    <a class="water-action-card" href="{{ url_for('sales.dispense') }}"><i class="bi bi-droplet-half" aria-hidden="true"></i><strong>صرف ديزل</strong></a>
+    <a class="water-action-card" href="{{ url_for('farmers.index') }}"><i class="bi bi-people" aria-hidden="true"></i><strong>المزارعون</strong></a>
+    <a class="water-action-card" href="{{ url_for('farmers.new') }}"><i class="bi bi-person-plus" aria-hidden="true"></i><strong>إضافة مزارع</strong></a>
+    <a class="water-action-card" href="{{ url_for('fuel.stock') }}"><i class="bi bi-fuel-pump-fill" aria-hidden="true"></i><strong>مخزون الديزل</strong></a>
+    <a class="water-action-card" href="{{ url_for('cashbox.index') }}"><i class="bi bi-wallet2" aria-hidden="true"></i><strong>صندوقي</strong></a>
+    <a class="water-action-card" href="{{ url_for('reports.my_operations') }}"><i class="bi bi-calendar-check" aria-hidden="true"></i><strong>تقرير العمليات</strong></a>
+    <a class="water-action-card" href="{{ url_for('fuel.supply') }}"><i class="bi bi-truck" aria-hidden="true"></i><strong>التوريدات</strong></a>
+  </section>
+
+  <section class="water-dashboard-panel">
+    <div class="water-panel-heading">
+      <h2>أعلى مديونيات المزارعين</h2>
+      <a href="{{ url_for('reports.my_operations') }}">عرض الكل</a>
+    </div>
+    {% for row in employee_debtors %}
+    <div class="water-debtor-row">
+      <div class="water-debtor-main">
+        <strong>{{ row.farmer.name }}</strong>
+        <span>{{ row.farmer.phone or 'حساب المزارع' }}</span>
+      </div>
+      <div class="water-debtor-amount">{{ row.outstanding|clean_number }} <small>{{ project_settings.currency }}</small></div>
+    </div>
+    {% else %}
+    <div class="water-empty"><i class="bi bi-check-circle"></i><div>لا توجد مديونيات مسجلة عليك حاليًا.</div></div>
+    {% endfor %}
+  </section>
+
+  {% if employee_stats %}
+  <section class="water-dashboard-panel">
+    <div class="water-panel-heading"><h2>ملخص اليوم</h2><a href="{{ url_for('reports.my_operations') }}">التقرير</a></div>
+    <div class="water-stats-grid">
+      <div class="water-stat"><span>صرف اليوم</span><strong>{{ employee_stats.today_drums|clean_number }} دبة</strong></div>
+      <div class="water-stat"><span>تحصيل اليوم</span><strong>{{ employee_stats.today_collected|clean_number }} {{ project_settings.currency }}</strong></div>
+      <div class="water-stat"><span>الصندوق</span><strong>{{ (employee_cashbox.balance if employee_cashbox else 0)|clean_number }} {{ project_settings.currency }}</strong></div>
+      <div class="water-stat"><span>المخزون المتاح</span><strong>{{ (employee_stats.available_liters / project_settings.drum_liters)|round(1)|clean_number }} دبة</strong></div>
+    </div>
+  </section>
+  {% endif %}
+</main>
+
+<script>
+(function () {
+  const button = document.getElementById("employee-theme-menu-toggle");
+  const menu = document.getElementById("employee-theme-menu");
+  if (!button || !menu) return;
+
+  button.addEventListener("click", function () {
+    const opening = menu.hasAttribute("hidden");
+    if (opening) menu.removeAttribute("hidden");
+    else menu.setAttribute("hidden", "");
+    button.setAttribute("aria-expanded", opening ? "true" : "false");
+  });
+
+  document.addEventListener("click", function (event) {
+    if (menu.hasAttribute("hidden")) return;
+    if (menu.contains(event.target) || button.contains(event.target)) return;
+    menu.setAttribute("hidden", "");
+    button.setAttribute("aria-expanded", "false");
+  });
+})();
+</script>
+{% endblock %}
