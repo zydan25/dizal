@@ -5,7 +5,7 @@ from app.extensions import db
 from app.models import User,Role,Cashbox,FuelTank,ProjectSettings
 from app.services.cashbox import balance
 from app.services.capital import add_capital,allocate_to_employee
-from app.services.fuel import create_purchase,approve_purchase,current_stock_liters
+from app.services.fuel import create_purchase,approve_purchase,current_stock_liters,update_purchase
 from flask_security.utils import hash_password
 
 def make_app():
@@ -60,3 +60,40 @@ def test_no_negative_employee_cashbox_on_supply():
             assert "رصيد" in str(exc)
         else:
             raise AssertionError("Expected insufficient cashbox error")
+
+
+def test_pending_fuel_purchase_can_be_updated_without_touching_stock_or_cashbox():
+    app=make_app()
+    manager_id,employee_id,employee_box_id,tank_id=seed(app)
+    with app.app_context():
+        purchase=create_purchase(
+            employee_id,tank_id,date.today(),"مورد قديم",
+            Decimal("1000"),Decimal("60000"),Decimal("1500"),Decimal("500"),
+            employee_id,"ملاحظات قديمة"
+        )
+        db.session.commit()
+        assert purchase.status=="submitted"
+        assert current_stock_liters(tank_id)==Decimal("0")
+        before_balance=balance(employee_box_id)
+
+        update_purchase(
+            purchase,tank_id,date.today(),
+            Decimal("1200"),Decimal("70000"),Decimal("1000"),Decimal("100"),
+            "ملاحظات معدلة"
+        )
+        db.session.commit()
+
+        assert purchase.supplier_name is None
+        assert purchase.liters==Decimal("1200")
+        assert purchase.diesel_amount==Decimal("70000")
+        assert purchase.delivery_fee==Decimal("1000")
+        assert purchase.other_fee==Decimal("100")
+        assert purchase.landed_cost==Decimal("71100")
+        assert purchase.notes=="ملاحظات معدلة"
+        assert purchase.status=="submitted"
+        assert purchase.document.status=="submitted"
+        assert current_stock_liters(tank_id)==Decimal("0")
+        assert balance(employee_box_id)==before_balance
+        assert FuelStockMovement.query.filter_by(
+            source_type="fuel_purchase",source_id=str(purchase.id)
+        ).count()==0
