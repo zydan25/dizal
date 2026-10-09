@@ -64,10 +64,12 @@
         {% endif %}
         <h1>{{ project_settings.project_name }}</h1>
       </div>
+      {% if user_has_permission(current_user,'notifications.view') %}
       <a class="water-header-notifications" href="{{ url_for('notifications.index') }}" aria-label="الإشعارات" title="الإشعارات">
         <i class="bi bi-bell" aria-hidden="true"></i>
         {% if unread_notifications %}<span>{{ unread_notifications }}</span>{% endif %}
       </a>
+      {% endif %}
       <button class="water-back d-none" id="employee-theme-install-proxy" data-dizal-install-proxy type="button" aria-label="تثبيت التطبيق" title="تثبيت التطبيق"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
     </div>
   </div>
