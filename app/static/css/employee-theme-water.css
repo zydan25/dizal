@@ -1200,6 +1200,71 @@ body.employee-theme-water {
   color: #245dc5;
   font-size: 1rem;
 }
+
+.employee-theme-water .water-menu-section h2 {
+  padding: 0;
+}
+.employee-theme-water .water-menu-section-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 1px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: right;
+  cursor: pointer;
+}
+.employee-theme-water .water-menu-section-toggle > span:first-child {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.employee-theme-water .water-menu-section-toggle > span:first-child > span {
+  overflow-wrap: anywhere;
+}
+.employee-theme-water .water-menu-section-toggle .water-menu-section-chevron {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  color: #8a96a8;
+  font-size: .75rem;
+  transition: transform .18s ease;
+}
+.employee-theme-water .water-menu-section.is-open .water-menu-section-chevron {
+  transform: rotate(180deg);
+}
+.employee-theme-water .water-menu-section-toggle:focus-visible {
+  border-radius: 8px;
+  outline: 2px solid #9dbcf2;
+  outline-offset: 3px;
+}
+.employee-theme-water .water-menu-grid[hidden] {
+  display: none !important;
+}
+
+/* Keep forms inside a comfortable mobile content width instead of edge-to-edge. */
+.employee-theme-water .page-wrap form:has(input:not([type="hidden"]), select, textarea):not(.water-supply-form):not(.water-supply-review-form) {
+  box-sizing: border-box;
+  width: min(760px, calc(100% - 28px));
+  max-width: 760px;
+  margin-right: auto;
+  margin-bottom: 24px;
+  margin-left: auto;
+}
+.employee-theme-water .page-wrap .mobile-form.card-form:not(.water-supply-form) {
+  box-sizing: border-box;
+  width: min(760px, calc(100% - 28px));
+  max-width: 760px;
+  margin: 10px auto 24px;
+}
+.employee-theme-water .page-wrap {
+  padding-bottom: 46px;
+}
+
 .employee-theme-water .water-menu-grid a {
   position: relative;
   min-height: 44px;
