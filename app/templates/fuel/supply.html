@@ -36,6 +36,9 @@
 </form>
 {% endif %}
 <a class="icon-btn" href="{{url_for('documents.view',document_id=purchase.document_id)}}" aria-label="السند"><i class="bi bi-receipt"></i></a>
+{% if purchase.status in ["submitted","changes_requested"] and (purchase.employee_id==current_user.id or user_has_permission(current_user,"users.manage")) %}
+<a class="icon-btn" href="{{url_for('fuel.edit_supply',purchase_id=purchase.id)}}" aria-label="تعديل التوريد" title="تعديل التوريد"><i class="bi bi-pencil-square"></i></a>
+{% endif %}
 </div></div>
 {% else %}<div class="empty-state"><i class="bi bi-truck"></i><strong>لا توجد توريدات</strong><span>سيظهر أول توريد هنا.</span></div>{% endfor %}
 </div>
