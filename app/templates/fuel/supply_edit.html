@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row">
+  <div class="page-heading"><h1>تعديل توريد ديزل</h1><p>{{ purchase.document.number }} · لا يمكن تعديل التوريد بعد اعتماده.</p></div>
+  <a class="secondary-btn" href="{{ url_for('fuel.supply') }}"><i class="bi bi-arrow-right"></i><span>العودة للتوريدات</span></a>
+</div>
+<div class="info-card settings-help"><i class="bi bi-info-circle"></i><span>بعد حفظ التعديلات سيعاد إرسال التوريد إلى قائمة انتظار اعتماد المدير. لن يتغير المخزون أو الصندوق قبل الاعتماد.</span></div>
+<form method="post" enctype="multipart/form-data" action="{{ url_for('fuel.edit_supply',purchase_id=purchase.id) }}" class="mobile-form card-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label>الخزان
+    <select name="tank_id" required>
+      {% for tank in tanks %}<option value="{{ tank.id }}" {% if tank.id==purchase.tank_id %}selected{% endif %}>{{ tank.name }} · {{ tank.code }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>تاريخ الشراء<input name="purchase_date" type="date" value="{{ purchase.purchase_date.isoformat() }}" required></label>
+  <label>كمية الديزل المورد باللتر<input name="liters" type="number" step="0.001" min="0.001" data-unit="liter" value="{{ purchase.liters|clean_number }}" required></label>
+  <label>قيمة شراء الديزل<input name="diesel_amount" type="number" step="0.001" min="0" value="{{ purchase.diesel_amount|clean_number }}" required></label>
+  <div class="two-col">
+    <label>تكلفة التوصيل<input name="delivery_fee" type="number" step="0.001" min="0" value="{{ purchase.delivery_fee|clean_number }}" required></label>
+    <label>رسوم أخرى<input name="other_fee" type="number" step="0.001" min="0" value="{{ purchase.other_fee|clean_number }}" required></label>
+  </div>
+  <label>إرفاق سند أو فاتورة إضافية<input name="proof" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp"></label>
+  <label>ملاحظات<textarea name="notes" rows="3">{{ purchase.notes or '' }}</textarea></label>
+  <button class="primary-btn submit-loading" type="submit" data-loading-text="جارٍ حفظ التعديلات وإعادة الإرسال…"><i class="bi bi-cloud-arrow-up"></i><span>حفظ التعديلات وإعادة الإرسال</span></button>
+</form>
+{% endblock %}
