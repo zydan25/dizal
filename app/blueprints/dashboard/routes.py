@@ -6,6 +6,7 @@ from ...decorators import permission_required
 from ...models import AuditLog,Cashbox,Document,Farmer,FarmerPayment,FuelDispense,FuelPurchase,FuelTank,Notification,ProjectSettings,User
 from ...permissions import user_has_permission
 from ...services.cashbox import balance
+from ...services.farmers import project_diesel_capacity
 from ...services.sales import farmer_account
 from ...services.reports import farmer_debts,inventory_commitment,project_summary
 from . import dashboard_bp
@@ -71,7 +72,8 @@ def index():
         }
     settings=ProjectSettings.get()
     dashboard_template="dashboard/employee_theme2.html" if (not manager and current_user.is_employee and settings.employee_dashboard_theme=="water") else "dashboard/index.html"
-    return render_template(dashboard_template,manager=manager,employee_count=employee_count,recent_audits=recent_audits,employee_cashbox=employee_cashbox,employee_stats=employee_stats,employee_debtors=employee_debtors,employee_farmers=employee_farmers,employee_farmers_total=employee_farmers_total,employee_notifications=employee_notifications,summary=summary,inventory=inventory,pending_supplies=pending_supplies,pending_farmers=pending_farmers,unread_all=unread_all,trend_rows=trend_rows,tank_overview=tank_overview)
+    project_capacity=project_diesel_capacity() if dashboard_template=="dashboard/employee_theme2.html" else None
+    return render_template(dashboard_template,manager=manager,employee_count=employee_count,recent_audits=recent_audits,employee_cashbox=employee_cashbox,employee_stats=employee_stats,employee_debtors=employee_debtors,employee_farmers=employee_farmers,employee_farmers_total=employee_farmers_total,employee_notifications=employee_notifications,summary=summary,inventory=inventory,pending_supplies=pending_supplies,pending_farmers=pending_farmers,unread_all=unread_all,trend_rows=trend_rows,tank_overview=tank_overview,project_capacity=project_capacity)
 
 def db_sum(column,*conditions):
     return float(__import__("app.extensions",fromlist=["db"]).db.session.query(func.coalesce(func.sum(column),0)).filter(*conditions).scalar() or 0)
