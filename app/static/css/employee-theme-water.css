@@ -284,6 +284,16 @@ body.employee-theme-water {
   gap: 16px;
   padding: 15px 0;
   border-bottom: 1px solid #e5e9f0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background .15s ease;
+}
+.employee-theme-water a.water-debtor-row:hover,
+.employee-theme-water a.water-debtor-row:focus-visible {
+  color: inherit;
+  background: rgba(255,255,255,.65);
+  outline-color: #9cb7e8;
 }
 .employee-theme-water .water-debtor-row:last-child { border-bottom: 0; }
 .employee-theme-water .water-debtor-main {
