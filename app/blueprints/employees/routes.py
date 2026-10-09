@@ -87,12 +87,19 @@ def edit(user_id):
         employee.email=(request.form.get("email") or employee.email or "").strip() or None
         employee.active=request.form.get("active")=="1"
         role_name=(request.form.get("role") or "").strip()
+        role_changed=False
         if role_name:
             role=Role.query.filter_by(name=role_name).first()
             if not role: raise ValueError("الدور المحدد غير موجود.")
             if employee.id==current_user.id and employee.has_role("manager") and role.name!="manager":
                 raise ValueError("لا يمكنك إزالة صلاحية المدير من حسابك الحالي.")
+            prior_role_ids={item.id for item in employee.roles}
+            role_changed=prior_role_ids!={role.id}
             employee.roles[:]=[role]
+            if role_changed:
+                # Overrides are relative to the old role. Clear them on role
+                # changes so they cannot silently defeat the newly selected role.
+                UserPermissionOverride.query.filter_by(user_id=employee.id).delete(synchronize_session=False)
         if profile:
             salary_type=request.form.get("salary_type") or profile.salary_type
             if salary_type not in {"fixed","per_liter","per_drum","percent_profit","commission"}: salary_type=profile.salary_type
@@ -102,7 +109,7 @@ def edit(user_id):
             profile.can_change_farmer_quota=request.form.get("can_change_farmer_quota")=="1"
         audit("employee.updated","user",employee.id,before=before,after={"active":employee.active,"display_name":employee.display_name})
         db.session.commit()
-        flash("تم تحديث بيانات الموظف.","success")
+        flash("تم تحديث بيانات الموظف وتطبيق الدور الجديد. أزيلت استثناءات الدور السابق." if role_changed else "تم تحديث بيانات الموظف.","success")
         return redirect(url_for("employees.index"))
     return render_template("employees/edit.html",employee=employee,profile=profile,roles=roles)
 
