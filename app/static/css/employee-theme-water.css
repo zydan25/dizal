@@ -2,14 +2,15 @@
    All selectors are scoped to .employee-theme-water to protect the existing UI. */
 body.employee-theme-water {
   margin: 0;
-  background: #f4f7fc;
+  background: #f4f7fb;
   color: #111827;
   overflow-x: hidden;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
 }
 .employee-theme-water .app-shell {
   display: block !important;
   min-height: 100vh;
-  background: #f4f7fc;
+  background: #f4f7fb;
 }
 .employee-theme-water .sidebar,
 .employee-theme-water .topbar,
@@ -22,7 +23,7 @@ body.employee-theme-water {
   padding: 0 !important;
   min-width: 0;
   min-height: 100vh;
-  background: #f4f7fc;
+  background: #f4f7fb;
 }
 .employee-theme-water .page-wrap {
   width: 100%;
@@ -43,14 +44,14 @@ body.employee-theme-water {
 .employee-theme-water .water-header-inner {
   width: min(760px, 100%);
   margin: 0 auto;
-  padding: 13px 20px 15px;
+  padding: 6px 20px 8px;
 }
 .employee-theme-water .water-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 53px;
+  min-height: 42px;
 }
 .employee-theme-water .water-brand {
   min-width: 0;
@@ -62,16 +63,16 @@ body.employee-theme-water {
 .employee-theme-water .water-brand-mark {
   display: grid;
   place-items: center;
-  flex: 0 0 34px;
-  width: 34px;
-  height: 34px;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
   color: #1a56db;
-  font-size: 1.55rem;
+  font-size: 1.45rem;
 }
 .employee-theme-water .water-brand h1 {
   margin: 0;
   color: #111;
-  font-size: clamp(1.1rem, 3.7vw, 1.62rem);
+  font-size: clamp(1.05rem, 3.7vw, 1.35rem);
   font-weight: 900;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -79,9 +80,9 @@ body.employee-theme-water {
 .employee-theme-water .water-back {
   display: grid;
   place-items: center;
-  flex: 0 0 48px;
-  width: 48px;
-  height: 48px;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
   border: 1px solid #e1e6ed;
   border-radius: 17px;
   background: #fff;
@@ -92,13 +93,13 @@ body.employee-theme-water {
 .employee-theme-water .water-menu-row {
   display: flex;
   justify-content: flex-start;
-  margin-top: 8px;
+  margin-top: 3px;
 }
 .employee-theme-water .water-menu-toggle {
   display: grid;
   place-items: center;
   width: 58px;
-  height: 48px;
+  height: 41px;
   border: 1px solid #dfe4eb;
   border-radius: 12px;
   background: #fff;
@@ -151,12 +152,18 @@ body.employee-theme-water {
 .employee-theme-water .water-dashboard {
   width: min(720px, 100%);
   margin: 0 auto;
-  padding: 22px 20px 30px;
+  padding: 20px 24px 30px;
+}
+.employee-theme-water .water-actions-shell {
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  background: transparent;
 }
 .employee-theme-water .water-quick-actions {
-  padding: 13px 14px;
+  padding: 9px 10px;
   border: 1px solid #edf0f5;
-  border-radius: 26px;
+  border-radius: 16px;
   background: #fff;
   box-shadow: 0 5px 12px rgba(16, 24, 40, .08);
 }
@@ -175,13 +182,13 @@ body.employee-theme-water {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: .62rem .5rem;
+  padding: .55rem .5rem;
   border: 1px solid #e0e6ef;
-  border-radius: 22px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #fff, #f8fbff);
   box-shadow: 0 3px 9px rgba(15, 23, 42, .04);
   color: #1f2937;
-  font-size: .94rem;
+  font-size: .85rem;
   font-weight: 800;
   text-decoration: none !important;
   white-space: nowrap;
@@ -194,27 +201,27 @@ body.employee-theme-water {
 }
 .employee-theme-water .inline-action-btn .plus-icon {
   color: #4b5563;
-  font-size: 1.15rem;
+  font-size: 1.08rem;
   font-weight: 900;
   line-height: 1;
 }
 .employee-theme-water .water-action-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 16px;
+  gap: 8px;
+  margin-top: 12px;
 }
 .employee-theme-water .water-action-card {
   display: flex;
   min-width: 0;
-  min-height: 160px;
+  min-height: 106px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  padding: 18px 10px;
-  border: 2px solid #e1e6ed;
-  border-radius: 28px;
+  gap: 6px;
+  padding: 16px 12px;
+  border: 1.5px solid #e1e6ed;
+  border-radius: 14px;
   background: rgba(255, 255, 255, .16);
   color: #111827;
   text-align: center;
@@ -231,20 +238,20 @@ body.employee-theme-water {
 .employee-theme-water .water-action-card i {
   display: block;
   color: #111827;
-  font-size: 2.45rem;
+  font-size: 1.8rem;
   line-height: 1;
 }
 .employee-theme-water .water-action-card strong {
   display: block;
-  font-size: 1.07rem;
-  font-weight: 800;
+  font-size: .82rem;
+  font-weight: 700;
   line-height: 1.4;
 }
 .employee-theme-water .water-dashboard-panel {
-  margin-top: 28px;
-  padding: 22px 20px;
-  border: 1.5px solid #e2e7ef;
-  border-radius: 28px;
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px solid #e2e7ef;
+  border-radius: 16px;
   background: rgba(255,255,255,.12);
 }
 .employee-theme-water .water-panel-heading {
@@ -257,7 +264,7 @@ body.employee-theme-water {
 .employee-theme-water .water-panel-heading h2 {
   margin: 0;
   color: #111827;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 900;
 }
 .employee-theme-water .water-panel-heading a {
@@ -334,21 +341,22 @@ body.employee-theme-water {
   overflow-wrap: anywhere;
 }
 @media (max-width: 480px) {
-  .employee-theme-water .water-header-inner { padding: 9px 13px 12px; }
-  .employee-theme-water .water-title-row { gap: 8px; min-height: 48px; }
+  .employee-theme-water .water-header-inner { padding: 6px 13px 8px; }
+  .employee-theme-water .water-title-row { gap: 8px; min-height: 42px; }
   .employee-theme-water .water-brand { gap: 6px; }
-  .employee-theme-water .water-brand-mark { flex-basis: 28px; width: 28px; font-size: 1.35rem; }
-  .employee-theme-water .water-brand h1 { font-size: clamp(1rem, 4.1vw, 1.3rem); }
-  .employee-theme-water .water-back { flex-basis: 43px; width: 43px; height: 43px; border-radius: 15px; }
-  .employee-theme-water .water-dashboard { padding: 19px 13px 25px; }
-  .employee-theme-water .water-quick-actions { padding: 10px; border-radius: 23px; }
-  .employee-theme-water .inline-action-btn { gap: 3px; padding: .55rem .27rem; border-radius: 18px; font-size: .8rem; }
+  .employee-theme-water .water-brand-mark { flex-basis: 28px; width: 28px; font-size: 1.3rem; }
+  .employee-theme-water .water-brand h1 { font-size: clamp(1rem, 4.1vw, 1.22rem); }
+  .employee-theme-water .water-back { flex-basis: 42px; width: 42px; height: 42px; border-radius: 15px; }
+  .employee-theme-water .water-dashboard { padding: 20px 24px 25px; }
+  .employee-theme-water .water-actions-shell { padding: 18px; border-radius: 18px; }
+  .employee-theme-water .water-quick-actions { padding: 8px; border-radius: 14px; }
+  .employee-theme-water .inline-action-btn { gap: 3px; padding: .5rem .27rem; border-radius: 13px; font-size: .75rem; }
   .employee-theme-water .inline-action-btn .plus-icon { font-size: 1rem; }
-  .employee-theme-water .water-action-grid { gap: 10px; margin-top: 14px; }
-  .employee-theme-water .water-action-card { min-height: 137px; gap: 13px; padding: 15px 7px; border-radius: 24px; }
-  .employee-theme-water .water-action-card i { font-size: 2.05rem; }
-  .employee-theme-water .water-action-card strong { font-size: .93rem; }
-  .employee-theme-water .water-dashboard-panel { margin-top: 22px; padding: 18px 15px; border-radius: 24px; }
+  .employee-theme-water .water-action-grid { gap: 8px; margin-top: 12px; }
+  .employee-theme-water .water-action-card { min-height: 106px; gap: 6px; padding: 16px 8px; border-radius: 14px; }
+  .employee-theme-water .water-action-card i { font-size: 1.8rem; }
+  .employee-theme-water .water-action-card strong { font-size: .82rem; }
+  .employee-theme-water .water-dashboard-panel { margin-top: 16px; padding: 20px 16px; border-radius: 16px; }
   .employee-theme-water .water-panel-heading h2 { font-size: 1.12rem; }
   .employee-theme-water .water-panel-heading a { padding: 4px 11px; font-size: .84rem; }
   .employee-theme-water .water-debtor-row { gap: 10px; }
