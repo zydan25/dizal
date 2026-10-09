@@ -165,6 +165,15 @@ def change_quota(farmer,new_quota,new_credit,manager_id,reason=None):
     new_quota=_decimal(new_quota,"كمية المزارع")
     if new_quota<0:
         raise ValueError("كمية المزارع لا يمكن أن تكون سالبة.")
+    consumed_value=db.session.query(func.coalesce(func.sum(FuelDispense.drums),0)).filter(
+        FuelDispense.farmer_id==farmer.id,
+        FuelDispense.status=="approved",
+    ).scalar() or 0
+    consumed_drums=_decimal(consumed_value,"الكمية المسحوبة")
+    if new_quota<consumed_drums:
+        raise ValueError(
+            f"لا يمكن خفض الكمية المتفق عليها إلى أقل من المسحوب بالفعل ({consumed_drums} دبة)."
+        )
     _ensure_project_quota_available(
         new_quota,
         exclude_farmer_id=farmer.id,
