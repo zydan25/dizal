@@ -32,12 +32,12 @@ SECTIONS=[
     ("reports.my_operations","تقريري التشغيلي","bi-clipboard-data","employee.statement.view")
 ]},
 {"key":"admin","title":"الإدارة","icon":"bi-sliders2","items":[
-    ("employees.index","الموظفون","bi-person-gear","employees.view"),
+    ("employees.index","الموظفون","bi-person-gear","users.view"),
     ("roles.index","الأدوار والصلاحيات","bi-shield-lock","roles.manage"),
     ("audit.index","سجل التدقيق","bi-journal-check","audit.view"),
     ("notifications.index","الإشعارات","bi-bell","notifications.view"),
     ("whatsapp.index","واتساب","bi-whatsapp","whatsapp.manage"),
-    ("settings.index","إعدادات المشروع","bi-gear","settings.view")
+    ("settings.index","إعدادات المشروع","bi-gear","settings.manage")
 ]},
 ]
 
