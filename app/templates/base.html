@@ -16,13 +16,13 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link href="{{url_for('static',filename='css/app.css',v='20260930-dashboard-v11')}}" rel="stylesheet">
-{% if current_user.is_authenticated and current_user.is_employee and request.endpoint in ['dashboard.index','fuel.supply','fuel.edit_supply'] and project_settings.employee_dashboard_theme == 'water' and not user_has_permission(current_user,'users.manage') %}
-<link href="{{url_for('static',filename='css/employee-theme-water.css',v='20261009-3')}}" rel="stylesheet">
+{% if current_user.is_authenticated and current_user.is_employee and project_settings.employee_dashboard_theme == 'water' and not user_has_permission(current_user,'users.manage') %}
+<link href="{{url_for('static',filename='css/employee-theme-water.css',v='20261009-4')}}" rel="stylesheet">
 {% endif %}
 <style>:root{--primary:{{project_settings.primary_color}};--secondary:{{project_settings.secondary_color}};--accent:{{project_settings.accent_color}};--surface:{{project_settings.surface_color}};--danger:{{project_settings.danger_color}};--radius:{{project_settings.radius}};--font-scale:{{project_settings.font_scale or '1'}};--font-family:"{{project_settings.font_family}}",Tajawal,sans-serif}.app-logo{max-height:36px;max-width:120px;object-fit:contain}</style>
 <title>{{project_settings.project_name}} | Dizal</title>
 </head>
-<body class="{% if current_user.is_authenticated and current_user.is_employee and request.endpoint in ['dashboard.index','fuel.supply','fuel.edit_supply'] and project_settings.employee_dashboard_theme == 'water' and not user_has_permission(current_user,'users.manage') %}employee-theme-water{% endif %}" data-currency="{{project_settings.currency}}" data-drum-liters="{{project_settings.drum_liters|clean_number}}">
+<body class="{% if current_user.is_authenticated and current_user.is_employee and project_settings.employee_dashboard_theme == 'water' and not user_has_permission(current_user,'users.manage') %}employee-theme-water{% endif %}" data-currency="{{project_settings.currency}}" data-drum-liters="{{project_settings.drum_liters|clean_number}}">
 {% if current_user.is_authenticated %}
 <div class="app-shell">
 <aside class="sidebar" id="sidebar">
@@ -51,6 +51,56 @@
 </div>
 </aside>
 <main class="main-area">
+{% if current_user.is_authenticated and current_user.is_employee and project_settings.employee_dashboard_theme == 'water' and not user_has_permission(current_user,'users.manage') %}
+<header class="water-header" id="employee-theme-shared-header">
+  <div class="water-header-inner">
+    <div class="water-title-row">
+      <button class="water-menu-toggle" id="employee-theme-menu-toggle" type="button" aria-expanded="false" aria-controls="employee-theme-menu" aria-label="فتح قائمة الموظف"><i class="bi bi-list" aria-hidden="true"></i></button>
+      <div class="water-brand">
+        {% if project_settings.logo_path %}
+        <img class="water-brand-image" src="{{ url_for('media.branding',path=project_settings.logo_path) }}" alt="">
+        {% else %}
+        <span class="water-brand-mark"><i class="bi bi-fuel-pump-fill" aria-hidden="true"></i></span>
+        {% endif %}
+        <h1>{{ project_settings.project_name }}</h1>
+      </div>
+      <a class="water-header-notifications" href="{{ url_for('notifications.index') }}" aria-label="الإشعارات" title="الإشعارات">
+        <i class="bi bi-bell" aria-hidden="true"></i>
+        {% if unread_notifications %}<span>{{ unread_notifications }}</span>{% endif %}
+      </a>
+      <button class="water-back d-none" id="employee-theme-install-proxy" data-dizal-install-proxy type="button" aria-label="تثبيت التطبيق" title="تثبيت التطبيق"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+    </div>
+  </div>
+  <div class="water-menu-panel" id="employee-theme-menu" hidden>
+    <div class="water-menu-greeting">
+      <span class="water-menu-avatar"><i class="bi bi-person-circle"></i></span>
+      <div><strong>{{ current_user.display_name or current_user.username }}</strong><small>قائمة النظام حسب صلاحيات حسابك</small></div>
+      <a href="{{ url_for('auth.account') }}" aria-label="إعدادات حسابي" title="إعدادات حسابي"><i class="bi bi-gear"></i></a>
+    </div>
+    {% for section in navigation %}
+    <section class="water-menu-section" data-water-nav-section="{{ section.key }}">
+      <h2><i class="bi {{ section.icon }}" aria-hidden="true"></i><span>{{ section.title }}</span></h2>
+      <div class="water-menu-grid">
+        {% for item in section["items"] %}
+        <a href="{{ url_for(item.endpoint) }}" class="{% if request.endpoint == item.endpoint or (request.endpoint == 'fuel.edit_supply' and item.endpoint == 'fuel.supply') %}active{% endif %}">
+          <i class="bi {{ item.icon }}" aria-hidden="true"></i><span>{{ item.label }}</span>
+          {% if request.endpoint == item.endpoint or (request.endpoint == 'fuel.edit_supply' and item.endpoint == 'fuel.supply') %}<i class="bi bi-arrow-up-left water-menu-active-mark" aria-hidden="true"></i>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+    <div class="water-menu-footer">
+      <a href="{{ url_for('auth.account') }}"><i class="bi bi-person-gear"></i><span>حسابي وإعدادات الحساب</span></a>
+      {% if user_has_permission(current_user,'notifications.view') %}<a href="{{ url_for('notifications.index') }}"><i class="bi bi-bell"></i><span>الإشعارات{% if unread_notifications %} ({{ unread_notifications }}){% endif %}</span></a>{% endif %}
+    </div>
+    <form method="post" action="{{ url_for('auth.logout') }}" onsubmit="return confirm('هل أنت متأكد من تسجيل الخروج؟');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="water-menu-logout" type="submit"><i class="bi bi-box-arrow-right"></i><span>تسجيل الخروج</span></button>
+    </form>
+  </div>
+</header>
+{% endif %}
 <header class="topbar">
 <button class="icon-btn" data-sidebar-open aria-label="فتح القائمة" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
 <a class="top-user" href="{{url_for('auth.account')}}" aria-label="حسابي"><small>{% if current_user.has_role('manager') %}المدير{% else %}الموظف{% endif %}</small><strong>{{current_user.display_name or current_user.username}}</strong></a>
@@ -114,7 +164,30 @@
 (function(){
   var installButton=document.querySelector("[data-dizal-install]");
   var installProxies=Array.prototype.slice.call(document.querySelectorAll("[data-dizal-install-proxy]"));
+  var menuButton=document.getElementById("employee-theme-menu-toggle");
+  var menuPanel=document.getElementById("employee-theme-menu");
   var deferredPrompt=null;
+
+  if(menuButton && menuPanel){
+    menuButton.addEventListener("click",function(){
+      var opening=menuPanel.hasAttribute("hidden");
+      if(opening)menuPanel.removeAttribute("hidden");
+      else menuPanel.setAttribute("hidden","");
+      menuButton.setAttribute("aria-expanded",opening?"true":"false");
+    });
+    document.addEventListener("click",function(event){
+      if(menuPanel.hasAttribute("hidden") || menuPanel.contains(event.target) || menuButton.contains(event.target))return;
+      menuPanel.setAttribute("hidden","");
+      menuButton.setAttribute("aria-expanded","false");
+    });
+    document.addEventListener("keydown",function(event){
+      if(event.key==="Escape" && !menuPanel.hasAttribute("hidden")){
+        menuPanel.setAttribute("hidden","");
+        menuButton.setAttribute("aria-expanded","false");
+        menuButton.focus();
+      }
+    });
+  }
   function setProxyVisibility(visible){
     installProxies.forEach(function(button){button.classList.toggle("d-none",!visible);});
   }
