@@ -2,10 +2,10 @@ from datetime import date
 from decimal import Decimal
 from app import create_app
 from app.extensions import db
-from app.models import User,Role,ProjectSettings,Cashbox,FuelTank,Farmer,EmployeeProfile,FarmerPaymentAllocation
+from app.models import User,Role,ProjectSettings,Cashbox,FuelTank,Farmer,EmployeeProfile,FarmerPaymentAllocation,JournalEntry
 from app.services.capital import add_capital,allocate_to_employee
 from app.services.fuel import create_purchase,approve_purchase,current_stock_liters
-from app.services.sales import create_dispense,create_general_sale,register_payment,farmer_account
+from app.services.sales import create_dispense,create_general_sale,register_payment,farmer_account,farmer_outstanding_amount
 from app.services.farmers import project_diesel_capacity
 from flask_security.utils import hash_password
 
@@ -114,3 +114,27 @@ def test_general_sale_can_use_only_unreserved_project_surplus():
         db.session.commit()
         assert sale.liters==Decimal("60")
         assert project_diesel_capacity()["remaining_liters"]==Decimal("0")
+
+
+def test_farmer_balance_combines_journals_with_older_unposted_sales_without_double_counting():
+    app=make_app()
+    manager_id,employee_id,box_id,tank_id,farmer_id=seed(app)
+    seed_stock(app,manager_id,employee_id)
+    with app.app_context():
+        employee=User.query.get(employee_id)
+        farmer=Farmer.query.get(farmer_id)
+        posted_sale=create_dispense(employee,farmer,tank_id,Decimal("2"),Decimal("650"),0)
+        db.session.flush()
+        legacy_sale=create_dispense(employee,farmer,tank_id,Decimal("1"),Decimal("650"),0)
+        db.session.flush()
+
+        # Simulate an older sale whose receivable journal was never posted.
+        journal=JournalEntry.query.filter_by(
+            document_id=legacy_sale.document_id,source_type="fuel_dispense"
+        ).first()
+        assert journal is not None
+        db.session.delete(journal)
+        db.session.commit()
+
+        # 2 drums posted to the ledger + 1 drum not posted yet = 39,000.
+        assert farmer_outstanding_amount(farmer_id)==Decimal("39000")
