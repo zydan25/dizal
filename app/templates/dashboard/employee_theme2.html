@@ -53,7 +53,7 @@
 
   <section class="water-dashboard-panel">
     <div class="water-panel-heading">
-      <h2>أعلى مديونيات المزارعين</h2>
+      <h2>أعلى الأرصدة المستحقة</h2>
       <a href="{{ url_for('reports.my_operations') }}">عرض الكل</a>
     </div>
     {% for row in employee_debtors %}
@@ -68,6 +68,26 @@
     <div class="water-empty"><i class="bi bi-check-circle"></i><div>لا توجد مديونيات مسجلة عليك حاليًا.</div></div>
     {% endfor %}
   </section>
+
+  {% if employee_followups %}
+  <section class="water-dashboard-panel water-followups-panel">
+    <div class="water-panel-heading">
+      <h2>مزارعون يحتاجون استكمالًا</h2>
+      <a href="{{ url_for('farmers.index',status='changes_requested') }}">عرض القائمة</a>
+    </div>
+    <p class="water-followups-intro">طلب المدير استكمال بيانات هؤلاء المزارعين. افتح الملف وأكمل المطلوب ثم احفظ لإعادة إرساله للمراجعة.</p>
+    {% for farmer in employee_followups %}
+    <div class="water-followup-row">
+      <div class="water-followup-main">
+        <strong>{{ farmer.name }}</strong>
+        <span>{{ farmer.phone }} · {{ farmer.code }}</span>
+        {% if farmer.review_note %}<small>ملاحظة المدير: {{ farmer.review_note }}</small>{% endif %}
+      </div>
+      <a class="water-followup-button" href="{{ url_for('farmers.edit',farmer_id=farmer.id) }}"><i class="bi bi-pencil-square"></i><span>استكمال البيانات</span></a>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
 
   {% if employee_stats %}
   <section class="water-dashboard-panel">
