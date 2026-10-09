@@ -65,13 +65,12 @@
       <span class="status-chip status-{{farmer.status}}">{{{"approved":"معتمد","submitted":"معلق","changes_requested":"استكمال","rejected":"مرفوض","suspended":"موقوف","deleted":"مؤرشف"}.get(farmer.status,farmer.status)}}</span>
     </div>
     <div class="farmer-metrics">
-      <div><small>السقف</small><strong>{{farmer.quota_drums|clean_number}}</strong><span>دبة</span></div>
+      <div><small>الكمية المتفق عليها</small><strong>{{farmer.quota_drums|clean_number}}</strong><span>دبة</span></div>
       <div class="metric-primary"><small>المسحوب</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div>
       <div class="metric-success"><small>المتبقي</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div>
       <div class="{% if account.outstanding_amount>0 %}metric-danger{% endif %}"><small>الدين</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
     </div>
     <div class="farmer-card-footer">
-      <span><i class="bi bi-shield-check"></i> حد الدين المتبقي {{account.remaining_credit_drums|clean_number}} دبة</span>
       <i class="bi bi-chevron-left"></i>
     </div>
   </a>
