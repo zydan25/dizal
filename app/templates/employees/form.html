@@ -7,7 +7,7 @@
 <div class="two-col"><label>اسم المستخدم<input name="username" required></label><label>الهاتف<input name="phone" inputmode="tel"></label></div>
 <label>دور الحساب
 <select name="role" required>
-{% for role in roles %}<option value="{{role.name}}" {% if role.name=="employee" %}selected{% endif %}>{{role.label or role.name}}{% if role.name=="manager" %} · صلاحية مدير كاملة{% endif %}</option>{% endfor %}
+{% for role in roles %}<option value="{{role.name}}" {% if role.name=="employee" %}selected{% endif %}>{{role.label or role.name}}{% if role.name=="manager" %} · صلاحية مدير كاملة{% elif not role.is_system %} · دور مخصص{% endif %}</option>{% endfor %}
 </select>
 <small class="field-help">اختر «مدير» لإنشاء موظف بصلاحيات الإدارة الكاملة. يبقى الحساب موظفًا من ناحية السجل التشغيلي.</small></label>
 <label>البريد الإلكتروني<input name="email" type="email"></label>
