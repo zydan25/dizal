@@ -137,6 +137,8 @@ def create_farmer(name,phone,address,notes,quota_drums,credit_limit_drums,assign
     row=Farmer(code=code,name=name.strip(),phone=phone.strip(),address=address,notes=notes,quota_drums=quota,credit_limit_drums=quota,assigned_employee_id=assigned_employee_id,created_by_id=created_by_id,status="submitted")
     db.session.add(row)
     db.session.flush()
+    from .accounting import ensure_farmer_receivable_account
+    ensure_farmer_receivable_account(row)
     document=create_document("FAR","ملف مزارع",created_by_id,source_type="farmer",source_id=row.id,status="submitted")
     if attachments:
         for document_type,attachment in attachments:
