@@ -55,7 +55,7 @@
 {% set farmer=item.farmer %}
 {% set account=item.account %}
 <article class="farmer-card farmer-live-item" data-search="{{(farmer.name ~ ' ' ~ farmer.code ~ ' ' ~ farmer.phone)|lower}}" data-status="{{farmer.status}}">
-  <a class="farmer-card-main" href="{{url_for('sales.farmer_account_view',farmer_id=farmer.id)}}">
+  <a class="farmer-card-main" href="{{url_for('farmers.detail',farmer_id=farmer.id)}}">
     <div class="farmer-card-head">
       <div class="farmer-avatar"><i class="bi bi-person-fill"></i></div>
       <div class="farmer-title">
