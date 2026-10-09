@@ -49,12 +49,13 @@ body.employee-theme-water {
 .employee-theme-water .water-title-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 8px;
   min-height: 42px;
 }
 .employee-theme-water .water-brand {
   min-width: 0;
+  flex: 0 1 auto;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -83,29 +84,29 @@ body.employee-theme-water {
   flex: 0 0 42px;
   width: 42px;
   height: 42px;
+  margin-inline-end: auto;
+  padding: 0;
   border: 1px solid #e1e6ed;
   border-radius: 17px;
   background: #fff;
   color: #424a56;
   font-size: 1.45rem;
-  text-decoration: none;
-}
-.employee-theme-water .water-menu-row {
-  display: flex;
-  justify-content: flex-start;
-  margin-top: 3px;
+  cursor: pointer;
 }
 .employee-theme-water .water-menu-toggle {
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 41px;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 42px;
+  padding: 0;
   border: 1px solid #dfe4eb;
   border-radius: 12px;
   background: #fff;
   color: #555;
-  font-size: 1.9rem;
+  font-size: 1.85rem;
   line-height: 1;
+  cursor: pointer;
 }
 .employee-theme-water .water-menu-panel {
   width: min(760px, calc(100% - 28px));
