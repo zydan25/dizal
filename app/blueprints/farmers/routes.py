@@ -7,7 +7,7 @@ from ...models import Document,EmployeeProfile,Farmer,FarmerDocument,FarmerPayme
 from ...permissions import user_has_permission
 from ...services.audit import audit
 from ...services.files import save_attachment
-from ...services.farmers import change_quota,create_farmer,review_farmer
+from ...services.farmers import change_quota,create_farmer,project_diesel_capacity,review_farmer
 from ...services.sales import farmer_account
 from . import farmers_bp
 
@@ -83,7 +83,8 @@ def new():
                 file=request.files.get(field)
                 if file and file.filename:
                     attachments.append((doc_type,save_attachment(file,current_app.config["UPLOAD_FOLDER"],"farmers")))
-            farmer=create_farmer(request.form.get("name",""),request.form.get("phone",""),request.form.get("address"),request.form.get("notes"),request.form.get("quota_drums") or 0,request.form.get("credit_limit_drums") or 0,assigned,current_user.id,attachments)
+            quota_value=request.form.get("quota_drums") or 0
+            farmer=create_farmer(request.form.get("name",""),request.form.get("phone",""),request.form.get("address"),request.form.get("notes"),quota_value,quota_value,assigned,current_user.id,attachments)
             audit("farmer.created","farmer",farmer.id,after={"code":farmer.code,"assigned_employee_id":assigned,"status":"submitted"})
             db.session.commit()
             flash("تم إرسال المزارع للمراجعة والاعتماد.","success")
@@ -91,7 +92,7 @@ def new():
         except (ValueError,TypeError) as exc:
             db.session.rollback()
             flash(str(exc),"danger")
-    return render_template("farmers/form.html",employees=employees)
+    return render_template("farmers/form.html",employees=employees,project_capacity=project_diesel_capacity())
 
 @farmers_bp.route("/<int:farmer_id>/edit",methods=["GET","POST"])
 @permission_required("farmers.create")
@@ -188,8 +189,9 @@ def review(farmer_id):
 def quota(farmer_id):
     farmer=Farmer.query.get_or_404(farmer_id)
     try:
-        movement=change_quota(farmer,request.form.get("quota_drums"),request.form.get("credit_limit_drums"),current_user.id,request.form.get("reason"))
-        audit("farmer.quota.changed","farmer",farmer.id,after={"quota_drums":str(movement.new_quota_drums),"credit_limit_drums":str(movement.new_credit_limit_drums)})
+        quota_value=request.form.get("quota_drums")
+        movement=change_quota(farmer,quota_value,quota_value,current_user.id,request.form.get("reason"))
+        audit("farmer.quota.changed","farmer",farmer.id,after={"quota_drums":str(movement.new_quota_drums)})
         db.session.commit();flash("تم تعديل سقف المزارع وتسجيل سبب التغيير.","success")
     except ValueError as exc:
         db.session.rollback();flash(str(exc),"danger")
