@@ -55,7 +55,7 @@ def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amou
     drums=Decimal(str(drums));price=Decimal(str(sale_price_per_liter));paid=Decimal(str(paid_amount or 0));settings=ProjectSettings.get()
     if drums<=0 or price<=0: raise ValueError("عدد الدباب وسعر اللتر يجب أن يكونا أكبر من صفر.")
     account=farmer_account(farmer)
-    if drums>account["remaining_quota_drums"]: raise ValueError(f"المتبقي للمزارع من السقف هو {account['remaining_quota_drums']} دبة.")
+    if drums>account["remaining_quota_drums"]: raise ValueError(f"المتبقي للمزارع من الكمية المتفق عليها هو {account['remaining_quota_drums']} دبة.")
     if paid<0: raise ValueError("المدفوع لا يمكن أن يكون سالبًا.")
     liters=drums*Decimal(str(settings.drum_liters))
     if liters>current_stock_liters(tank_id): raise ValueError("المخزون في الخزان لا يكفي لهذه العملية.")
