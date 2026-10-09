@@ -1,5 +1,29 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading"><h1>الأدوار والصلاحيات</h1><p>تكوين الصلاحيات حسب الدور، ثم إعطاء استثناءات للموظف عند الحاجة.</p></div>
-<div class="entity-list">{% for role in roles %}<a class="entity-row" href="{{url_for('roles.edit',role_id=role.id)}}"><div class="avatar"><i class="bi bi-shield-check"></i></div><div class="entity-main"><strong>{{role.label or role.name}}</strong><span>{{role.name}}</span><small>{{role.permission_links|length}} صلاحية</small></div></a>{% endfor %}</div>
+<div class="page-heading-row">
+  <div class="page-heading">
+    <h1>الأدوار والصلاحيات</h1>
+    <p>أنشئ أدوارًا مخصصة وحدد الصفحات والعمليات التي يستطيع كل دور استخدامها.</p>
+  </div>
+  <a class="primary-btn" href="{{ url_for('roles.new') }}"><i class="bi bi-person-lock"></i><span>إضافة دور</span></a>
+</div>
+<div class="info-card settings-help">
+  <i class="bi bi-info-circle"></i>
+  <span>بعد إنشاء الدور وتحديد صلاحياته، يمكنك إسناده إلى الموظف من شاشة تعديل الموظف. الأدوار الأساسية لا يمكن حذفها.</span>
+</div>
+<div class="entity-list role-list">
+{% for role in roles %}
+<a class="entity-row" href="{{ url_for('roles.edit',role_id=role.id) }}">
+  <div class="avatar"><i class="bi bi-shield-check"></i></div>
+  <div class="entity-main">
+    <strong>{{ role.label or role.name }}</strong>
+    <span>{{ role.name }}{% if role.is_system %} · دور أساسي{% else %} · دور مخصص{% endif %}</span>
+    <small>{{ role.permission_links|length }} صلاحية{% if role.description %} · {{ role.description }}{% endif %}</small>
+  </div>
+  <i class="bi bi-chevron-left"></i>
+</a>
+{% else %}
+<div class="empty-state"><i class="bi bi-shield"></i><strong>لا توجد أدوار</strong><span>أنشئ الدور الأول للبدء.</span></div>
+{% endfor %}
+</div>
 {% endblock %}
