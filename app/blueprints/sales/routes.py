@@ -5,6 +5,7 @@ from ...extensions import db
 from ...models import Document,Farmer,FarmerPayment,FarmerQuotaMovement,FuelDispense,FuelTank,User,ProjectSettings
 from ...permissions import user_has_permission
 from ...services.audit import audit
+from ...services.farmers import project_diesel_capacity
 from ...services.sales import create_dispense,create_general_sale,farmer_account,farmer_account_metrics,register_payment
 from . import sales_bp
 
@@ -142,7 +143,7 @@ def point_of_sale():
     if current_user.has_role("manager") and not selected_employee_id and employees:
         selected_employee_id=str(employees[0].id)
     selected_tank_id=request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
-    return render_template("sales/point_of_sale.html",tanks=tanks,employees=employees,settings=settings,selected_employee_id=selected_employee_id,selected_tank_id=selected_tank_id)
+    return render_template("sales/point_of_sale.html",tanks=tanks,employees=employees,settings=settings,selected_employee_id=selected_employee_id,selected_tank_id=selected_tank_id,project_capacity=project_diesel_capacity())
 
 @sales_bp.get("/farmer/<int:farmer_id>")
 @permission_required("farmers.view")
