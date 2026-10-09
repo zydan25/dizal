@@ -99,8 +99,6 @@ def edit(user_id):
             profile.salary_type=salary_type
             profile.salary_value=request.form.get("salary_value") or profile.salary_value
             profile.farmer_limit_override=request.form.get("farmer_limit_override") or None
-            profile.credit_limit_override=request.form.get("credit_limit_override") or None
-            profile.daily_liters_limit_override=request.form.get("daily_liters_limit_override") or None
             profile.can_change_farmer_quota=request.form.get("can_change_farmer_quota")=="1"
         audit("employee.updated","user",employee.id,before=before,after={"active":employee.active,"display_name":employee.display_name})
         db.session.commit()
