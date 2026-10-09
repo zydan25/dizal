@@ -24,9 +24,8 @@
 
 <div class="stats-grid page-stats-compact farmer-account-stats">
   <div class="stat-card"><div><small>السحب</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><div><small>متبقي السقف</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div></div>
+  <div class="stat-card"><div><small>المتبقي من الكمية</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div></div>
   <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الدين</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><div><small>حد الدين</small><strong>{{account.remaining_credit_drums|clean_number}}</strong><span>دبة</span></div></div>
   <div class="stat-card"><div><small>أقدم دين</small><strong>{{account.debt_age_days|clean_number}}</strong><span>يوم</span></div></div>
   <div class="stat-card"><div><small>قبل الفترة</small><strong>{{account.prior_balance|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
   <div class="stat-card"><div><small>آخر سداد</small><strong>{% if account.last_payment %}{{account.last_payment.amount|clean_number}}{% else %}—{% endif %}</strong><span>{% if account.last_payment %}{{account.last_payment.created_at.strftime("%Y-%m-%d")}}{% else %}لا يوجد{% endif %}</span></div></div>
@@ -36,7 +35,7 @@
 <div class="farmer-account-manage">
   <a class="secondary-btn" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil"></i><span>تعديل الملف</span></a>
   <a class="secondary-btn" href="{{url_for('farmers.detail',farmer_id=farmer.id)}}"><i class="bi bi-person-vcard"></i><span>ملف المزارع</span></a>
-  <a class="secondary-btn" href="#quota-edit"><i class="bi bi-sliders"></i><span>تعديل الحد الأعلى</span></a>
+  <a class="secondary-btn" href="#quota-edit"><i class="bi bi-sliders"></i><span>تعديل الكمية المتفق عليها</span></a>
 </div>
 {% endif %}
 
@@ -61,23 +60,20 @@
 {% else %}<div class="empty-state" id="account-empty"><i class="bi bi-journal-x"></i><strong>لا توجد عمليات</strong><span>جرّب فترة أخرى أو غيّر كلمة البحث.</span></div>{% endfor %}
 </div>
 
-<div class="section-title"><h2>تاريخ السقف</h2><span>{{quota_movements|length|clean_number}} تعديل</span></div>
+<div class="section-title"><h2>تاريخ الكمية المتفق عليها</h2><span>{{quota_movements|length|clean_number}} تعديل</span></div>
 <div class="entity-list">
 {% for row in quota_movements %}
-<div class="entity-row"><div class="avatar"><i class="bi bi-sliders"></i></div><div class="entity-main"><strong>{{row.old_quota_drums|clean_number}} → {{row.new_quota_drums|clean_number}} دبة</strong><span>حد الدين {{row.old_credit_limit_drums|clean_number}} → {{row.new_credit_limit_drums|clean_number}} دبة</span><small>{{row.reason or "بدون سبب"}} · {{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div></div>
+<div class="entity-row"><div class="avatar"><i class="bi bi-sliders"></i></div><div class="entity-main"><strong>{{row.old_quota_drums|clean_number}} → {{row.new_quota_drums|clean_number}} دبة</strong><small>{{row.reason or "بدون سبب"}} · {{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small></div></div>
 {% else %}<div class="empty-state">لا توجد تعديلات على السقف.</div>{% endfor %}
 </div>
 
 {% if current_user.has_role("manager") %}
-<div class="section-title" id="quota-edit"><h2>الحد الأعلى والسقف</h2><span>تعديل موثق</span></div>
+<div class="section-title" id="quota-edit"><h2>الكمية المتفق عليها</h2><span>تعديل موثق</span></div>
 <form method="post" action="{{url_for('farmers.quota',farmer_id=farmer.id)}}" class="mobile-form card-form farmer-quota-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-<div class="two-col">
-<label>السقف بالدبة<input name="quota_drums" type="number" step="0.1" value="{{farmer.quota_drums|clean_number}}"></label>
-<label>حد الدين بالدبة<input name="credit_limit_drums" type="number" step="0.1" value="{{farmer.credit_limit_drums|clean_number}}"></label>
-</div>
+<label>الكمية المتفق عليها بالدبة<input name="quota_drums" type="number" step="0.1" min="0" value="{{farmer.quota_drums|clean_number}}" required></label>
 <label>سبب التعديل<textarea name="reason" rows="2" required placeholder="سبب رفع أو خفض الحد"></textarea></label>
-<button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ الحد</span></button>
+<button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ الكمية</span></button>
 </form>
 {% endif %}
 
