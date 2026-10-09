@@ -25,8 +25,8 @@
 <div class="stats-grid page-stats-compact farmer-account-stats">
   <div class="stat-card"><div><small>السحب</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div></div>
   <div class="stat-card"><div><small>المتبقي من الكمية</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div></div>
-  <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الدين</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><div><small>أقدم دين</small><strong>{{account.debt_age_days|clean_number}}</strong><span>يوم</span></div></div>
+  <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الرصيد</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>عمر الرصيد</small><strong>{{account.debt_age_days|clean_number}}</strong><span>يوم</span></div></div>
   <div class="stat-card"><div><small>قبل الفترة</small><strong>{{account.prior_balance|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
   <div class="stat-card"><div><small>آخر سداد</small><strong>{% if account.last_payment %}{{account.last_payment.amount|clean_number}}{% else %}—{% endif %}</strong><span>{% if account.last_payment %}{{account.last_payment.created_at.strftime("%Y-%m-%d")}}{% else %}لا يوجد{% endif %}</span></div></div>
 </div>
