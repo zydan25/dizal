@@ -18,7 +18,7 @@ PERMISSIONS={
 }
 ROLE_PERMISSIONS={
 "manager":set(PERMISSIONS.keys()),
-"employee":{"dashboard.view","cashbox.view","employee.statement.view","notifications.view","fuel.supply.create","fuel.stock.view","fuel.dispense","farmers.view","farmers.create","farmers.documents.upload","farmer.payment.create","documents.view"}
+"employee":{"dashboard.view","cashbox.view","employee.statement.view","notifications.view","fuel.supply.create","fuel.stock.view","fuel.dispense","farmers.view","farmers.create","farmers.documents.upload","farmers.quota.change","farmer.payment.create","documents.view"}
 }
 def user_has_permission(user,permission_key):
     if not user or not user.is_authenticated:return False
