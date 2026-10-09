@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from app import create_app
 from app.extensions import db
-from app.models import User,Role,Cashbox,FuelTank,ProjectSettings
+from app.models import User,Role,Cashbox,FuelTank,FuelStockMovement,ProjectSettings
 from app.services.cashbox import balance
 from app.services.capital import add_capital,allocate_to_employee
 from app.services.fuel import create_purchase,approve_purchase,current_stock_liters,update_purchase
