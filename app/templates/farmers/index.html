@@ -3,7 +3,7 @@
 <div class="page-heading-row">
   <div class="page-heading">
     <h1>المزارعون</h1>
-    <p>بطاقات تشغيلية سريعة: السحب، المتبقي، الدين، والإجراءات.</p>
+    <p>بطاقات تشغيلية سريعة: السحب، المتبقي، الرصيد المستحق، والإجراءات.</p>
   </div>
   <div class="header-actions">
     <a class="primary-btn" href="{{url_for('sales.dispense')}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>
@@ -16,7 +16,7 @@
   <div class="stat-card"><div><small>المزارعون</small><strong>{{stats.total|clean_number}}</strong><span>حساب</span></div></div>
   <div class="stat-card"><div><small>صرف الديزل</small><strong>{{stats.consumed|clean_number}}</strong><span>دبة</span></div></div>
   <div class="stat-card"><div><small>المتبقي للسحب</small><strong>{{stats.remaining|clean_number}}</strong><span>دبة</span></div></div>
-  <div class="stat-card"><div><small>المديونية</small><strong>{{stats.debt|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>إجمالي الأرصدة</small><strong>{{stats.debt|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
   <div class="stat-card"><div><small>المعتمد</small><strong>{{stats.approved|clean_number}}</strong><span>حساب</span></div></div>
   <div class="stat-card"><div><small>بانتظار</small><strong>{{stats.pending|clean_number}}</strong><span>مراجعة</span></div></div>
   <div class="stat-card"><div><small>موقوف</small><strong>{{stats.suspended|clean_number}}</strong><span>حساب</span></div></div>
@@ -36,7 +36,7 @@
       <option value="name" {% if sort=="name" %}selected{% endif %}>الاسم</option>
       <option value="consumed" {% if sort=="consumed" %}selected{% endif %}>الأكثر سحبًا</option>
       <option value="remaining" {% if sort=="remaining" %}selected{% endif %}>الأعلى متبقيًا</option>
-      <option value="debt" {% if sort=="debt" %}selected{% endif %}>الأعلى مديونية</option>
+      <option value="debt" {% if sort=="debt" %}selected{% endif %}>الأعلى رصيدًا</option>
     </select>
   </label>
 </div>
@@ -68,7 +68,7 @@
       <div><small>الكمية المتفق عليها</small><strong>{{farmer.quota_drums|clean_number}}</strong><span>دبة</span></div>
       <div class="metric-primary"><small>المسحوب</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div>
       <div class="metric-success"><small>المتبقي</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div>
-      <div class="{% if account.outstanding_amount>0 %}metric-danger{% endif %}"><small>الدين</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
+      <div class="{% if account.outstanding_amount>0 %}metric-danger{% endif %}"><small>الرصيد</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div>
     </div>
     <div class="farmer-card-footer">
       <i class="bi bi-chevron-left"></i>
