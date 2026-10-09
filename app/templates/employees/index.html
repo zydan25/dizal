@@ -3,6 +3,7 @@
 <div class="page-heading-row">
   <div class="page-heading"><h1>الموظفون</h1><p>بطاقات الموظفين، الأداء، الصندوق، العمليات، والصلاحيات.</p></div>
   <div class="header-actions">
+    {% if user_has_permission(current_user,"roles.manage") %}<a class="secondary-btn" href="{{url_for('roles.index')}}"><i class="bi bi-shield-lock"></i><span>الأدوار</span></a>{% endif %}
     <a class="secondary-btn" href="{{url_for('reports.employees')}}"><i class="bi bi-bar-chart"></i><span>تقرير</span></a>
     <a class="primary-btn" href="{{url_for('employees.new')}}"><i class="bi bi-plus-lg"></i><span>موظف</span></a>
   </div>
