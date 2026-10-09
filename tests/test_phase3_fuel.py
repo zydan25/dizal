@@ -97,3 +97,16 @@ def test_pending_fuel_purchase_can_be_updated_without_touching_stock_or_cashbox(
         assert FuelStockMovement.query.filter_by(
             source_type="fuel_purchase",source_id=str(purchase.id)
         ).count()==0
+
+
+def test_new_employee_theme_templates_compile():
+    app=make_app()
+    with app.app_context():
+        for template_name in (
+            "fuel/supply_theme2.html",
+            "fuel/supply_edit.html",
+            "dashboard/employee_theme2.html",
+            "roles/new.html",
+            "roles/edit.html",
+        ):
+            app.jinja_env.get_template(template_name)
