@@ -119,8 +119,8 @@ def validate_farmer_limits(employee,quota_drums,credit_limit_drums=None):
     if active_farmer_count(employee.id)>=int(limits["max_farmers"]):
         raise ValueError("وصل الموظف إلى الحد المسموح لعدد المزارعين.")
     quota=_decimal(quota_drums,"كمية المزارع")
-    if quota<0:
-        raise ValueError("كمية المزارع لا يمكن أن تكون سالبة.")
+    if quota<=0:
+        raise ValueError("الكمية المتفق عليها يجب أن تكون أكبر من صفر دبة.")
     _ensure_project_quota_available(quota,lock=True)
 
 def create_farmer(name,phone,address,notes,quota_drums,credit_limit_drums,assigned_employee_id,created_by_id,attachments=None):
