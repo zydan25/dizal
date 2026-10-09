@@ -1,7 +1,7 @@
 from decimal import Decimal
 from app import create_app
 from app.extensions import db
-from app.models import User,Role,ProjectSettings,EmployeeProfile
+from app.models import Account,User,Role,ProjectSettings,EmployeeProfile
 from app.services.farmers import create_farmer,review_farmer,change_quota
 from flask_security.utils import hash_password
 
@@ -31,6 +31,12 @@ def test_farmer_workflow_and_limits():
     with app.app_context():
         farmer=create_farmer("مزارع 1","777000001","العنوان","",Decimal("5"),Decimal("6"),employee_id,employee_id)
         assert farmer.status=="submitted"
+        control=Account.query.filter_by(code="1400").first()
+        farmer_account_row=Account.query.filter_by(code=f"1400-F{farmer.id:06d}").first()
+        assert control is not None
+        assert farmer_account_row is not None
+        assert farmer_account_row.parent_id==control.id
+        assert farmer_account_row.name==f"ذمم المزارع - {farmer.name}"
         review_farmer(farmer,"approve",manager_id,"تم الاعتماد")
         db.session.commit()
         assert farmer.status=="approved"
