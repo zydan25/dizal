@@ -12,18 +12,17 @@
 <option value="">اختر المزارع</option>
 {% for farmer in farmers %}
 {% set acc = farmer.__dict__.get('id') and none %}
-<option value="{{farmer.id}}" {% if selected_farmer_id|string==farmer.id|string %}selected{% endif %}>{{farmer.name}} · سقفه {{farmer.quota_drums|clean_number}} دبة</option>
+<option value="{{farmer.id}}" {% if selected_farmer_id|string==farmer.id|string %}selected{% endif %}>{{farmer.name}} · الكمية المتفق عليها {{farmer.quota_drums|clean_number}} دبة</option>
 {% endfor %}
 </select>
 </label>
 <div class="info-card farmer-operating-card" id="farmer-operating-info">
   <div class="section-title"><h2>ملخص المزارع</h2><span>يظهر بعد الاختيار</span></div>
   <div class="stats-grid compact-stats">
-    <div><small>السقف</small><strong id="farmer_quota">0</strong><span>دبة</span></div>
+    <div><small>الكمية المتفق عليها</small><strong id="farmer_quota">0</strong><span>دبة</span></div>
     <div><small>المسحوب</small><strong id="farmer_consumed">0</strong><span>دبة</span></div>
-    <div><small>متبقي السقف</small><strong id="farmer_remaining_quota">0</strong><span>دبة</span></div>
+    <div><small>المتبقي من الكمية</small><strong id="farmer_remaining_quota">0</strong><span>دبة</span></div>
     <div><small>الدين الحالي</small><strong id="farmer_outstanding">0</strong><span>{{project_settings.currency}}</span></div>
-    <div><small>حد الدين المتبقي</small><strong id="farmer_remaining_credit">0</strong><span>دبة</span></div>
   </div>
 </div>
 <label>الخزان
@@ -62,7 +61,6 @@ function refreshFarmerInfo(){
   document.getElementById("farmer_consumed").textContent=fmt(data.consumed_drums,1);
   document.getElementById("farmer_remaining_quota").textContent=fmt(data.remaining_quota_drums,1);
   document.getElementById("farmer_outstanding").textContent=fmt(data.outstanding_amount,2);
-  document.getElementById("farmer_remaining_credit").textContent=fmt(data.remaining_credit_drums,2);
 }
 farmerSelect?.addEventListener("change",refreshFarmerInfo);
 refreshFarmerInfo();
