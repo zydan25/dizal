@@ -4,6 +4,7 @@ from ..extensions import db
 from ..models import Cashbox,Document,Farmer,FarmerPayment,FarmerPaymentAllocation,FuelDispense,FuelStockMovement,FuelTank,ProjectSettings,User
 from .cashbox import post_transaction
 from .documents import create_document
+from .farmers import validate_project_diesel_sale
 from .fuel import consume_fifo,current_stock_liters
 
 def farmer_consumed_drums(farmer_id):
@@ -38,12 +39,14 @@ def farmer_account(farmer):
     consumed=farmer_consumed_drums(farmer.id)
     outstanding=farmer_outstanding_amount(farmer.id)
     outstanding_drums=farmer_outstanding_credit_drums(farmer.id)
+    remaining_quota=max(Decimal(str(farmer.quota_drums))-consumed,Decimal("0"))
     return {
         "consumed_drums":consumed,
-        "remaining_quota_drums":max(Decimal(str(farmer.quota_drums))-consumed,Decimal("0")),
+        "remaining_quota_drums":remaining_quota,
         "outstanding_amount":outstanding,
         "outstanding_drums":outstanding_drums,
-        "remaining_credit_drums":max(Decimal(str(farmer.credit_limit_drums))-outstanding_drums,Decimal("0")),
+        # Compatibility alias only; the separate debt cap is no longer enforced.
+        "remaining_credit_drums":remaining_quota,
     }
 
 def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amount=0,notes=None):
@@ -59,8 +62,9 @@ def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amou
     total=liters*price
     if paid>total: raise ValueError("المدفوع لا يمكن أن يتجاوز قيمة الصرف.")
     credit=total-paid
+    # The agreed quota is the single quantity ceiling. Unpaid value is tracked
+    # as debt and settled later; it has no second, separate drum limit.
     credit_drums=(credit/(price*Decimal(str(settings.drum_liters)))) if price>0 else Decimal("0")
-    if credit_drums>account["remaining_credit_drums"]: raise ValueError(f"المتبقي للمزارع من حد المديونية هو {account['remaining_credit_drums']} دبة.")
     document=create_document("DSP","سند صرف ديزل",employee.id,source_type="fuel_dispense")
     row=FuelDispense(document_id=document.id,farmer_id=farmer.id,employee_id=employee.id,tank_id=tank_id,liters=liters,drums=drums,sale_price_per_liter=price,total_amount=total,paid_amount=paid,credit_amount=credit,credit_drums=credit_drums,payment_mode="cash" if credit==0 else ("mixed" if paid>0 else "credit"),notes=notes,status="approved")
     db.session.add(row);db.session.flush();document.source_id=str(row.id)
@@ -84,6 +88,7 @@ def create_general_sale(employee,tank_id,drums,sale_price_per_liter,customer_nam
     if drums<=0 or price<=0:
         raise ValueError("عدد الدباب وسعر اللتر يجب أن يكونا أكبر من صفر.")
     liters=drums*Decimal(str(settings.drum_liters))
+    validate_project_diesel_sale(liters)
     if liters>current_stock_liters(tank_id):
         raise ValueError("المخزون في الخزان لا يكفي لهذه العملية.")
     total=liters*price
