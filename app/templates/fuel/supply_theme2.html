@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="water-header">
+  <div class="water-header-inner">
+    <div class="water-title-row">
+      <button class="water-menu-toggle" id="employee-theme-menu-toggle" type="button" aria-expanded="false" aria-controls="employee-theme-menu" aria-label="فتح القائمة"><i class="bi bi-list" aria-hidden="true"></i></button>
+      <div class="water-brand">
+        <span class="water-brand-mark"><i class="bi bi-fuel-pump-fill" aria-hidden="true"></i></span>
+        <h1>{{ supply_project_name or project_settings.project_name }}</h1>
+      </div>
+      <button class="water-back d-none" id="employee-theme-install-proxy" data-dizal-install-proxy type="button" aria-label="تثبيت التطبيق" title="تثبيت التطبيق"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+    </div>
+  </div>
+  <div class="water-menu-panel" id="employee-theme-menu" hidden>
+    <div class="water-menu-grid">
+      <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house"></i><span>الرئيسية</span></a>
+      <a href="{{ url_for('farmers.index') }}"><i class="bi bi-people"></i><span>المزارعون</span></a>
+      <a href="{{ url_for('sales.dispense') }}"><i class="bi bi-droplet-half"></i><span>صرف ديزل</span></a>
+      <a href="{{ url_for('sales.point_of_sale') }}"><i class="bi bi-shop"></i><span>بيع عام</span></a>
+      <a href="{{ url_for('fuel.supply') }}"><i class="bi bi-truck"></i><span>التوريدات</span></a>
+      <a href="{{ url_for('fuel.stock') }}"><i class="bi bi-fuel-pump"></i><span>مخزون الديزل</span></a>
+      <a href="{{ url_for('cashbox.index') }}"><i class="bi bi-wallet2"></i><span>الصندوق</span></a>
+      <a href="{{ url_for('reports.my_operations') }}"><i class="bi bi-clipboard-data"></i><span>التقرير التشغيلي</span></a>
+      <a href="{{ url_for('notifications.index') }}"><i class="bi bi-bell"></i><span>الإشعارات</span></a>
+      <a href="{{ url_for('auth.account') }}"><i class="bi bi-person-circle"></i><span>حسابي</span></a>
+    </div>
+    <form method="post" action="{{ url_for('auth.logout') }}" onsubmit="return confirm('هل أنت متأكد من تسجيل الخروج؟');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="water-menu-logout" type="submit"><i class="bi bi-box-arrow-right"></i><span>تسجيل الخروج</span></button>
+    </form>
+  </div>
+</header>
+
+<main class="water-dashboard water-supply-dashboard">
+  <section class="water-supply-intro">
+    <div class="water-supply-intro-icon"><i class="bi bi-truck"></i></div>
+    <div class="water-supply-intro-copy">
+      <span class="water-supply-eyebrow">شراء الديزل وتعبئة الخزانات</span>
+      <h2>توريدات الديزل</h2>
+      <p>هذه الشاشة لتسجيل كمية الديزل التي اشتريتها لتعبئة الخزان. أدخل كمية اللترات والتكلفة، وارفق صورة السند أو الفاتورة، ثم ارفع التوريد للمدير لاعتماده.</p>
+    </div>
+    <div class="water-supply-flow">
+      <div><b>١</b><span>سجّل الشراء</span></div>
+      <i class="bi bi-chevron-left"></i>
+      <div><b>٢</b><span>ارفق السند</span></div>
+      <i class="bi bi-chevron-left"></i>
+      <div><b>٣</b><span>انتظر الاعتماد</span></div>
+    </div>
+    <div class="water-supply-approval-note"><i class="bi bi-info-circle"></i><span>يظل التوريد معلّقًا حتى يراجعه المدير. عند الاعتماد فقط يُخصم إجمالي الشراء من صندوق الموظف وتُضاف اللترات إلى مخزون الخزان.</span></div>
+  </section>
+
+  {% if supply_cashbox_balance is not none %}
+  <section class="water-supply-cashbox">
+    <div class="water-supply-cashbox-icon"><i class="bi bi-wallet2"></i></div>
+    <div><span>رصيد صندوقك الحالي</span><strong>{{ supply_cashbox_balance|clean_number }} <small>{{ project_settings.currency }}</small></strong></div>
+    <p>تأكد من وجود رصيد يغطي قيمة الديزل والتوصيل والرسوم قبل رفع التوريد.</p>
+  </section>
+  {% endif %}
+
+  {% if editing %}
+  <section class="water-supply-form-panel" id="supply-form-panel">
+    <div class="water-supply-section-heading">
+      <div><span class="water-supply-step">تعديل وإعادة الإرسال</span><h2>تعديل التوريد {{ editing.document.number }}</h2></div>
+      <a class="water-supply-cancel" href="{{ url_for('fuel.supply') }}"><i class="bi bi-x-lg"></i> إلغاء</a>
+    </div>
+    <div class="water-supply-state-note"><i class="bi bi-pencil-square"></i><span>يمكنك تعديل هذا التوريد لأنه لم يُعتمد بعد. بعد الحفظ سيعود إلى قائمة انتظار اعتماد المدير.</span></div>
+  {% else %}
+  <section class="water-supply-form-panel">
+    <button class="water-supply-new-btn" type="button" data-bs-toggle="collapse" data-bs-target="#supply-new" aria-expanded="{{ 'true' if form_error else 'false' }}" aria-controls="supply-new">
+      <span class="water-supply-new-icon"><i class="bi bi-plus-lg"></i></span>
+      <span><strong>إضافة توريد جديد</strong><small>تسجيل شراء ديزل وإرفاق سند الشراء</small></span>
+      <i class="bi bi-chevron-down water-supply-new-chevron"></i>
+    </button>
+  {% endif %}
+
+  <div class="{% if editing or form_error %}collapse show{% else %}collapse{% endif %}" id="supply-new">
+    <form method="post" enctype="multipart/form-data" class="mobile-form card-form water-supply-form" action="{% if editing %}{{ url_for('fuel.edit_supply',purchase_id=editing.id) }}{% else %}{{ url_for('fuel.supply') }}{% endif %}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="water-supply-form-section-title"><i class="bi bi-box-seam"></i><span>بيانات التوريد</span></div>
+      {% if current_user.has_role("manager") and not editing %}
+      <label>الموظف الذي سيُخصم الشراء من صندوقه
+        <select name="employee_id" required>
+          <option value="">اختر الموظف</option>
+          {% for e in employees %}<option value="{{ e.id }}" {% if request.form.get('employee_id')|string==e.id|string %}selected{% endif %}>{{ e.display_name }}</option>{% endfor %}
+        </select>
+        <small class="field-help">سيُخصم المبلغ من صندوق الموظف المختار عند اعتماد التوريد.</small>
+      </label>
+      {% endif %}
+
+      <label>الخزان الذي تم تعبئته
+        <select name="tank_id" required>
+          {% for tank in tanks %}
+          <option value="{{ tank.id }}" {% if request.form.get('tank_id', editing.tank_id if editing else selected_tank_id)|string==tank.id|string %}selected{% endif %}>{{ tank.name }} · {{ tank.code }}</option>
+          {% else %}<option value="">لا يوجد خزان فعال</option>{% endfor %}
+        </select>
+        <small class="field-help">اختر الخزان الذي ستضاف إليه كمية الديزل بعد اعتماد السند.</small>
+      </label>
+
+      <label>تاريخ الشراء
+        <input name="purchase_date" type="date" value="{{ request.form.get('purchase_date', editing.purchase_date.isoformat() if editing else today) }}" required>
+      </label>
+
+      <label>كمية الديزل المورد باللتر
+        <input name="liters" type="number" step="0.001" min="0.001" inputmode="decimal" data-unit="liter" value="{{ request.form.get('liters', editing.liters if editing else '') }}" required>
+        <small class="field-help">اكتب الكمية باللتر كما وردت في سند الشراء، وليس بعدد الدباب.</small>
+      </label>
+
+      <div class="water-supply-form-section-title"><i class="bi bi-receipt"></i><span>تكلفة الشراء</span></div>
+      <label>قيمة شراء الديزل
+        <input name="diesel_amount" type="number" step="0.001" min="0" inputmode="decimal" value="{{ request.form.get('diesel_amount', editing.diesel_amount if editing else '') }}" required>
+      </label>
+      <div class="water-supply-cost-grid">
+        <label>تكلفة التوصيل
+          <input name="delivery_fee" type="number" step="0.001" min="0" inputmode="decimal" value="{{ request.form.get('delivery_fee', editing.delivery_fee if editing else '0') }}" required>
+        </label>
+        <label>رسوم أخرى
+          <input name="other_fee" type="number" step="0.001" min="0" inputmode="decimal" value="{{ request.form.get('other_fee', editing.other_fee if editing else '0') }}" required>
+        </label>
+      </div>
+      <div class="water-supply-total-estimate">
+        <span>إجمالي تكلفة التوريد قبل الاعتماد</span>
+        <strong id="supply-landed-preview">{{ ((editing.landed_cost if editing else 0)|float)|round(3)|clean_number }} <small>{{ project_settings.currency }}</small></strong>
+        <small>هذا المبلغ هو الذي سيُخصم من صندوق الموظف عند اعتماد التوريد.</small>
+      </div>
+
+      <label>السند أو الفاتورة (اختياري)
+        <input name="proof" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp">
+        <small class="field-help">{% if editing %}يمكنك إرفاق مستند إضافي داعم للتوريد.{% else %}ارفق صورة واضحة أو ملف PDF للسند حتى يتمكن المدير من المراجعة.{% endif %}</small>
+      </label>
+
+      <label>ملاحظات في نهاية النموذج
+        <textarea name="notes" rows="3" placeholder="أي توضيح حول الشراء أو التعبئة أو المبلغ...">{{ request.form.get('notes', editing.notes if editing else '') }}</textarea>
+      </label>
+
+      <button class="primary-btn submit-loading water-supply-submit" type="submit" data-loading-text="{% if editing %}جارٍ حفظ التعديلات وإعادة الإرسال…{% else %}جارٍ رفع التوريد للمدير…{% endif %}">
+        <i class="bi bi-cloud-arrow-up-fill"></i>
+        <span>{% if editing %}حفظ التعديلات وإعادة الإرسال{% else %}رفع التوريد للمدير{% endif %}</span>
+      </button>
+      <p class="water-supply-submit-help"><i class="bi bi-shield-check"></i> لن تدخل الكمية في المخزون ولن يُخصم المبلغ من الصندوق قبل اعتماد المدير.</p>
+    </form>
+  </div>
+  </section>
+
+  <section class="water-supply-list-panel">
+    <div class="water-supply-section-heading">
+      <div><span class="water-supply-step">سجل العمليات</span><h2>توريداتي السابقة</h2><small>يمكن تعديل التوريد ما دام ينتظر الاعتماد أو طلب المدير استكماله.</small></div>
+      <span class="water-supply-count">{{ purchases|length }} عملية</span>
+    </div>
+
+    <div class="water-supply-list">
+    {% for purchase in purchases %}
+      {% set status_labels = {'submitted':'بانتظار الاعتماد','changes_requested':'مطلوب استكمال','approved':'معتمد','rejected':'مرفوض','cancelled':'ملغي'} %}
+      <article class="water-supply-card">
+        <div class="water-supply-card-top">
+          <div class="water-supply-card-icon"><i class="bi bi-truck"></i></div>
+          <div class="water-supply-card-main">
+            <strong>توريد {{ purchase.document.number }}</strong>
+            <span>{{ purchase.purchase_date.strftime('%Y-%m-%d') }} · {{ purchase.tank.name }}</span>
+          </div>
+          <span class="water-supply-status status-{{ purchase.status }}">{{ status_labels.get(purchase.status,purchase.status) }}</span>
+        </div>
+        <div class="water-supply-card-metrics">
+          <div><small>كمية الديزل</small><strong>{{ purchase.liters|clean_number }} <small>لتر</small></strong></div>
+          <div><small>إجمالي التكلفة</small><strong>{{ purchase.landed_cost|clean_number }} <small>{{ project_settings.currency }}</small></strong></div>
+        </div>
+        {% if purchase.notes %}<p class="water-supply-card-note"><i class="bi bi-chat-left-text"></i>{{ purchase.notes }}</p>{% endif %}
+        <div class="water-supply-card-actions">
+          <a class="water-supply-action-button" href="{{ url_for('documents.view',document_id=purchase.document_id) }}"><i class="bi bi-receipt"></i><span>فتح السند والمرفقات</span></a>
+          {% if purchase.status in ['submitted','changes_requested'] and (purchase.employee_id==current_user.id or user_has_permission(current_user,'users.manage')) %}
+          <a class="water-supply-action-button is-edit" href="{{ url_for('fuel.edit_supply',purchase_id=purchase.id) }}"><i class="bi bi-pencil-square"></i><span>تعديل التوريد</span></a>
+          {% endif %}
+        </div>
+        {% if user_has_permission(current_user,'fuel.supply.approve') and purchase.status=='submitted' %}
+        <form method="post" action="{{ url_for('fuel.review',purchase_id=purchase.id) }}" class="water-supply-review-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="water-supply-approve" name="action" value="approve" type="submit"><i class="bi bi-check2-circle"></i> اعتماد التوريد</button>
+          <button class="water-supply-request" name="action" value="changes_requested" type="submit"><i class="bi bi-pencil-square"></i> طلب استكمال</button>
+          <button class="water-supply-reject" name="action" value="rejected" type="submit" onclick="return confirm('هل تريد رفض هذا التوريد؟')"><i class="bi bi-x-circle"></i></button>
+        </form>
+        {% endif %}
+      </article>
+    {% else %}
+      <div class="water-supply-empty"><i class="bi bi-truck"></i><strong>لا توجد توريدات مسجلة بعد</strong><span>اضغط «إضافة توريد جديد» لتسجيل أول عملية شراء ديزل.</span></div>
+    {% endfor %}
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  const button=document.getElementById("employee-theme-menu-toggle");
+  const menu=document.getElementById("employee-theme-menu");
+  const installProxy=document.getElementById("employee-theme-install-proxy");
+  if(installProxy)installProxy.addEventListener("click",function(){
+    const installButton=document.querySelector("[data-dizal-install]");
+    if(installButton)installButton.click();
+  });
+  if(button&&menu){
+    button.addEventListener("click",function(){
+      const opening=menu.hasAttribute("hidden");
+      if(opening)menu.removeAttribute("hidden");else menu.setAttribute("hidden","");
+      button.setAttribute("aria-expanded",opening?"true":"false");
+    });
+    document.addEventListener("click",function(event){
+      if(menu.hasAttribute("hidden")||menu.contains(event.target)||button.contains(event.target))return;
+      menu.setAttribute("hidden","");
+      button.setAttribute("aria-expanded","false");
+    });
+  }
+
+  const liters=document.querySelector('input[name="liters"]');
+  const diesel=document.querySelector('input[name="diesel_amount"]');
+  const delivery=document.querySelector('input[name="delivery_fee"]');
+  const other=document.querySelector('input[name="other_fee"]');
+  const total=document.getElementById("supply-landed-preview");
+  function fmt(n){return Number(n||0).toLocaleString("en-US",{maximumFractionDigits:3});}
+  function recalc(){
+    const sum=Number(diesel?.value||0)+Number(delivery?.value||0)+Number(other?.value||0);
+    if(total)total.innerHTML=fmt(sum)+' <small>{{ project_settings.currency }}</small>';
+  }
+  [liters,diesel,delivery,other].forEach(input=>{input?.addEventListener("input",recalc);input?.addEventListener("change",recalc);});
+  recalc();
+})();
+</script>
+{% endblock %}
