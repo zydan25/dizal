@@ -22,7 +22,7 @@ def upgrade():
     ).scalar()
 
     if permission_id is None:
-        result = connection.execute(
+        connection.execute(
             sa.text(
                 "INSERT INTO permission (key, label, module) "
                 "VALUES (:key, :label, :module)"
@@ -33,12 +33,10 @@ def upgrade():
                 "module": "farmers",
             },
         )
-        permission_id = result.lastrowid
-        if permission_id is None:
-            permission_id = connection.execute(
-                sa.text("SELECT id FROM permission WHERE key = :key"),
-                {"key": "farmers.quota.change"},
-            ).scalar()
+        permission_id = connection.execute(
+            sa.text("SELECT id FROM permission WHERE key = :key"),
+            {"key": "farmers.quota.change"},
+        ).scalar()
 
     employee_role_id = connection.execute(
         sa.text("SELECT id FROM role WHERE name = :name"),
