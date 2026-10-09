@@ -10,7 +10,7 @@
     <button class="small-icon-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="المزيد"><i class="bi bi-three-dots"></i></button>
     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
       <li><a class="dropdown-item" href="{{url_for('sales.farmer_account_view',farmer_id=farmer.id)}}"><i class="bi bi-file-earmark-text me-2"></i>كشف الحساب الكامل</a></li>
-      {% if current_user.has_role("manager") or farmer.status in ["submitted","changes_requested"] %}<li><a class="dropdown-item" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil me-2"></i>تعديل الملف</a></li>{% endif %}
+      {% if can_edit_farmer %}<li><a class="dropdown-item" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil me-2"></i>تعديل الملف والمرفقات</a></li>{% endif %}
       {% if current_user.has_role("manager") %}
       <li><hr class="dropdown-divider"></li>
       {% if farmer.status=="suspended" %}<li><form method="post" action="{{url_for('farmers.status_change',farmer_id=farmer.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="dropdown-item" name="action" value="activate" type="submit"><i class="bi bi-person-check me-2"></i>إعادة التفعيل</button></form></li>{% elif farmer.status!="deleted" %}<li><form method="post" action="{{url_for('farmers.status_change',farmer_id=farmer.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="dropdown-item" name="action" value="suspend" type="submit"><i class="bi bi-person-x me-2"></i>إيقاف المزارع</button></form></li>{% endif %}
@@ -23,17 +23,17 @@
   <div class="stat-card"><div><small>الكمية المتفق عليها</small><strong>{{farmer.quota_drums|clean_number}}</strong><span>دبة</span></div></div>
   <div class="stat-card"><div><small>المسحوب</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div></div>
   <div class="stat-card"><div><small>المتبقي</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div></div>
-  <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الدين</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
-  <div class="stat-card"><div><small>عمر الدين</small><strong>{{account.debt_age_days|clean_number}}</strong><span>يوم</span></div></div>
+  <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الرصيد المستحق</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card"><div><small>عمر الرصيد</small><strong>{{account.debt_age_days|clean_number}}</strong><span>يوم</span></div></div>
 </div>
 
 <div class="action-row farmer-detail-actions">
-  {% if farmer.status in ["approved","suspended"] %}<a class="primary-btn" href="{{url_for('sales.dispense')}}?farmer_id={{farmer.id}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>{% endif %}
-  {% if farmer.status in ["approved","suspended"] %}<a class="secondary-btn farmer-pay-btn" href="{{url_for('sales.payment')}}?farmer_id={{farmer.id}}"><i class="bi bi-cash-coin"></i><span>سداد</span></a>{% endif %}
+  {% if farmer.status=="approved" %}<a class="primary-btn" href="{{url_for('sales.dispense')}}?farmer_id={{farmer.id}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>{% endif %}
+  {% if farmer.status in ["approved","suspended"] %}<a class="secondary-btn farmer-pay-btn" href="{{url_for('sales.payment')}}?farmer_id={{farmer.id}}"><i class="bi bi-cash-coin"></i><span>{% if farmer.status=="suspended" %}تحصيل الرصيد{% else %}سداد{% endif %}</span></a>{% endif %}
   <a class="secondary-btn" href="{{url_for('sales.farmer_account_view',farmer_id=farmer.id)}}"><i class="bi bi-file-earmark-text"></i><span>كشف الحساب</span></a>
   <button class="secondary-btn print-action" type="button" onclick="window.print()"><i class="bi bi-printer"></i><span>طباعة</span></button>
-  {% if current_user.has_role("manager") %}<a class="secondary-btn quota-action" href="#quota-edit"><i class="bi bi-sliders"></i><span>تعديل الحد الأعلى</span></a>{% endif %}
-  {% if current_user.has_role("manager") %}<a class="secondary-btn" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil"></i><span>تعديل الملف</span></a>{% endif %}
+  {% if can_change_quota %}<a class="secondary-btn quota-action" href="#quota-edit"><i class="bi bi-sliders"></i><span>تعديل الكمية المتفق عليها</span></a>{% endif %}
+  {% if can_edit_farmer %}<a class="secondary-btn" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil"></i><span>تعديل الملف والمرفقات</span></a>{% endif %}
 </div>
 
 <div class="section-title"><h2>آخر العمليات</h2><span id="farmer-operations-count">{{operations|length|clean_number}} حركة</span></div>
@@ -69,7 +69,7 @@
   {% if farmer.review_note %}<div class="detail-line"><strong>ملاحظة المدير</strong><span>{{farmer.review_note}}</span></div>{% endif %}
 </div>
 
-{% if current_user.has_role("manager") %}
+{% if can_change_quota %}
 <div class="section-title" id="quota-edit"><h2>الكمية المتفق عليها</h2><span>تعديل الكمية بالدبة مع تسجيل السبب</span></div>
 <form method="post" action="{{url_for('farmers.quota',farmer_id=farmer.id)}}" class="mobile-form card-form farmer-quota-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
