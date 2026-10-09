@@ -76,7 +76,7 @@
       <div class="water-stat"><span>صرف اليوم</span><strong>{{ employee_stats.today_drums|clean_number }} دبة</strong></div>
       <div class="water-stat"><span>تحصيل اليوم</span><strong>{{ employee_stats.today_collected|clean_number }} {{ project_settings.currency }}</strong></div>
       <div class="water-stat"><span>الصندوق</span><strong>{{ (employee_cashbox.balance if employee_cashbox else 0)|clean_number }} {{ project_settings.currency }}</strong></div>
-      <div class="water-stat"><span>المخزون المتاح</span><strong>{{ (employee_stats.available_liters / project_settings.drum_liters)|round(1)|clean_number }} دبة</strong></div>
+      <div class="water-stat"><span>المخزون المتاح</span><strong>{{ ((employee_stats.available_liters|float) / (project_settings.drum_liters|float))|round(1)|clean_number }} دبة</strong></div>
     </div>
   </section>
   {% endif %}
