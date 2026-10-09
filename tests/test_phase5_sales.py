@@ -88,7 +88,7 @@ def test_cannot_dispense_over_quota():
         try:
             create_dispense(employee,farmer,tank_id,Decimal("8"),Decimal("650"),0)
         except ValueError as exc:
-            assert "السقف" in str(exc)
+            assert "الكمية المتفق عليها" in str(exc)
         else:
             raise AssertionError("quota should block dispense")
 
