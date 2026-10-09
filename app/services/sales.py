@@ -50,8 +50,14 @@ def farmer_outstanding_amount(farmer_id,before_date=None):
         return max(balance,Decimal("0"))
 
     # One-time compatibility for historical accounts not yet represented in the ledger.
-    dispensed_query=db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0)).filter(
-        FuelDispense.farmer_id==farmer_id,FuelDispense.status=="approved"
+    dispensed_query=(
+        db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0))
+        .join(Document,FuelDispense.document_id==Document.id)
+        .filter(
+            FuelDispense.farmer_id==farmer_id,
+            FuelDispense.status=="approved",
+            Document.status!="reversed",
+        )
     )
     paid_query=(
         db.session.query(func.coalesce(func.sum(FarmerPayment.amount),0))
