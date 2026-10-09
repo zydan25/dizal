@@ -1,17 +1,29 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-heading"><h1>إضافة مزارع</h1><p>سيُحفظ الطلب مع المرفقات ثم ينتظر اعتماد المدير.</p></div>
-<form method="post" enctype="multipart/form-data" class="mobile-form card-form">
+<form method="post" enctype="multipart/form-data" class="mobile-form card-form" id="farmer-create-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+<div class="info-card settings-help" id="project-capacity-summary"
+     data-limit-liters="{{project_capacity.limit_liters}}"
+     data-used-liters="{{project_capacity.used_liters}}"
+     data-remaining-liters="{{project_capacity.remaining_liters}}"
+     data-drum-liters="{{project_capacity.drum_liters}}">
+  <i class="bi bi-fuel-pump"></i>
+  <span><strong>حد ديزل المشروع:</strong> {{project_capacity.limit_liters|clean_number}} لتر.
+    <strong>المحجوز والمباع:</strong> {{project_capacity.used_liters|clean_number}} لتر.
+    <strong>الفائض المتاح للتخصيص:</strong> <b id="project-capacity-remaining">{{project_capacity.remaining_liters|clean_number}}</b> لتر.
+  </span>
+</div>
 {% if current_user.has_role("manager") %}<label>الموظف المسؤول<select name="employee_id"><option value="">اختر الموظف</option>{% for e in employees %}<option value="{{e.id}}">{{e.display_name}}</option>{% endfor %}</select></label>{% endif %}
 <label>اسم المزارع<input name="name" required></label>
 <div class="two-col"><label>رقم الهاتف<input name="phone" inputmode="tel" required></label><label>العنوان<input name="address"></label></div>
-<div class="two-col"><label>سقف الاستحقاق بالدبة<input name="quota_drums" type="number" step="0.1" min="0" required data-unit="drum"></label><label>حد المديونية بالدبة<input name="credit_limit_drums" type="number" step="0.1" min="0" required data-unit="drum"></label></div>
+<label>الكمية المتفق عليها بالدبة<input name="quota_drums" id="farmer-quota-drums" type="number" step="0.1" min="0.1" inputmode="decimal" value="{{request.form.get('quota_drums','')}}" required data-unit="drum"></label>
+<small class="field-help" id="farmer-quota-capacity-hint" aria-live="polite">سيحسب النظام اللترات المحجوزة لهذه الكمية ويمنع تجاوز حد ديزل المشروع.</small>
 <label>ملاحظات<textarea name="notes" rows="3"></textarea></label>
 <div class="section-title"><h2>المرفقات</h2><span>اختيارية الآن ويمكن طلب استكمالها</span></div>
 <div class="two-col"><label>البطاقة الأمامية<input type="file" name="id_front" accept=".pdf,.png,.jpg,.jpeg,.webp"></label><label>البطاقة الخلفية<input type="file" name="id_back" accept=".pdf,.png,.jpg,.jpeg,.webp"></label></div>
 <div class="two-col"><label>العقد/الالتزام<input type="file" name="contract" accept=".pdf,.png,.jpg,.jpeg,.webp"></label><label>ملف إضافي<input type="file" name="other_document" accept=".pdf,.png,.jpg,.jpeg,.webp"></label></div>
-<button class="primary-btn form-submit-loading" type="submit">
+<button class="primary-btn form-submit-loading" id="farmer-create-submit" type="submit">
   <span class="form-submit-icon"><i class="bi bi-send"></i></span>
   <span class="form-submit-label">إرسال للمراجعة</span>
 </button>
@@ -26,6 +38,37 @@
 @keyframes form-submit-spin{to{transform:rotate(360deg)}}
 </style>
 <script>
+(function(){
+  const summary=document.getElementById("project-capacity-summary");
+  const input=document.getElementById("farmer-quota-drums");
+  const hint=document.getElementById("farmer-quota-capacity-hint");
+  const submit=document.getElementById("farmer-create-submit");
+  if(!summary||!input||!hint||!submit)return;
+  const available=Number(summary.dataset.remainingLiters||0);
+  const drumLiters=Number(summary.dataset.drumLiters||20);
+  const fmt=n=>Number(n||0).toLocaleString("en-US",{maximumFractionDigits:3});
+  function updateCapacity(){
+    const drums=Number(input.value||0);
+    const requested=drums*drumLiters;
+    const tooMuch=requested>available+0.0005;
+    const noCapacity=available<=0.0005;
+    if(!input.value){
+      hint.textContent=noCapacity
+        ?"اكتمل حد ديزل المشروع؛ لا يمكن تخصيص كمية جديدة قبل زيادة الحد أو خفض الكميات المحجوزة."
+        :"الفائض الحالي "+fmt(available)+" لتر، ويمكنك تخصيص كمية لا تتجاوزه.";
+    }else if(tooMuch){
+      hint.textContent="الكمية المطلوبة ("+fmt(requested)+" لتر) تتجاوز الفائض المتاح ("+fmt(available)+" لتر). خفّض الكمية قبل الحفظ.";
+    }else{
+      hint.textContent="ستحجز "+fmt(requested)+" لتر، وسيبقى "+fmt(Math.max(available-requested,0))+" لتر متاحًا للمشروع.";
+    }
+    hint.classList.toggle("text-danger",tooMuch||noCapacity);
+    hint.classList.toggle("text-success",!!input.value&&!tooMuch&&!noCapacity);
+    submit.disabled=tooMuch||noCapacity;
+  }
+  input.addEventListener("input",updateCapacity);
+  input.addEventListener("change",updateCapacity);
+  updateCapacity();
+})();
 document.querySelectorAll("form.mobile-form").forEach(function(form){
   form.addEventListener("submit",function(){
     var button=form.querySelector(".form-submit-loading");
