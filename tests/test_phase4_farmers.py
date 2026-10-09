@@ -52,3 +52,23 @@ def test_employee_farmer_limit_is_enforced():
             assert "الحد المسموح" in str(exc)
         else:
             raise AssertionError("Expected farmer limit error")
+
+
+def test_project_diesel_limit_reserves_agreed_farmer_quantities():
+    app=make_app()
+    manager_id,employee_id=seed(app)
+    with app.app_context():
+        settings=ProjectSettings.get()
+        settings.project_diesel_limit_liters=Decimal("60")
+        db.session.commit()
+
+        create_farmer("مزارع 1","777000101",None,None,Decimal("2"),Decimal("2"),employee_id,employee_id)
+        db.session.commit()
+
+        try:
+            create_farmer("مزارع 2","777000102",None,None,Decimal("2"),Decimal("2"),employee_id,employee_id)
+        except ValueError as exc:
+            assert "الفائض المتاح" in str(exc)
+            assert "20" in str(exc)
+        else:
+            raise AssertionError("Project diesel cap should reserve the first farmer's 40 liters")
