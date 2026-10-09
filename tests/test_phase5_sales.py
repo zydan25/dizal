@@ -5,7 +5,8 @@ from app.extensions import db
 from app.models import User,Role,ProjectSettings,Cashbox,FuelTank,Farmer,EmployeeProfile,FarmerPaymentAllocation
 from app.services.capital import add_capital,allocate_to_employee
 from app.services.fuel import create_purchase,approve_purchase,current_stock_liters
-from app.services.sales import create_dispense,register_payment,farmer_account
+from app.services.sales import create_dispense,create_general_sale,register_payment,farmer_account
+from app.services.farmers import project_diesel_capacity
 from flask_security.utils import hash_password
 
 def make_app():
@@ -90,3 +91,26 @@ def test_cannot_dispense_over_quota():
             assert "السقف" in str(exc)
         else:
             raise AssertionError("quota should block dispense")
+
+
+def test_general_sale_can_use_only_unreserved_project_surplus():
+    app=make_app()
+    manager_id,employee_id,box_id,tank_id,farmer_id=seed(app)
+    seed_stock(app,manager_id,employee_id)
+    with app.app_context():
+        settings=ProjectSettings.get()
+        settings.project_diesel_limit_liters=Decimal("200")
+        db.session.commit()
+
+        employee=User.query.get(employee_id)
+        try:
+            create_general_sale(employee,tank_id,Decimal("4"),Decimal("650"),"عميل اختبار")
+        except ValueError as exc:
+            assert "فائض المشروع المتاح 60" in str(exc)
+        else:
+            raise AssertionError("General sale should not consume diesel reserved by farmer quotas")
+
+        sale=create_general_sale(employee,tank_id,Decimal("3"),Decimal("650"),"عميل اختبار")
+        db.session.commit()
+        assert sale.liters==Decimal("60")
+        assert project_diesel_capacity()["remaining_liters"]==Decimal("0")
