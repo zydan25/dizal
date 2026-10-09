@@ -122,7 +122,7 @@ def permissions(user_id):
         audit("employee.permissions.updated","user",employee.id,after={"permissions":sorted(selected)})
         db.session.commit()
         flash("تم حفظ صلاحيات الموظف الإضافية والاستثناءات.","success")
-        return redirect(url_for("employees.index"))
+        return redirect(url_for("employees.permissions",user_id=employee.id))
     effective=set(role_keys)
     overrides={row.permission_key:row.allowed for row in employee.permission_overrides}
     for key,val in overrides.items():
