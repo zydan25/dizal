@@ -11,7 +11,7 @@ def farmer_consumed_drums(farmer_id):
     value=db.session.query(func.coalesce(func.sum(FuelDispense.drums),0)).filter(FuelDispense.farmer_id==farmer_id,FuelDispense.status=="approved").scalar() or 0
     return Decimal(str(value))
 
-def farmer_outstanding_amount(farmer_id):
+def farmer_outstanding_amount(farmer_id,before_date=None):
     """Get the farmer's current receivable balance from the accounting ledger.
 
     Historical records predating journal posting are handled by the legacy
@@ -29,7 +29,9 @@ def farmer_outstanding_amount(farmer_id):
             or_(JournalEntry.document_id.is_(None),Document.status!="reversed"),
         )
     )
-    ledger_line_count=(
+    if before_date is not None:
+        ledger_query=ledger_query.filter(JournalEntry.entry_date<before_date)
+    ledger_count_query=(
         db.session.query(func.count(JournalLine.id))
         .join(JournalEntry,JournalLine.journal_entry_id==JournalEntry.id)
         .join(Account,JournalLine.account_id==Account.id)
@@ -39,22 +41,30 @@ def farmer_outstanding_amount(farmer_id):
             Account.code=="1400",
             or_(JournalEntry.document_id.is_(None),Document.status!="reversed"),
         )
-        .scalar() or 0
     )
+    if before_date is not None:
+        ledger_count_query=ledger_count_query.filter(JournalEntry.entry_date<before_date)
+    ledger_line_count=ledger_count_query.scalar() or 0
     if ledger_line_count:
         balance=Decimal(str(ledger_query.scalar() or 0))
         return max(balance,Decimal("0"))
 
-    # One-time compatibility for old accounts which have no journal postings.
-    dispensed=db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0)).filter(
+    # One-time compatibility for historical accounts not yet represented in the ledger.
+    dispensed_query=db.session.query(func.coalesce(func.sum(FuelDispense.credit_amount),0)).filter(
         FuelDispense.farmer_id==farmer_id,FuelDispense.status=="approved"
-    ).scalar() or 0
-    paid=(
+    )
+    paid_query=(
         db.session.query(func.coalesce(func.sum(FarmerPayment.amount),0))
         .join(Document,FarmerPayment.document_id==Document.id)
         .filter(FarmerPayment.farmer_id==farmer_id,Document.status!="reversed")
-        .scalar() or 0
     )
+    if before_date is not None:
+        from datetime import datetime,time,timezone
+        start_dt=datetime.combine(before_date,time.min).replace(tzinfo=timezone.utc)
+        dispensed_query=dispensed_query.filter(FuelDispense.created_at<start_dt)
+        paid_query=paid_query.filter(FarmerPayment.created_at<start_dt)
+    dispensed=dispensed_query.scalar() or 0
+    paid=paid_query.scalar() or 0
     return max(Decimal(str(dispensed))-Decimal(str(paid)),Decimal("0"))
 
 def farmer_outstanding_credit_drums(farmer_id):
