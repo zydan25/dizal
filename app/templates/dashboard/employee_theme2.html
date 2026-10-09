@@ -3,11 +3,11 @@
 <header class="water-header">
   <div class="water-header-inner">
     <div class="water-title-row">
+      <button class="water-menu-toggle" id="employee-theme-menu-toggle" type="button" aria-expanded="false" aria-controls="employee-theme-menu" aria-label="فتح القائمة"><i class="bi bi-list" aria-hidden="true"></i></button>
       <div class="water-brand">
         <span class="water-brand-mark"><i class="bi bi-fuel-pump-fill" aria-hidden="true"></i></span>
         <h1>{{ project_settings.project_name }}</h1>
       </div>
-      <button class="water-menu-toggle" id="employee-theme-menu-toggle" type="button" aria-expanded="false" aria-controls="employee-theme-menu" aria-label="فتح القائمة"><i class="bi bi-list" aria-hidden="true"></i></button>
       <button class="water-back" id="employee-theme-install-proxy" type="button" aria-label="تثبيت التطبيق" title="تثبيت التطبيق"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
     </div>
   </div>
@@ -57,13 +57,13 @@
       <a href="{{ url_for('reports.my_operations') }}">عرض الكل</a>
     </div>
     {% for row in employee_debtors %}
-    <div class="water-debtor-row">
+    <a class="water-debtor-row" href="{{ url_for('farmers.detail', farmer_id=row.farmer.id) }}">
       <div class="water-debtor-main">
         <strong>{{ row.farmer.name }}</strong>
         <span>{{ row.farmer.phone or 'حساب المزارع' }}</span>
       </div>
       <div class="water-debtor-amount">{{ row.outstanding|clean_number }} <small>{{ project_settings.currency }}</small></div>
-    </div>
+    </a>
     {% else %}
     <div class="water-empty"><i class="bi bi-check-circle"></i><div>لا توجد مديونيات مسجلة عليك حاليًا.</div></div>
     {% endfor %}
