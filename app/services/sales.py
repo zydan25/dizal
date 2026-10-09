@@ -21,6 +21,11 @@ def farmer_outstanding_amount(farmer_id,before_date=None):
     from sqlalchemy import or_
     from datetime import datetime,time,timezone
 
+    receivable_control=Account.query.filter_by(code="1400").first()
+    if receivable_control is None:
+        from .accounting import account as ensure_account
+        receivable_control=ensure_account("1400")
+
     ledger_query=(
         db.session.query(func.coalesce(func.sum(JournalLine.debit-JournalLine.credit),0))
         .join(JournalEntry,JournalLine.journal_entry_id==JournalEntry.id)
@@ -28,7 +33,7 @@ def farmer_outstanding_amount(farmer_id,before_date=None):
         .outerjoin(Document,JournalEntry.document_id==Document.id)
         .filter(
             JournalLine.farmer_id==farmer_id,
-            Account.code=="1400",
+            or_(Account.code=="1400",Account.parent_id==receivable_control.id),
             or_(JournalEntry.document_id.is_(None),Document.status!="reversed"),
         )
     )
