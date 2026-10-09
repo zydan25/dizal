@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-heading-row"><div class="page-heading"><h1>إعدادات المشروع</h1><p>إدارة القواعد والثيم وهوية السندات من شاشة واحدة.</p></div><button class="secondary-btn install-app-btn" type="button" data-install-app><i class="bi bi-phone"></i><span>تثبيت التطبيق</span></button></div>
+<form id="reset-action-form" method="post" action="{{url_for('settings.reset')}}"></form>
 <form method="post" enctype="multipart/form-data" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <div class="section-title"><h2>هوية المشروع</h2><span>الاسم والمعلومات</span></div>
@@ -18,6 +19,14 @@
     <label class="switch-field"><span>السماح للموظف بتغيير السعر</span><input type="checkbox" name="allow_employee_sale_price_override" value="1" {% if settings.allow_employee_sale_price_override %}checked{% endif %}><small>{% if settings.allow_employee_sale_price_override %}مسموح في الصرف ونقطة البيع{% else %}السعر ثابت حسب الإعدادات{% endif %}</small></label>
   </div>
 </div>
+<div class="section-title"><h2>واجهة الموظف</h2><span>تغيير لوحة الموظف فقط</span></div>
+<label>ثيم لوحة الموظف
+<select name="employee_dashboard_theme" id="employee_dashboard_theme">
+  <option value="classic" {% if settings.employee_dashboard_theme != "water" %}selected{% endif %}>الثيم الأول — التصميم الحالي</option>
+  <option value="water" {% if settings.employee_dashboard_theme == "water" %}selected{% endif %}>الثيم الثاني — بطاقات مشابهة للصورة</option>
+</select>
+</label>
+<div class="info-card settings-help"><i class="bi bi-info-circle"></i><span>هذا الخيار يغيّر لوحة الموظف الرئيسية فقط. تبقى لوحة المدير وبقية الصفحات على تصميمها الحالي.</span></div>
 <div class="section-title"><h2>مظهر النظام</h2><span>اختيار جاهز بدل إدخال أكواد الألوان</span></div>
 <label>مجموعة الألوان
 <select name="color_preset" id="color_preset">
@@ -69,7 +78,7 @@ document.querySelectorAll("[data-palette]").forEach(btn=>btn.addEventListener("c
   <div class="system-tool-card backup-tool-card">
     <div class="system-tool-icon"><i class="bi bi-database-check"></i></div>
     <div class="system-tool-copy"><strong>نسخة احتياطية</strong><p>ينشئ ملفًا محفوظًا على الخادم يتضمن قاعدة البيانات وملفات المرفقات الموجودة.</p></div>
-    <form method="post" action="{{url_for('settings.backup')}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="primary-btn" type="submit"><i class="bi bi-cloud-arrow-down"></i><span>إنشاء نسخة</span></button></form>
+    <button class="primary-btn" type="submit" formaction="{{url_for('settings.backup')}}" formmethod="post" formnovalidate><i class="bi bi-cloud-arrow-down"></i><span>إنشاء نسخة</span></button>
   </div>
   {% if backups %}
   <div class="backup-list">
@@ -84,13 +93,13 @@ document.querySelectorAll("[data-palette]").forEach(btn=>btn.addEventListener("c
     <button class="danger-btn" type="button" data-bs-toggle="collapse" data-bs-target="#reset-system-form"><i class="bi bi-shield-lock"></i><span>فتح التصفير</span></button>
   </div>
   <div class="collapse" id="reset-system-form">
-    <form method="post" action="{{url_for('settings.reset')}}" class="mobile-form card-form danger-form">
-      <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-      <label>كلمة مرور المدير<input type="password" name="password" autocomplete="current-password" required></label>
-      <label>اكتب «تصفير» للتأكيد<input name="confirmation" required autocomplete="off"></label>
+    <div class="mobile-form card-form danger-form">
+      <input type="hidden" name="csrf_token" value="{{csrf_token()}}" form="reset-action-form">
+      <label>كلمة مرور المدير<input type="password" name="password" autocomplete="current-password" required form="reset-action-form"></label>
+      <label>اكتب «تصفير» للتأكيد<input name="confirmation" required autocomplete="off" form="reset-action-form"></label>
       <div class="info-card danger-info"><i class="bi bi-exclamation-triangle"></i><span>هذه العملية لا يمكن التراجع عنها من داخل النظام. أنشئ نسخة احتياطية قبل التصفير.</span></div>
-      <button class="danger-btn" type="submit" onclick="return confirm('سيتم حذف بيانات المشروع وحسابات الموظفين. هل أنشأت نسخة احتياطية وتريد المتابعة؟')"><i class="bi bi-trash3"></i><span>تصفير النظام نهائيًا</span></button>
-    </form>
+      <button class="danger-btn" type="submit" form="reset-action-form" onclick="return confirm('سيتم حذف بيانات المشروع وحسابات الموظفين. هل أنشأت نسخة احتياطية وتريد المتابعة؟')"><i class="bi bi-trash3"></i><span>تصفير النظام نهائيًا</span></button>
+    </div>
   </div>
 </div>
 <div class="section-title"><h2>السندات والطباعة</h2><span>هوية منظمة قبل الطباعة</span></div>
