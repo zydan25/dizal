@@ -29,6 +29,9 @@ def can_change_farmer_quota(farmer):
         return True
     if farmer.assigned_employee_id!=current_user.id or farmer.status in {"deleted","rejected","suspended"}:
         return False
+    overrides={row.permission_key:row.allowed for row in current_user.permission_overrides}
+    if "farmers.quota.change" in overrides:
+        return overrides["farmers.quota.change"]
     profile=getattr(current_user,"employee_profile",None)
     return user_has_permission(current_user,"farmers.quota.change") or bool(profile and profile.can_change_farmer_quota)
 
