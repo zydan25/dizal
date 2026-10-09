@@ -1,7 +1,7 @@
 """add selectable employee dashboard theme
 
 Revision ID: d4a1b9c8e210
-Revises: e9b4a7f2c117
+Revises: 4c8d2e9f2026
 """
 
 from alembic import op
@@ -9,7 +9,7 @@ import sqlalchemy as sa
 
 
 revision = "d4a1b9c8e210"
-down_revision = "e9b4a7f2c117"
+down_revision = "4c8d2e9f2026"
 branch_labels = None
 depends_on = None
 
