@@ -179,4 +179,7 @@ def farmer_account_view(farmer_id):
     ledger += [{"kind":"payment","date":row.created_at,"row":row} for row in payments]
     ledger.sort(key=lambda item:item["date"],reverse=True)
     account=farmer_account_metrics(farmer,start=start_date)
+    if start_date:
+        from ...services.sales import farmer_outstanding_amount
+        account["prior_balance"]=farmer_outstanding_amount(farmer.id,before_date=start_date)
     return render_template("sales/farmer_account.html",farmer=farmer,account=account,dispenses=dispenses,payments=payments,quota_movements=quota_movements,ledger=ledger,start=start_date,end=end_date)
