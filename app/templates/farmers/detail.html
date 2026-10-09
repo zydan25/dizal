@@ -64,6 +64,7 @@
 
 <div class="section-title"><h2>بيانات المزارع</h2><span>الملف</span></div>
 <div class="info-card">
+  <div class="detail-line"><strong>الحساب المحاسبي</strong><span><bdi>{{ receivable_account_code }}</bdi> · ذمم هذا المزارع</span></div>
   <div class="detail-line"><strong>العنوان</strong><span>{{farmer.address or "غير محدد"}}</span></div>
   <div class="detail-line"><strong>الملاحظات</strong><span>{{farmer.notes or "لا توجد ملاحظات"}}</span></div>
   {% if farmer.review_note %}<div class="detail-line"><strong>ملاحظة المدير</strong><span>{{farmer.review_note}}</span></div>{% endif %}
