@@ -506,6 +506,574 @@ body.employee-theme-water {
   background: #fff2d8;
   color: #684209;
 }
+.employee-theme-water .water-supply-dashboard {
+  padding-top: 18px;
+}
+.employee-theme-water .water-supply-intro,
+.employee-theme-water .water-supply-form-panel,
+.employee-theme-water .water-supply-list-panel {
+  margin-bottom: 16px;
+  border: 1px solid #e1e7f0;
+  border-radius: 20px;
+  background: rgba(255,255,255,.28);
+  padding: 18px;
+}
+.employee-theme-water .water-supply-intro {
+  display: grid;
+  grid-template-columns: 48px minmax(0,1fr);
+  gap: 12px;
+  align-items: start;
+}
+.employee-theme-water .water-supply-intro-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #d4e2f8;
+  border-radius: 15px;
+  background: #fff;
+  color: #1c5bd9;
+  font-size: 1.5rem;
+}
+.employee-theme-water .water-supply-intro-copy {
+  min-width: 0;
+}
+.employee-theme-water .water-supply-eyebrow,
+.employee-theme-water .water-supply-step {
+  display: block;
+  color: #1e5acb;
+  font-size: .76rem;
+  font-weight: 800;
+}
+.employee-theme-water .water-supply-intro-copy h2,
+.employee-theme-water .water-supply-section-heading h2 {
+  margin: 3px 0 7px;
+  color: #111827;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+.employee-theme-water .water-supply-intro-copy p {
+  margin: 0;
+  color: #56647a;
+  font-size: .88rem;
+  line-height: 1.85;
+}
+.employee-theme-water .water-supply-flow {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  margin-top: 5px;
+  padding: 11px 10px;
+  border: 1px solid #e4eaf3;
+  border-radius: 14px;
+  background: #fff;
+}
+.employee-theme-water .water-supply-flow div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  color: #303c4f;
+  font-size: .76rem;
+  font-weight: 800;
+}
+.employee-theme-water .water-supply-flow b {
+  display: grid;
+  flex: 0 0 23px;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: #eaf1ff;
+  color: #1d55c4;
+  font-size: .72rem;
+}
+.employee-theme-water .water-supply-flow > i {
+  color: #9aa6b8;
+  font-size: .7rem;
+}
+.employee-theme-water .water-supply-approval-note {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 2px;
+  color: #6b778b;
+  font-size: .8rem;
+  line-height: 1.75;
+}
+.employee-theme-water .water-supply-approval-note i {
+  margin-top: 4px;
+  color: #1c5bd9;
+}
+.employee-theme-water .water-supply-cashbox {
+  display: grid;
+  grid-template-columns: 43px minmax(0,1fr);
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid #cfe9dc;
+  border-radius: 17px;
+  background: #f3fbf6;
+}
+.employee-theme-water .water-supply-cashbox-icon {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  border: 1px solid #d3eadc;
+  border-radius: 14px;
+  background: #fff;
+  color: #16754c;
+  font-size: 1.35rem;
+}
+.employee-theme-water .water-supply-cashbox span,
+.employee-theme-water .water-supply-cashbox strong {
+  display: block;
+}
+.employee-theme-water .water-supply-cashbox span {
+  color: #557463;
+  font-size: .78rem;
+  font-weight: 800;
+}
+.employee-theme-water .water-supply-cashbox strong {
+  margin-top: 3px;
+  color: #146c43;
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+.employee-theme-water .water-supply-cashbox p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #557463;
+  font-size: .78rem;
+  line-height: 1.65;
+}
+.employee-theme-water .water-supply-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+.employee-theme-water .water-supply-section-heading h2 {
+  margin-bottom: 3px;
+}
+.employee-theme-water .water-supply-section-heading small {
+  color: #6f7b8f;
+  font-size: .8rem;
+  line-height: 1.6;
+}
+.employee-theme-water .water-supply-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1px solid #e1e6ee;
+  border-radius: 11px;
+  background: #fff;
+  color: #626f82;
+  font-size: .8rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.employee-theme-water .water-supply-state-note {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 11px 12px;
+  border: 1px solid #f0d8ac;
+  border-radius: 12px;
+  background: #fff9ed;
+  color: #78581f;
+  font-size: .82rem;
+  line-height: 1.7;
+}
+.employee-theme-water .water-supply-state-note i {
+  flex: 0 0 auto;
+  margin-top: 3px;
+}
+.employee-theme-water .water-supply-new-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 11px;
+  border: 0;
+  background: transparent;
+  color: #111827;
+  text-align: right;
+}
+.employee-theme-water .water-supply-new-icon {
+  display: grid;
+  flex: 0 0 48px;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #d4e2f8;
+  border-radius: 15px;
+  background: #fff;
+  color: #1d5bd5;
+  font-size: 1.5rem;
+}
+.employee-theme-water .water-supply-new-btn > span:nth-child(2) {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+}
+.employee-theme-water .water-supply-new-btn strong {
+  font-size: 1rem;
+  font-weight: 900;
+}
+.employee-theme-water .water-supply-new-btn small {
+  color: #78869b;
+  font-size: .78rem;
+}
+.employee-theme-water .water-supply-new-chevron {
+  color: #78869b;
+  transition: transform .15s ease;
+}
+.employee-theme-water .water-supply-new-btn[aria-expanded="true"] .water-supply-new-chevron {
+  transform: rotate(180deg);
+}
+.employee-theme-water .water-supply-form {
+  gap: 14px;
+  padding: 16px 0 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.employee-theme-water .water-supply-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #202b3c;
+  font-size: .9rem;
+  font-weight: 800;
+}
+.employee-theme-water .water-supply-form input:not([type="file"]),
+.employee-theme-water .water-supply-form select,
+.employee-theme-water .water-supply-form textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 12px;
+  border: 1px solid #dce3ee;
+  border-radius: 12px;
+  background: #fff;
+  color: #152033;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+.employee-theme-water .water-supply-form textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+.employee-theme-water .water-supply-form input[type="file"] {
+  width: 100%;
+  min-height: 47px;
+  padding: 9px;
+  border: 1px dashed #cfd9e8;
+  border-radius: 12px;
+  background: #fff;
+  color: #59667a;
+  font-size: .82rem;
+}
+.employee-theme-water .water-supply-form input:focus,
+.employee-theme-water .water-supply-form select:focus,
+.employee-theme-water .water-supply-form textarea:focus {
+  border-color: #8baeea;
+  outline: 3px solid rgba(37,99,235,.10);
+}
+.employee-theme-water .water-supply-form .field-help {
+  color: #7b8798;
+  font-size: .76rem;
+  font-weight: 500;
+  line-height: 1.65;
+}
+.employee-theme-water .water-supply-form-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #e4eaf2;
+  color: #1e4f9e;
+  font-size: .9rem;
+  font-weight: 900;
+}
+.employee-theme-water .water-supply-form-section-title i {
+  font-size: 1.15rem;
+}
+.employee-theme-water .water-supply-cost-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 11px;
+}
+.employee-theme-water .water-supply-total-estimate {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid #d2e2fc;
+  border-radius: 14px;
+  background: #f6f9ff;
+  color: #566984;
+  font-size: .82rem;
+  line-height: 1.6;
+}
+.employee-theme-water .water-supply-total-estimate strong {
+  color: #194fb5;
+  font-size: 1.45rem;
+  font-weight: 900;
+}
+.employee-theme-water .water-supply-total-estimate strong small {
+  font-size: .78rem;
+}
+.employee-theme-water .water-supply-total-estimate > small {
+  color: #7787a0;
+  font-size: .75rem;
+}
+.employee-theme-water .water-supply-submit {
+  display: flex;
+  width: 100%;
+  min-height: 53px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 3px;
+  border-radius: 14px;
+  font-size: .95rem;
+  font-weight: 900;
+}
+.employee-theme-water .water-supply-submit-help {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: -5px 0 0;
+  color: #768397;
+  font-size: .77rem;
+  line-height: 1.7;
+}
+.employee-theme-water .water-supply-submit-help i {
+  margin-top: 3px;
+  color: #16835c;
+}
+.employee-theme-water .water-supply-count {
+  padding: 7px 10px;
+  border: 1px solid #e1e7f0;
+  border-radius: 999px;
+  background: #fff;
+  color: #59677c;
+  font-size: .76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.employee-theme-water .water-supply-list {
+  display: grid;
+  gap: 12px;
+}
+.employee-theme-water .water-supply-card {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #e0e6ef;
+  border-radius: 16px;
+  background: rgba(255,255,255,.7);
+}
+.employee-theme-water .water-supply-card-top {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+.employee-theme-water .water-supply-card-icon {
+  display: grid;
+  flex: 0 0 40px;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e0e7f1;
+  border-radius: 13px;
+  background: #fff;
+  color: #245dc3;
+  font-size: 1.25rem;
+}
+.employee-theme-water .water-supply-card-main {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+}
+.employee-theme-water .water-supply-card-main strong {
+  overflow-wrap: anywhere;
+  color: #172033;
+  font-size: .91rem;
+  font-weight: 900;
+}
+.employee-theme-water .water-supply-card-main span {
+  color: #7c8799;
+  font-size: .75rem;
+}
+.employee-theme-water .water-supply-status {
+  flex: 0 0 auto;
+  max-width: 120px;
+  padding: 5px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #68758a;
+  font-size: .69rem;
+  font-weight: 800;
+  text-align: center;
+}
+.employee-theme-water .water-supply-status.status-submitted {
+  border-color: #f0dbad;
+  background: #fff8e8;
+  color: #8a5a0b;
+}
+.employee-theme-water .water-supply-status.status-changes_requested {
+  border-color: #f3c7b8;
+  background: #fff3ee;
+  color: #a64225;
+}
+.employee-theme-water .water-supply-status.status-approved {
+  border-color: #bfe4d0;
+  background: #f0fbf4;
+  color: #177348;
+}
+.employee-theme-water .water-supply-status.status-rejected,
+.employee-theme-water .water-supply-status.status-cancelled {
+  border-color: #edc7cd;
+  background: #fff4f5;
+  color: #ab2f42;
+}
+.employee-theme-water .water-supply-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+  margin-top: 13px;
+}
+.employee-theme-water .water-supply-card-metrics > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid #e7ecf3;
+  border-radius: 12px;
+  background: #fff;
+}
+.employee-theme-water .water-supply-card-metrics > div small {
+  color: #7b8798;
+  font-size: .72rem;
+}
+.employee-theme-water .water-supply-card-metrics > div strong {
+  overflow-wrap: anywhere;
+  color: #172033;
+  font-size: 1rem;
+  font-weight: 900;
+}
+.employee-theme-water .water-supply-card-metrics > div strong small {
+  font-size: .7rem;
+}
+.employee-theme-water .water-supply-card-note {
+  display: flex;
+  gap: 7px;
+  margin: 11px 0 0;
+  color: #6d798b;
+  font-size: .78rem;
+  line-height: 1.65;
+}
+.employee-theme-water .water-supply-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.employee-theme-water .water-supply-action-button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1px solid #dfe6f0;
+  border-radius: 11px;
+  background: #fff;
+  color: #35435a;
+  font-size: .78rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.employee-theme-water .water-supply-action-button.is-edit {
+  border-color: #bfd2f4;
+  color: #2057b5;
+}
+.employee-theme-water .water-supply-review-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid #e6ebf2;
+}
+.employee-theme-water .water-supply-review-form button {
+  display: inline-flex;
+  min-height: 35px;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1px solid #dfe6f0;
+  border-radius: 10px;
+  background: #fff;
+  font-size: .76rem;
+  font-weight: 800;
+}
+.employee-theme-water .water-supply-review-form .water-supply-approve {
+  border-color: #b6e1c8;
+  background: #f0fbf4;
+  color: #176c43;
+}
+.employee-theme-water .water-supply-review-form .water-supply-request {
+  border-color: #f0d8ac;
+  background: #fffaf0;
+  color: #84560e;
+}
+.employee-theme-water .water-supply-review-form .water-supply-reject {
+  flex: 0 0 38px;
+  color: #ad2c3d;
+}
+.employee-theme-water .water-supply-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 15px;
+  color: #7a879a;
+  text-align: center;
+}
+.employee-theme-water .water-supply-empty i {
+  font-size: 2rem;
+  color: #96a6bc;
+}
+.employee-theme-water .water-supply-empty strong {
+  color: #27364b;
+  font-weight: 900;
+}
+.employee-theme-water .water-supply-empty span {
+  font-size: .8rem;
+  line-height: 1.7;
+}
+
 @media (max-width: 480px) {
   .employee-theme-water .water-header-inner { padding: 6px 13px 8px; }
   .employee-theme-water .water-title-row { gap: 8px; min-height: 42px; }
