@@ -40,6 +40,46 @@ def attach_proof(purchase,attachment):
     db.session.add(row)
     return row
 
+def update_purchase(purchase,tank_id,purchase_date,liters,diesel_amount,delivery_fee=0,other_fee=0,notes=None):
+    """Edit a purchase while it has not been approved by the manager."""
+    from decimal import InvalidOperation
+    if purchase.status not in {"submitted","changes_requested"}:
+        raise ValueError("لا يمكن تعديل توريد بعد اعتماده أو إغلاقه.")
+
+    try:
+        liters=Decimal(str(liters))
+        diesel_amount=Decimal(str(diesel_amount))
+        delivery_fee=Decimal(str(delivery_fee or 0))
+        other_fee=Decimal(str(other_fee or 0))
+    except (InvalidOperation,ValueError,TypeError):
+        raise ValueError("تحقق من كمية الديزل والمبالغ؛ يجب إدخال أرقام صحيحة.")
+
+    if liters<=0:
+        raise ValueError("كمية الديزل المورد يجب أن تكون أكبر من صفر لتر.")
+    if min(diesel_amount,delivery_fee,other_fee)<0:
+        raise ValueError("المبالغ لا يمكن أن تكون سالبة.")
+    tank=FuelTank.query.filter_by(id=tank_id,is_active=True).first()
+    if not tank:
+        raise ValueError("اختر خزانًا فعالًا لاستلام الديزل.")
+
+    landed=diesel_amount+delivery_fee+other_fee
+    purchase.tank_id=tank.id
+    purchase.purchase_date=purchase_date
+    purchase.supplier_name=None
+    purchase.liters=liters
+    purchase.diesel_amount=diesel_amount
+    purchase.delivery_fee=delivery_fee
+    purchase.other_fee=other_fee
+    purchase.landed_cost=landed
+    purchase.unit_cost=landed/liters
+    purchase.notes=(notes or "").strip() or None
+    purchase.status="submitted"
+    purchase.document.status="submitted"
+    purchase.document.notes=purchase.notes
+    purchase.approved_at=None
+    purchase.approved_by_id=None
+    return purchase
+
 def approve_purchase(purchase,approved_by_id):
     if purchase.status!="submitted":
         raise ValueError("التوريد ليس في حالة انتظار اعتماد.")
