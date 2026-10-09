@@ -1074,6 +1074,311 @@ body.employee-theme-water {
   line-height: 1.7;
 }
 
+/* Shared navigation for all screens using the alternate employee theme. */
+.employee-theme-water .water-header {
+  position: sticky;
+  top: 0;
+}
+.employee-theme-water .water-title-row {
+  justify-content: flex-start;
+}
+.employee-theme-water .water-menu-toggle {
+  order: 0;
+}
+.employee-theme-water .water-brand {
+  order: 1;
+  flex: 1 1 auto;
+}
+.employee-theme-water .water-header-notifications {
+  position: relative;
+  display: grid;
+  flex: 0 0 39px;
+  place-items: center;
+  width: 39px;
+  height: 39px;
+  border: 1px solid #e1e6ed;
+  border-radius: 14px;
+  background: #fff;
+  color: #5c687a;
+  text-decoration: none;
+  font-size: 1.15rem;
+}
+.employee-theme-water .water-header-notifications span {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  display: grid;
+  min-width: 17px;
+  height: 17px;
+  place-items: center;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #dc3545;
+  color: #fff;
+  font-size: .63rem;
+  font-weight: 900;
+}
+.employee-theme-water .water-brand-image {
+  display: block;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.employee-theme-water .water-menu-panel {
+  max-height: calc(100dvh - 74px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.employee-theme-water .water-menu-greeting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 3px 13px;
+  margin-bottom: 11px;
+  border-bottom: 1px solid #e6eaf0;
+}
+.employee-theme-water .water-menu-avatar {
+  display: grid;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid #dfe8f8;
+  border-radius: 14px;
+  background: #eef4ff;
+  color: #1f5dcc;
+  font-size: 1.45rem;
+}
+.employee-theme-water .water-menu-greeting > div {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+.employee-theme-water .water-menu-greeting strong {
+  overflow-wrap: anywhere;
+  color: #172033;
+  font-size: .91rem;
+  font-weight: 900;
+}
+.employee-theme-water .water-menu-greeting small {
+  color: #7c8799;
+  font-size: .73rem;
+}
+.employee-theme-water .water-menu-greeting > a {
+  display: grid;
+  flex: 0 0 35px;
+  width: 35px;
+  height: 35px;
+  place-items: center;
+  border: 1px solid #e1e6ee;
+  border-radius: 11px;
+  background: #fff;
+  color: #5a6678;
+  text-decoration: none;
+}
+.employee-theme-water .water-menu-section {
+  margin: 0 0 14px;
+}
+.employee-theme-water .water-menu-section:last-of-type {
+  margin-bottom: 8px;
+}
+.employee-theme-water .water-menu-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 2px 8px;
+  color: #69768a;
+  font-size: .79rem;
+  font-weight: 900;
+}
+.employee-theme-water .water-menu-section h2 i {
+  color: #245dc5;
+  font-size: 1rem;
+}
+.employee-theme-water .water-menu-grid a {
+  position: relative;
+  min-height: 44px;
+  background: #fbfcff;
+}
+.employee-theme-water .water-menu-grid a.active {
+  border-color: #c8d9fb;
+  background: #eef4ff;
+  color: #184ca9;
+}
+.employee-theme-water .water-menu-grid a.active > i:first-child {
+  color: #184ca9;
+}
+.employee-theme-water .water-menu-grid .water-menu-active-mark {
+  margin-inline-start: auto;
+  font-size: .75rem;
+  color: #1f5dcc;
+}
+.employee-theme-water .water-menu-footer {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+  padding-top: 11px;
+  border-top: 1px solid #e6eaf0;
+}
+.employee-theme-water .water-menu-footer a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e6eaf0;
+  border-radius: 12px;
+  background: #f9fbff;
+  color: #36445a;
+  font-size: .79rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.employee-theme-water .water-menu-footer i {
+  color: #245dc5;
+  font-size: 1rem;
+}
+.employee-theme-water .water-menu-logout {
+  min-height: 42px;
+}
+/* First rollout of the second theme to the remaining employee pages. */
+.employee-theme-water .page-wrap > .page-heading,
+.employee-theme-water .page-wrap > .page-heading-row,
+.employee-theme-water .page-wrap > .section-title,
+.employee-theme-water .page-wrap > .stats-grid,
+.employee-theme-water .page-wrap > .action-row,
+.employee-theme-water .page-wrap > .info-card,
+.employee-theme-water .page-wrap > .mobile-form,
+.employee-theme-water .page-wrap > .entity-list,
+.employee-theme-water .page-wrap > .table-responsive,
+.employee-theme-water .page-wrap > .document-live-preview,
+.employee-theme-water .page-wrap > .document-settings-grid,
+.employee-theme-water .page-wrap > .operation-card-list,
+.employee-theme-water .page-wrap > .operation-tools,
+.employee-theme-water .page-wrap > .employee-card-grid,
+.employee-theme-water .page-wrap > .settings-help {
+  width: min(760px, calc(100% - 28px));
+  max-width: 760px;
+  margin-right: auto;
+  margin-left: auto;
+}
+.employee-theme-water .page-wrap > .page-heading {
+  padding-top: 20px;
+  margin-bottom: 14px;
+}
+.employee-theme-water .page-heading h1 {
+  color: #172033;
+  font-weight: 900;
+  letter-spacing: -.02em;
+}
+.employee-theme-water .page-heading p {
+  color: #6d7a8f;
+  line-height: 1.75;
+}
+.employee-theme-water .page-heading-row {
+  gap: 12px;
+  align-items: center;
+  padding-top: 18px;
+  margin-bottom: 16px;
+}
+.employee-theme-water .page-heading-row .page-heading {
+  flex: 1 1 220px;
+  margin: 0;
+}
+.employee-theme-water .section-title {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+.employee-theme-water .section-title h2 {
+  color: #243248;
+  font-weight: 900;
+}
+.employee-theme-water .stats-grid {
+  gap: 10px;
+}
+.employee-theme-water .stat-card,
+.employee-theme-water .info-card,
+.employee-theme-water .entity-row,
+.employee-theme-water .document-setting-card {
+  border-color: #e1e7f0;
+  border-radius: 16px;
+  box-shadow: 0 3px 12px rgba(25,45,78,.035);
+}
+.employee-theme-water .mobile-form.card-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 17px;
+  border: 1px solid #e1e7f0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 4px 15px rgba(25,45,78,.035);
+}
+.employee-theme-water .mobile-form.card-form > label {
+  min-width: 0;
+  color: #29374b;
+  font-weight: 800;
+}
+.employee-theme-water .mobile-form.card-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.employee-theme-water .mobile-form.card-form select,
+.employee-theme-water .mobile-form.card-form textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #dfe6f0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+}
+.employee-theme-water .mobile-form.card-form textarea {
+  min-height: 90px;
+}
+.employee-theme-water .mobile-form.card-form .two-col {
+  gap: 12px;
+}
+.employee-theme-water .mobile-form.card-form .primary-btn,
+.employee-theme-water .mobile-form.card-form .secondary-btn,
+.employee-theme-water .page-wrap > .page-heading-row .primary-btn,
+.employee-theme-water .page-wrap > .page-heading-row .secondary-btn {
+  min-height: 43px;
+  border-radius: 12px;
+  font-weight: 850;
+}
+.employee-theme-water .entity-list {
+  display: grid;
+  gap: 9px;
+}
+.employee-theme-water .entity-row {
+  min-width: 0;
+  padding: 13px;
+  background: #fff;
+}
+.employee-theme-water .entity-row .entity-main {
+  min-width: 0;
+}
+.employee-theme-water .entity-row .entity-main strong,
+.employee-theme-water .entity-row .entity-main span,
+.employee-theme-water .entity-row .entity-main small {
+  overflow-wrap: anywhere;
+}
+.employee-theme-water .table-responsive {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+}
+.employee-theme-water .table-responsive table {
+  margin-bottom: 0;
+}
+.employee-theme-water .alert {
+  border-radius: 13px;
+}
+
 @media (max-width: 480px) {
   .employee-theme-water .water-header-inner { padding: 6px 13px 8px; }
   .employee-theme-water .water-title-row { gap: 8px; min-height: 42px; }
