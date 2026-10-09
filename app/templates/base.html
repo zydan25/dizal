@@ -17,7 +17,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link href="{{url_for('static',filename='css/app.css',v='20260930-dashboard-v11')}}" rel="stylesheet">
 {% if current_user.is_authenticated and current_user.is_employee and project_settings.employee_dashboard_theme == 'water' and not user_has_permission(current_user,'users.manage') %}
-<link href="{{url_for('static',filename='css/employee-theme-water.css',v='20261009-4')}}" rel="stylesheet">
+<link href="{{url_for('static',filename='css/employee-theme-water.css',v='20261009-5')}}" rel="stylesheet">
 {% endif %}
 <style>:root{--primary:{{project_settings.primary_color}};--secondary:{{project_settings.secondary_color}};--accent:{{project_settings.accent_color}};--surface:{{project_settings.surface_color}};--danger:{{project_settings.danger_color}};--radius:{{project_settings.radius}};--font-scale:{{project_settings.font_scale or '1'}};--font-family:"{{project_settings.font_family}}",Tajawal,sans-serif}.app-logo{max-height:36px;max-width:120px;object-fit:contain}</style>
 <title>{{project_settings.project_name}} | Dizal</title>
@@ -79,9 +79,20 @@
       <div><strong>{{ current_user.display_name or current_user.username }}</strong><small>قائمة النظام حسب صلاحيات حسابك</small></div>
     </div>
     {% for section in navigation %}
-    <section class="water-menu-section" data-water-nav-section="{{ section.key }}">
-      <h2><i class="bi {{ section.icon }}" aria-hidden="true"></i><span>{{ section.title }}</span></h2>
-      <div class="water-menu-grid">
+    {% set section_state = namespace(active=false) %}
+    {% for item in section["items"] %}
+      {% if request.endpoint == item.endpoint or (request.endpoint == 'fuel.edit_supply' and item.endpoint == 'fuel.supply') %}
+        {% set section_state.active = true %}
+      {% endif %}
+    {% endfor %}
+    <section class="water-menu-section{% if section_state.active %} is-open{% endif %}" data-water-nav-section="{{ section.key }}">
+      <h2>
+        <button class="water-menu-section-toggle" type="button" data-water-section-toggle aria-expanded="{{ 'true' if section_state.active else 'false' }}" aria-controls="water-menu-children-{{ loop.index }}">
+          <span><i class="bi {{ section.icon }}" aria-hidden="true"></i><span>{{ section.title }}</span></span>
+          <i class="bi bi-chevron-down water-menu-section-chevron" aria-hidden="true"></i>
+        </button>
+      </h2>
+      <div class="water-menu-grid" id="water-menu-children-{{ loop.index }}"{% if not section_state.active %} hidden{% endif %}>
         {% for item in section["items"] %}
         <a href="{{ url_for(item.endpoint) }}" class="{% if request.endpoint == item.endpoint or (request.endpoint == 'fuel.edit_supply' and item.endpoint == 'fuel.supply') %}active{% endif %}">
           <i class="bi {{ item.icon }}" aria-hidden="true"></i><span>{{ item.label }}</span>
@@ -176,6 +187,29 @@
       else menuPanel.setAttribute("hidden","");
       menuButton.setAttribute("aria-expanded",opening?"true":"false");
     });
+
+    /* Accordion tree: only one permission group may be open at a time. */
+    var sectionToggles=Array.prototype.slice.call(menuPanel.querySelectorAll("[data-water-section-toggle]"));
+    sectionToggles.forEach(function(toggle){
+      toggle.addEventListener("click",function(){
+        var section=toggle.closest("[data-water-nav-section]");
+        var children=section ? section.querySelector(".water-menu-grid") : null;
+        var wasOpen=toggle.getAttribute("aria-expanded")==="true";
+        sectionToggles.forEach(function(otherToggle){
+          var otherSection=otherToggle.closest("[data-water-nav-section]");
+          var otherChildren=otherSection ? otherSection.querySelector(".water-menu-grid") : null;
+          otherToggle.setAttribute("aria-expanded","false");
+          if(otherSection)otherSection.classList.remove("is-open");
+          if(otherChildren)otherChildren.setAttribute("hidden","");
+        });
+        if(!wasOpen && section && children){
+          toggle.setAttribute("aria-expanded","true");
+          section.classList.add("is-open");
+          children.removeAttribute("hidden");
+        }
+      });
+    });
+
     document.addEventListener("click",function(event){
       if(menuPanel.hasAttribute("hidden") || menuPanel.contains(event.target) || menuButton.contains(event.target))return;
       menuPanel.setAttribute("hidden","");
