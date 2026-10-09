@@ -23,7 +23,7 @@
   <div class="stat-card"><div><small>الكمية المتفق عليها</small><strong>{{farmer.quota_drums|clean_number}}</strong><span>دبة</span></div></div>
   <div class="stat-card"><div><small>المسحوب</small><strong>{{account.consumed_drums|clean_number}}</strong><span>دبة</span></div></div>
   <div class="stat-card"><div><small>المتبقي</small><strong>{{account.remaining_quota_drums|clean_number}}</strong><span>دبة</span></div></div>
-  <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الرصيد المستحق</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
+  <div class="stat-card {% if account.outstanding_amount>0 %}stat-danger{% endif %}"><div><small>الرصيد</small><strong>{{account.outstanding_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></div></div>
   <div class="stat-card"><div><small>عمر الرصيد</small><strong>{{account.debt_age_days|clean_number}}</strong><span>يوم</span></div></div>
 </div>
 
