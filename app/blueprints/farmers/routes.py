@@ -179,7 +179,8 @@ def detail(farmer_id):
     operations.sort(key=lambda item:item["date"],reverse=True)
     can_edit=editable_farmer(farmer)
     can_change_quota=can_change_farmer_quota(farmer)
-    return render_template("farmers/detail.html",farmer=farmer,account=account,operations=operations,can_edit_farmer=can_edit,can_change_quota=can_change_quota)
+    receivable_account_code=f"1400-F{farmer.id:06d}"
+    return render_template("farmers/detail.html",farmer=farmer,account=account,operations=operations,can_edit_farmer=can_edit,can_change_quota=can_change_quota,receivable_account_code=receivable_account_code)
 
 @farmers_bp.get("/<int:farmer_id>/documents/<int:document_id>")
 @permission_required("farmers.view")
