@@ -7,10 +7,8 @@
         <span class="water-brand-mark"><i class="bi bi-fuel-pump-fill" aria-hidden="true"></i></span>
         <h1>{{ project_settings.project_name }}</h1>
       </div>
-      <a class="water-back" href="{{ url_for('auth.account') }}" aria-label="العودة إلى حسابي" title="حسابي"><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-    </div>
-    <div class="water-menu-row">
       <button class="water-menu-toggle" id="employee-theme-menu-toggle" type="button" aria-expanded="false" aria-controls="employee-theme-menu" aria-label="فتح القائمة"><i class="bi bi-list" aria-hidden="true"></i></button>
+      <button class="water-back" id="employee-theme-install-proxy" type="button" aria-label="تثبيت التطبيق" title="تثبيت التطبيق"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
     </div>
   </div>
   <div class="water-menu-panel" id="employee-theme-menu" hidden>
@@ -45,7 +43,7 @@
     <a class="water-action-card" href="{{ url_for('sales.payment') }}"><i class="bi bi-cash-coin" aria-hidden="true"></i><strong>تسجيل سداد</strong></a>
     <a class="water-action-card" href="{{ url_for('sales.dispense') }}"><i class="bi bi-droplet-half" aria-hidden="true"></i><strong>صرف ديزل</strong></a>
     <a class="water-action-card" href="{{ url_for('farmers.index') }}"><i class="bi bi-people" aria-hidden="true"></i><strong>المزارعون</strong></a>
-    <a class="water-action-card" href="{{ url_for('farmers.new') }}"><i class="bi bi-person-plus" aria-hidden="true"></i><strong>إضافة مزارع</strong></a>
+    <a class="water-action-card" href="{{ url_for('sales.point_of_sale') }}"><i class="bi bi-shop" aria-hidden="true"></i><strong>بيع عام</strong></a>
     <a class="water-action-card" href="{{ url_for('fuel.stock') }}"><i class="bi bi-fuel-pump-fill" aria-hidden="true"></i><strong>مخزون الديزل</strong></a>
     <a class="water-action-card" href="{{ url_for('cashbox.index') }}"><i class="bi bi-wallet2" aria-hidden="true"></i><strong>صندوقي</strong></a>
     <a class="water-action-card" href="{{ url_for('reports.my_operations') }}"><i class="bi bi-calendar-check" aria-hidden="true"></i><strong>تقرير العمليات</strong></a>
@@ -88,6 +86,13 @@
 (function () {
   const button = document.getElementById("employee-theme-menu-toggle");
   const menu = document.getElementById("employee-theme-menu");
+  const installProxy = document.getElementById("employee-theme-install-proxy");
+  if (installProxy) {
+    installProxy.addEventListener("click", function () {
+      const installButton = document.querySelector("[data-dizal-install]");
+      if (installButton) installButton.click();
+    });
+  }
   if (!button || !menu) return;
 
   button.addEventListener("click", function () {
