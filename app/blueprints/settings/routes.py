@@ -1,3 +1,4 @@
+from decimal import Decimal,InvalidOperation
 from flask import current_app,flash,redirect,render_template,request,url_for,send_file,abort
 from ...decorators import permission_required
 from flask_security.utils import verify_password
@@ -6,6 +7,7 @@ from ...models import ProjectSettings
 from ...services.audit import audit
 from ...services.system_admin import create_backup,list_backups,reset_project_data
 from ...services.files import save_image
+from ...services.farmers import project_diesel_capacity
 from . import settings_bp
 
 PALETTES={
@@ -23,14 +25,28 @@ FONT_SCALES={"0.95":"أصغر","1":"متوسط","1.05":"كبير قليلًا","
 def index():
     settings=ProjectSettings.get()
     if request.method=="POST":
+        try:
+            project_limit=Decimal(str(request.form.get("project_diesel_limit_liters") or settings.project_diesel_limit_liters))
+        except (InvalidOperation,ValueError,TypeError):
+            flash("أدخل حد ديزل المشروع باللتر كرقم صحيح.","danger")
+            return redirect(url_for("settings.index"))
+        capacity=project_diesel_capacity()
+        if project_limit<=0:
+            flash("حد ديزل المشروع يجب أن يكون أكبر من صفر لتر.","danger")
+            return redirect(url_for("settings.index"))
+        if project_limit<capacity["used_liters"]:
+            flash(
+                f"لا يمكن خفض حد المشروع إلى {project_limit} لتر؛ الكميات المحجوزة للمزارعين ومبيعات البيع العام تبلغ {capacity['used_liters']} لتر.",
+                "danger",
+            )
+            return redirect(url_for("settings.index"))
+        settings.project_diesel_limit_liters=project_limit
         settings.project_name=(request.form.get("project_name") or settings.project_name).strip()
         settings.manager_name=(request.form.get("manager_name") or "").strip() or None
         settings.manager_phone=(request.form.get("manager_phone") or "").strip() or None
         settings.currency=(request.form.get("currency") or settings.currency).strip()
         settings.drum_liters=request.form.get("drum_liters") or settings.drum_liters
         settings.max_farmers_per_employee=int(request.form.get("max_farmers_per_employee") or settings.max_farmers_per_employee)
-        settings.max_credit_drums_per_farmer=request.form.get("max_credit_drums_per_farmer") or settings.max_credit_drums_per_farmer
-        settings.max_dispense_liters_per_day=request.form.get("max_dispense_liters_per_day") or settings.max_dispense_liters_per_day
         settings.default_sale_price_per_liter=request.form.get("default_sale_price_per_liter") or settings.default_sale_price_per_liter
         settings.allow_employee_sale_price_override=request.form.get("allow_employee_sale_price_override")=="1"
         settings.primary_color=(request.form.get("primary_color") or settings.primary_color).strip()
@@ -68,7 +84,7 @@ def index():
         return redirect(url_for("settings.index"))
     current_palette=next((key for key,colors in PALETTES.items() if settings.primary_color==colors["primary"] and settings.secondary_color==colors["secondary"] and settings.accent_color==colors["accent"]), "")
     backup_rows=[{"name":row.name,"size_mb":row.stat().st_size/1024/1024,"modified":__import__("datetime").datetime.fromtimestamp(row.stat().st_mtime).strftime("%Y-%m-%d %H:%M")} for row in list_backups()[:10]]
-    return render_template("settings/index.html",settings=settings,palettes=PALETTES,font_scales=FONT_SCALES,current_palette=current_palette,backups=backup_rows)
+    return render_template("settings/index.html",settings=settings,palettes=PALETTES,font_scales=FONT_SCALES,current_palette=current_palette,backups=backup_rows,project_capacity=project_diesel_capacity())
 
 @settings_bp.post("/backup")
 @permission_required("settings.manage")
