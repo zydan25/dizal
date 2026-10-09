@@ -17,7 +17,20 @@ def visible_farmer(farmer):
 
 def editable_farmer(farmer):
     if current_user.has_role("manager"): return True
-    return farmer.assigned_employee_id==current_user.id and farmer.status in {"draft","changes_requested","submitted"}
+    return (
+        farmer.assigned_employee_id==current_user.id
+        and farmer.status in {"draft","changes_requested","submitted","approved"}
+        and user_has_permission(current_user,"farmers.create")
+    )
+
+
+def can_change_farmer_quota(farmer):
+    if current_user.has_role("manager"):
+        return True
+    if farmer.assigned_employee_id!=current_user.id or farmer.status in {"deleted","rejected","suspended"}:
+        return False
+    profile=getattr(current_user,"employee_profile",None)
+    return user_has_permission(current_user,"farmers.quota.change") or bool(profile and profile.can_change_farmer_quota)
 
 def _farmer_file_path(row):
     root=Path(current_app.config["UPLOAD_FOLDER"]).resolve()
@@ -161,7 +174,9 @@ def detail(farmer_id):
     operations=[{"kind":"dispense","date":row.created_at,"row":row} for row in dispenses if row.status=="approved"]
     operations += [{"kind":"payment","date":row.created_at,"row":row} for row in payments]
     operations.sort(key=lambda item:item["date"],reverse=True)
-    return render_template("farmers/detail.html",farmer=farmer,account=account,operations=operations)
+    can_edit=editable_farmer(farmer)
+    can_change_quota=can_change_farmer_quota(farmer)
+    return render_template("farmers/detail.html",farmer=farmer,account=account,operations=operations,can_edit_farmer=can_edit,can_change_quota=can_change_quota)
 
 @farmers_bp.get("/<int:farmer_id>/documents/<int:document_id>")
 @permission_required("farmers.view")
@@ -185,14 +200,17 @@ def review(farmer_id):
     return redirect(url_for("farmers.pending"))
 
 @farmers_bp.post("/<int:farmer_id>/quota")
-@permission_required("farmers.quota.change")
 def quota(farmer_id):
+    if not current_user.is_authenticated:
+        abort(403)
     farmer=Farmer.query.get_or_404(farmer_id)
+    if not visible_farmer(farmer) or not can_change_farmer_quota(farmer):
+        abort(403)
     try:
         quota_value=request.form.get("quota_drums")
         movement=change_quota(farmer,quota_value,quota_value,current_user.id,request.form.get("reason"))
         audit("farmer.quota.changed","farmer",farmer.id,after={"quota_drums":str(movement.new_quota_drums)})
-        db.session.commit();flash("تم تعديل سقف المزارع وتسجيل سبب التغيير.","success")
+        db.session.commit();flash("تم تحديث الكمية المتفق عليها للمزارع وتسجيل سبب التغيير.","success")
     except ValueError as exc:
         db.session.rollback();flash(str(exc),"danger")
     return redirect(url_for("farmers.detail",farmer_id=farmer.id))
