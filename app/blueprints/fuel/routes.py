@@ -2,7 +2,7 @@ from datetime import date
 from flask import abort,current_app,flash,redirect,render_template,request,url_for
 from flask_login import current_user
 from sqlalchemy import func
-from sqlalchemy.exc import DataError
+from sqlalchemy.exc import DataError,SQLAlchemyError
 from ...decorators import permission_required
 from ...extensions import db
 from ...models import Asset,Cashbox,FuelPurchase,FuelStockMovement,FuelTank,ProjectSettings,User
@@ -12,6 +12,7 @@ from ...services.cashbox import balance
 from ...services.files import save_attachment
 from ...services.fuel import approve_purchase,attach_proof,create_purchase,current_stock_liters,update_purchase
 from ...services.assets import create_asset
+from ...services.asset_attachments import add_asset_attachments,cleanup_asset_uploads
 from ...services.notifications import notify_user
 from . import fuel_bp
 
@@ -238,6 +239,8 @@ def _tank_stats(tank):
 @fuel_bp.route("/tanks",methods=["GET","POST"])
 @permission_required("fuel.tank.manage")
 def tanks():
+    saved_upload_keys=[]
+    attachment_count=0
     if request.method=="POST":
         try:
             name=(request.form.get("name") or "").strip()
@@ -258,22 +261,36 @@ def tanks():
                 notes=(request.form.get("notes") or "").strip() or None,
                 create_tank=True,tank_capacity_liters=capacity,
             )
+            saved_upload_keys,attachment_count=add_asset_attachments(
+                asset,request.files.getlist("attachments"),current_app.config["UPLOAD_FOLDER"]
+            )
             tank=asset.tank
             audit("fuel.tank.created","fuel_tank",tank.id,after={
                 "name":tank.name,"code":tank.code,"asset_id":asset.id,
                 "asset_code":asset.asset_code,"cost":str(asset.acquisition_cost),
                 "cashbox_id":asset.payer_cashbox_id,
+                "attachments_added":attachment_count,
             })
             db.session.commit()
-            flash("تم إنشاء الخزان وتسجيله تلقائيًا كأصل ثابت مع خصم قيمته من الصندوق المحدد.","success")
+            message="تم إنشاء الخزان وتسجيله تلقائيًا كأصل ثابت مع خصم قيمته من الصندوق المحدد."
+            if attachment_count:
+                message+=f" وتم حفظ {attachment_count} مرفق شراء."
+            flash(message,"success")
             return redirect(url_for("fuel.tanks"))
         except (ValueError,TypeError) as exc:
             db.session.rollback()
+            cleanup_asset_uploads(saved_upload_keys,current_app.config["UPLOAD_FOLDER"])
             flash(str(exc),"danger")
         except DataError:
             current_app.logger.exception("Database rejected tank fields; transaction rolled back.")
             db.session.rollback()
+            cleanup_asset_uploads(saved_upload_keys,current_app.config["UPLOAD_FOLDER"])
             flash("تعذر حفظ الخزان لأن إحدى القيم النصية تجاوزت الحد المسموح به. تحقق من اسم الخزان والحقول النصية ثم أعد المحاولة.","danger")
+        except SQLAlchemyError:
+            current_app.logger.exception("Failed to create tank asset or save its attachments.")
+            db.session.rollback()
+            cleanup_asset_uploads(saved_upload_keys,current_app.config["UPLOAD_FOLDER"])
+            flash("تعذر حفظ الخزان أو مرفقاته بسبب خطأ في قاعدة البيانات. لم يتم اعتماد العملية.","danger")
     tanks=FuelTank.query.order_by(FuelTank.id.desc()).all()
     ids=[tank.id for tank in tanks]
     linked=Asset.query.filter(Asset.tank_id.in_(ids)).all() if ids else []
@@ -287,6 +304,8 @@ def tanks():
 @permission_required("fuel.tank.manage")
 def edit_tank(tank_id):
     tank=FuelTank.query.get_or_404(tank_id)
+    saved_upload_keys=[]
+    attachment_count=0
     if request.method=="POST":
         try:
             new_name=(request.form.get("name") or tank.name or "").strip()
@@ -299,18 +318,37 @@ def edit_tank(tank_id):
             tank.location=(request.form.get("location") or "").strip() or None
             tank.notes=(request.form.get("notes") or "").strip() or None
             tank.is_active=request.form.get("is_active")=="1"
-            audit("fuel.tank.updated","fuel_tank",tank.id,after={"name":tank.name,"capacity_liters":str(tank.capacity_liters or 0),"is_active":tank.is_active})
+            uploads=[item for item in request.files.getlist("attachments") if item and (item.filename or "").strip()]
+            if uploads:
+                asset=Asset.query.filter_by(tank_id=tank.id).first()
+                if not asset:
+                    raise ValueError("هذا الخزان غير مرتبط بسجل أصل شراء؛ افتح سجل الأصول وأرفق الملفات بالأصل المرتبط.")
+                saved_upload_keys,attachment_count=add_asset_attachments(
+                    asset,uploads,current_app.config["UPLOAD_FOLDER"]
+                )
+            audit("fuel.tank.updated","fuel_tank",tank.id,after={"name":tank.name,"capacity_liters":str(tank.capacity_liters or 0),"is_active":tank.is_active,"attachments_added":attachment_count})
             db.session.commit()
-            flash("تم تحديث بيانات الخزان.","success")
+            message="تم تحديث بيانات الخزان."
+            if attachment_count:
+                message+=f" وتم إرفاق {attachment_count} ملف."
+            flash(message,"success")
             return redirect(url_for("fuel.tanks"))
         except (ValueError,TypeError) as exc:
             db.session.rollback()
+            cleanup_asset_uploads(saved_upload_keys,current_app.config["UPLOAD_FOLDER"])
             flash(str(exc),"danger")
         except DataError:
             current_app.logger.exception("Database rejected updated tank fields; transaction rolled back.")
             db.session.rollback()
+            cleanup_asset_uploads(saved_upload_keys,current_app.config["UPLOAD_FOLDER"])
             flash("تعذر تحديث الخزان لأن إحدى القيم النصية تجاوزت الحد المسموح به. تحقق من اسم الخزان والحقول النصية ثم أعد المحاولة.","danger")
-    return render_template("fuel/tank_form.html",tank=tank)
+        except SQLAlchemyError:
+            current_app.logger.exception("Failed to update tank or save its attachments.")
+            db.session.rollback()
+            cleanup_asset_uploads(saved_upload_keys,current_app.config["UPLOAD_FOLDER"])
+            flash("تعذر تحديث الخزان أو مرفقاته بسبب خطأ في قاعدة البيانات. لم يتم اعتماد التغييرات.","danger")
+    asset=Asset.query.filter_by(tank_id=tank.id).first()
+    return render_template("fuel/tank_form.html",tank=tank,asset=asset)
 
 @fuel_bp.get("/tanks/<int:tank_id>")
 @permission_required("fuel.stock.view")

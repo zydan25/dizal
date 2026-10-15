@@ -1,12 +1,36 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-heading-row"><div class="page-heading"><h1>تعديل الخزان</h1><p>تعديل البيانات التشغيلية فقط مع إبقاء السجل والحركات كما هي.</p></div><span class="status-chip">{{tank.code}}</span></div>
-<form method="post" class="mobile-form card-form">
+<form method="post" enctype="multipart/form-data" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>اسم الخزان<input name="name" value="{{tank.name}}" required></label>
 <div class="two-col"><label>السعة باللتر<input name="capacity_liters" type="number" step="0.001" min="0" value="{{(tank.capacity_liters or '')|clean_number}}" data-unit="liter"></label><label>الموقع<input name="location" value="{{tank.location or ''}}"></label></div>
 <label class="check-row"><input type="checkbox" name="is_active" value="1" {% if tank.is_active %}checked{% endif %}> <span>الخزان فعال للتشغيل</span></label>
 <label>ملاحظات<textarea name="notes" rows="3">{{tank.notes or ''}}</textarea></label>
+<section class="asset-attachments-field">
+  <label>سندات الخزان ومرفقاته
+    <input type="file" name="attachments" multiple accept=".pdf,.png,.jpg,.jpeg,.webp">
+  </label>
+  <small class="field-help">ارفع سند الشراء أو الفواتير الإضافية. يمكن اختيار عدة ملفات PDF أو صور، بحد أقصى 10 ملفات في المرة الواحدة.</small>
+  {% if asset and asset.document and asset.document.attachments %}
+  <div class="asset-attachments-current">
+    <strong>الملفات المحفوظة ({{asset.document.attachments|length}})</strong>
+    {% for item in asset.document.attachments|sort(attribute="created_at",reverse=true) %}
+    <div class="asset-attachment-row"><i class="bi {% if item.mime_type=='application/pdf' %}bi-file-earmark-pdf{% else %}bi-file-earmark-image{% endif %}"></i><span>{{item.original_name}}</span><a href="{{url_for('assets.attachment',asset_id=asset.id,attachment_id=item.id)}}" target="_blank" rel="noopener">فتح</a><a href="{{url_for('assets.attachment',asset_id=asset.id,attachment_id=item.id,download=1)}}">تنزيل</a></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
 <button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ التعديلات</span></button>
 </form>
+<style>
+.asset-attachments-field{display:grid;gap:8px;margin:5px 0 13px;padding:13px;border:1px solid #e0e6ef;border-radius:14px;background:#fbfcfe}
+.asset-attachments-field>label{margin:0}.asset-attachments-field input[type=file]{width:100%;min-width:0}
+.asset-attachments-field .field-help{display:block;color:#64748b;font-size:11px;line-height:1.6}
+.asset-attachments-current{display:grid;gap:7px;padding-top:10px;border-top:1px solid #e4e9f0}
+.asset-attachments-current>strong{font-size:12px;color:#344054}
+.asset-attachment-row{display:flex;min-width:0;align-items:center;gap:8px;padding:8px 9px;border:1px solid #e0e6ef;border-radius:10px;background:#fff;font-size:12px}
+.asset-attachment-row>i{flex:0 0 auto;color:#1a56db}.asset-attachment-row>span{flex:1;min-width:0;overflow-wrap:anywhere}
+.asset-attachment-row>a{flex:0 0 auto;color:#174fb8;font-weight:800;text-decoration:none}
+</style>
 {% endblock %}

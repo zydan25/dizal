@@ -5,7 +5,7 @@
   <button class="primary-btn" type="button" data-bs-toggle="collapse" data-bs-target="#new-tank" aria-expanded="false" aria-controls="new-tank"><i class="bi bi-plus-lg"></i><span>إضافة خزان</span></button>
 </div>
 <div class="collapse" id="new-tank">
-<form method="post" class="mobile-form card-form">
+<form method="post" enctype="multipart/form-data" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>اسم الخزان
 <input name="name" required maxlength="160" autocomplete="off" aria-describedby="tank-name-help" placeholder="مثال: الخزان الرئيسي">
@@ -24,6 +24,12 @@
 <label>الموقع<input name="location"></label>
 </div>
 <label>ملاحظات<textarea name="notes" rows="2"></textarea></label>
+<section class="asset-attachments-field">
+  <label>سندات شراء الخزان والمرفقات
+    <input type="file" name="attachments" multiple accept=".pdf,.png,.jpg,.jpeg,.webp">
+  </label>
+  <small class="field-help">يمكن إرفاق حتى 10 ملفات PDF أو صور في عملية الشراء الواحدة، بإجمالي لا يتجاوز 10 ميجابايت.</small>
+</section>
 <div class="info-card"><i class="bi bi-link-45deg"></i><div><strong>ربط تلقائي بالأصول</strong><small>هذا ليس مجرد إنشاء خزان: عند الحفظ ينشئ النظام أصلًا ثابتًا للخزان، ويصدر سند شراء، ويخصم قيمته من الصندوق المحدد. الديزل الموجود لاحقًا هو مخزون مستقل عن قيمة الخزان.</small></div></div>
 <button class="primary-btn submit-loading" type="submit" data-loading-text="جارٍ حفظ الخزان…"{% if not cashboxes %} disabled{% endif %}><i class="bi bi-check2"></i><span>حفظ الخزان وتسجيل الأصل</span></button>
 </form></div>
