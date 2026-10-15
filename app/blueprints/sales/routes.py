@@ -33,51 +33,166 @@ def visible_farmers(employee=None):
         query=query.filter_by(assigned_employee_id=current_user.id)
     return query.all()
 
-@sales_bp.route("/dispense",methods=["GET","POST"])
-@permission_required("fuel.dispense")
-def dispense():
-    if request.method=="POST":
-        try:
-            farmer=Farmer.query.get_or_404(int(request.form["farmer_id"]))
-            employee=selected_employee(farmer)
-            tank_id=request.form.get("tank_id")
-            if tank_id:
-                tank=FuelTank.query.get_or_404(int(tank_id))
-            else:
-                tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).first()
-                if not tank:
-                    raise ValueError("لا يوجد خزان فعال.")
-            settings=ProjectSettings.get()
-            if current_user.has_role("manager") or settings.allow_employee_sale_price_override:
-                price=request.form.get("sale_price_per_liter") or settings.default_sale_price_per_liter
-            else:
-                price=settings.default_sale_price_per_liter
-            row=create_dispense(employee,farmer,tank.id,request.form.get("drums"),price,request.form.get("paid_amount") or 0,request.form.get("notes"))
-            audit("fuel.dispense.created","fuel_dispense",row.id,after={"farmer_id":farmer.id,"employee_id":employee.id,"drums":str(row.drums),"liters":str(row.liters),"total":str(row.total_amount),"credit":str(row.credit_amount),"cost":str(row.cost_amount),"document_id":row.document_id})
-            db.session.commit()
-            flash("تم تسجيل صرف الديزل وإصدار سند الصرف.","success")
-            return redirect(url_for("sales.dispense"))
-        except ValueError as exc:
-            db.session.rollback()
-            flash(str(exc),"danger")
+
+def _dispense_form_context():
     farmers=visible_farmers()
-    tanks=FuelTank.query.filter_by(is_active=True).all()
+    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).all()
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
     settings=ProjectSettings.get()
-    farmer_info={str(farmer.id):{key:(float(value) if isinstance(value,(int,float)) else str(value)) for key,value in farmer_account(farmer).items()} for farmer in farmers}
-    selected_farmer_id=request.args.get("farmer_id") or ""
-    selected_employee_id=request.args.get("employee_id") or ""
+    farmer_info={
+        str(farmer.id):{
+            key:(float(value) if isinstance(value,(int,float)) else str(value))
+            for key,value in farmer_account(farmer).items()
+        }
+        for farmer in farmers
+    }
+    form_values=request.form if request.method=="POST" else {}
+    selected_farmer_id=form_values.get("farmer_id") or request.args.get("farmer_id") or ""
+    selected_employee_id=form_values.get("employee_id") or request.args.get("employee_id") or ""
     if current_user.has_role("manager") and selected_farmer_id and not selected_employee_id:
         selected_farmer=Farmer.query.get(selected_farmer_id)
         if selected_farmer:
             selected_employee_id=str(selected_farmer.assigned_employee_id or "")
-    selected_tank_id=request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
-    dispense_query=FuelDispense.query.filter_by(status="approved",sale_type="farmer").order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc())
-    if not current_user.has_role("manager"):
-        dispense_query=dispense_query.filter_by(employee_id=current_user.id)
-    dispenses=dispense_query.limit(60).all()
-    return render_template("sales/dispense.html",farmers=farmers,tanks=tanks,employees=employees,settings=settings,farmer_info=farmer_info,selected_farmer_id=selected_farmer_id,selected_employee_id=selected_employee_id,selected_tank_id=selected_tank_id,dispenses=dispenses)
+    selected_tank_id=form_values.get("tank_id") or request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
+    values={
+        "drums":form_values.get("drums",""),
+        "paid_amount":form_values.get("paid_amount","0"),
+        "sale_price_per_liter":form_values.get("sale_price_per_liter",str(settings.default_sale_price_per_liter)),
+        "notes":form_values.get("notes",""),
+    }
+    return {
+        "farmers":farmers,"tanks":tanks,"employees":employees,"settings":settings,
+        "farmer_info":farmer_info,"selected_farmer_id":selected_farmer_id,
+        "selected_employee_id":selected_employee_id,"selected_tank_id":selected_tank_id,
+        "form_values":values,
+    }
 
+
+def _render_dispense_form():
+    return render_template("sales/dispense.html",**_dispense_form_context())
+
+
+@sales_bp.get("/dispense/new",endpoint="dispense_create")
+@permission_required("fuel.dispense")
+def dispense_create():
+    return _render_dispense_form()
+
+
+@sales_bp.route("/dispense",methods=["GET","POST"])
+@permission_required("fuel.dispense")
+def dispense():
+        if request.method=="POST":
+            try:
+                farmer=Farmer.query.get_or_404(int(request.form["farmer_id"]))
+                employee=selected_employee(farmer)
+                tank_id=request.form.get("tank_id")
+                if tank_id:
+                    tank=FuelTank.query.get_or_404(int(tank_id))
+                else:
+                    tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).first()
+                    if not tank:
+                        raise ValueError("لا يوجد خزان فعال.")
+                settings=ProjectSettings.get()
+                if current_user.has_role("manager") or settings.allow_employee_sale_price_override:
+                    price=request.form.get("sale_price_per_liter") or settings.default_sale_price_per_liter
+                else:
+                    price=settings.default_sale_price_per_liter
+                row=create_dispense(employee,farmer,tank.id,request.form.get("drums"),price,request.form.get("paid_amount") or 0,request.form.get("notes"))
+                audit("fuel.dispense.created","fuel_dispense",row.id,after={"farmer_id":farmer.id,"employee_id":employee.id,"drums":str(row.drums),"liters":str(row.liters),"total":str(row.total_amount),"credit":str(row.credit_amount),"cost":str(row.cost_amount),"document_id":row.document_id})
+                db.session.commit()
+                flash("تم تسجيل صرف الديزل وإصدار سند الصرف.","success")
+                return redirect(url_for("sales.dispense"))
+            except ValueError as exc:
+                db.session.rollback()
+                flash(str(exc),"danger")
+        return _render_dispense_form()
+
+    from datetime import date,datetime,time,timedelta,timezone
+    from math import ceil
+    from sqlalchemy import func,or_
+
+    search=(request.args.get("q") or "").strip()
+    farmer_id=(request.args.get("farmer_id") or "").strip()
+    date_from=(request.args.get("date_from") or "").strip()
+    date_to=(request.args.get("date_to") or "").strip()
+    sort=request.args.get("sort","newest")
+    start_date=end_date=None
+    try:
+        start_date=date.fromisoformat(date_from) if date_from else None
+        end_date=date.fromisoformat(date_to) if date_to else None
+    except ValueError:
+        flash("صيغة التاريخ غير صحيحة؛ استخدم YYYY-MM-DD.","danger")
+        start_date=end_date=None
+    if start_date and end_date and end_date<start_date:
+        flash("تاريخ البداية لا يمكن أن يأتي بعد تاريخ النهاية.","danger")
+        start_date=end_date=None
+
+    query=(
+        FuelDispense.query
+        .join(Document,FuelDispense.document_id==Document.id)
+        .outerjoin(Farmer,FuelDispense.farmer_id==Farmer.id)
+        .join(User,FuelDispense.employee_id==User.id)
+        .filter(
+            FuelDispense.status=="approved",
+            FuelDispense.sale_type=="farmer",
+            Document.status=="approved",
+        )
+    )
+    if not current_user.has_role("manager"):
+        query=query.filter(FuelDispense.employee_id==current_user.id)
+    if farmer_id.isdigit():
+        query=query.filter(FuelDispense.farmer_id==int(farmer_id))
+    if start_date:
+        query=query.filter(FuelDispense.created_at>=datetime.combine(start_date,time.min).replace(tzinfo=timezone.utc))
+    if end_date:
+        query=query.filter(FuelDispense.created_at<datetime.combine(end_date+timedelta(days=1),time.min).replace(tzinfo=timezone.utc))
+    if search:
+        pattern="%"+search.replace("%","\\%").replace("_","\\_")+"%"
+        query=query.filter(or_(
+            Farmer.name.ilike(pattern),Farmer.code.ilike(pattern),Farmer.phone.ilike(pattern),
+            Document.number.ilike(pattern),User.display_name.ilike(pattern),FuelDispense.notes.ilike(pattern),
+        ))
+
+    agg=query.order_by(None).with_entities(
+        func.count(FuelDispense.id),
+        func.coalesce(func.sum(FuelDispense.drums),0),
+        func.coalesce(func.sum(FuelDispense.liters),0),
+        func.coalesce(func.sum(FuelDispense.total_amount),0),
+        func.coalesce(func.sum(FuelDispense.paid_amount),0),
+        func.coalesce(func.sum(FuelDispense.credit_amount),0),
+    ).first()
+    totals={
+        "count":int(agg[0] or 0),"drums":agg[1] or 0,"liters":agg[2] or 0,
+        "total_amount":agg[3] or 0,"paid_amount":agg[4] or 0,"credit_amount":agg[5] or 0,
+    }
+    total_count=totals["count"]
+    try:
+        page=max(1,int(request.args.get("page",1)))
+    except (TypeError,ValueError):
+        page=1
+    per_page=25
+    pages=max(1,ceil(total_count/per_page))
+
+    if sort=="oldest":
+        query=query.order_by(FuelDispense.created_at.asc(),FuelDispense.id.asc())
+    elif sort=="farmer":
+        query=query.order_by(Farmer.name.asc(),FuelDispense.created_at.desc(),FuelDispense.id.desc())
+    elif sort=="amount":
+        query=query.order_by(FuelDispense.total_amount.desc(),FuelDispense.created_at.desc())
+    else:
+        sort="newest"
+        query=query.order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc())
+    dispenses=query.offset((page-1)*per_page).limit(per_page).all()
+
+    farmer_options=Farmer.query.order_by(Farmer.name.asc()).all()
+    if not current_user.has_role("manager") and not user_has_permission(current_user,"farmers.view_all"):
+        farmer_options=[row for row in farmer_options if row.assigned_employee_id==current_user.id]
+    settings=ProjectSettings.get()
+    return render_template(
+        "sales/dispenses.html",dispenses=dispenses,totals=totals,total_count=total_count,
+        page=page,pages=pages,search=search,farmer_id=farmer_id,date_from=date_from,
+        date_to=date_to,sort=sort,farmer_options=farmer_options,settings=settings,
+    )
 
 def _can_edit_dispense(row):
     return bool(

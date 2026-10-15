@@ -1,27 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row"><div class="page-heading"><h1>إضافة صرف ديزل</h1><p>اختر المزارع وعدد الدباب، والنظام يحسب اللترات والمبلغ والدين والتكلفة.</p></div><a class="secondary-btn" href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><span>المزارعون</span></a></div>
+<div class="page-heading-row dispense-form-heading">
+  <div class="page-heading"><h1>إضافة صرف ديزل</h1><p>اختر المزارع والكمية، وستظهر حسابات اللترات والمبلغ والمدفوع والمتبقي قبل التأكيد.</p></div>
+  <a class="secondary-btn" href="{{url_for('sales.dispense')}}"><i class="bi bi-journal-text"></i><span>سجل الصرف</span></a>
+</div>
 
-<form method="post" class="mobile-form card-form" id="dispense-form">
+<form method="post" action="{{url_for('sales.dispense')}}" class="mobile-form card-form" id="dispense-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 {% if current_user.has_role("manager") %}
-<label>الموظف المسؤول<select name="employee_id" id="employee_id" required><option value="">اختر الموظف</option>{% for employee in employees %}<option value="{{employee.id}}" {% if selected_employee_id|string==employee.id|string %}selected{% endif %}>{{employee.display_name}}</option>{% endfor %}</select></label>
+<label>الموظف المسؤول
+<select name="employee_id" id="employee_id" required><option value="">اختر الموظف</option>{% for employee in employees %}<option value="{{employee.id}}" {% if selected_employee_id|string==employee.id|string %}selected{% endif %}>{{employee.display_name}}</option>{% endfor %}</select>
+</label>
 {% endif %}
 <label>المزارع
 <select name="farmer_id" id="farmer_id" required>
 <option value="">اختر المزارع</option>
 {% for farmer in farmers %}
-{% set acc = farmer.__dict__.get('id') and none %}
-<option value="{{farmer.id}}" {% if selected_farmer_id|string==farmer.id|string %}selected{% endif %}>{{farmer.name}} · الكمية المتفق عليها {{farmer.quota_drums|clean_number}} دبة</option>
+<option value="{{farmer.id}}" {% if selected_farmer_id|string==farmer.id|string %}selected{% endif %}>{{farmer.name}} · المتبقي {{farmer.quota_drums|clean_number}} دبة</option>
 {% endfor %}
 </select>
 </label>
 <div class="info-card farmer-operating-card" id="farmer-operating-info">
-  <div class="section-title"><h2>ملخص المزارع</h2><span>يظهر بعد الاختيار</span></div>
+  <div class="section-title"><h2>ملخص المزارع</h2><span>يتحدث عند تغيير الاختيار</span></div>
   <div class="stats-grid compact-stats">
     <div><small>الكمية المتفق عليها</small><strong id="farmer_quota">0</strong><span>دبة</span></div>
     <div><small>المسحوب</small><strong id="farmer_consumed">0</strong><span>دبة</span></div>
-    <div><small>المتبقي من الكمية</small><strong id="farmer_remaining_quota">0</strong><span>دبة</span></div>
+    <div><small>المتبقي</small><strong id="farmer_remaining_quota">0</strong><span>دبة</span></div>
     <div><small>الدين الحالي</small><strong id="farmer_outstanding">0</strong><span>{{project_settings.currency}}</span></div>
   </div>
 </div>
@@ -31,113 +35,33 @@
 </select>
 </label>
 <div class="two-col">
-<label>عدد الدباب<input name="drums" id="drums" type="number" step="0.1" min="0.1" inputmode="decimal" required></label>
-<label>المدفوع الآن<input name="paid_amount" id="paid_amount" type="number" step="0.001" min="0" value="0" inputmode="decimal"></label>
+<label>عدد الدباب<input name="drums" id="drums" type="number" step="0.1" min="0.1" inputmode="decimal" required value="{{form_values.drums}}"></label>
+<label>المدفوع الآن<input name="paid_amount" id="paid_amount" type="number" step="0.001" min="0" value="{{form_values.paid_amount}}" inputmode="decimal"></label>
 </div>
 <label>سعر اللتر
-<input name="sale_price_per_liter" id="sale_price" type="number" step="0.001" min="0.001" inputmode="decimal" value="{{settings.default_sale_price_per_liter|clean_number}}" {% if not current_user.has_role("manager") and not settings.allow_employee_sale_price_override %}readonly{% endif %}>
+<input name="sale_price_per_liter" id="sale_price" type="number" step="0.001" min="0.001" inputmode="decimal" value="{{form_values.sale_price_per_liter|clean_number}}" {% if not current_user.has_role("manager") and not settings.allow_employee_sale_price_override %}readonly{% endif %}>
 <small class="field-help price-policy-note">{% if current_user.has_role("manager") %}المدير يستطيع تغيير السعر في هذه العملية.{% elif settings.allow_employee_sale_price_override %}السعر قابل للتغيير لأن إعدادات المشروع تسمح للموظف بذلك.{% else %}السعر ثابت من إعدادات المدير ولا يمكن تغييره في هذه العملية.{% endif %}</small>
 </label>
-<div class="calculation-card">
+<div class="calculation-card dispense-calculation">
 <div><small>اللترات</small><strong id="liters_preview">0</strong><span>لتر</span></div>
 <div><small>الإجمالي</small><strong id="total_preview">0</strong><span>{{project_settings.currency}}</span></div>
-<div><small>الدين</small><strong id="credit_preview">0</strong><span>{{project_settings.currency}}</span></div>
+<div><small>المدفوع</small><strong id="paid_preview">0</strong><span>{{project_settings.currency}}</span></div>
+<div><small>المتبقي</small><strong id="credit_preview">0</strong><span>{{project_settings.currency}}</span></div>
 </div>
-<label>ملاحظات<textarea name="notes" rows="2"></textarea></label>
-<button class="primary-btn form-submit-loading" type="submit">
+<label>ملاحظات<textarea name="notes" rows="2">{{form_values.notes}}</textarea></label>
+<button class="primary-btn form-submit-loading dispense-submit" type="submit">
   <span class="form-submit-icon"><i class="bi bi-droplet-fill"></i></span>
-  <span class="form-submit-label">تأكيد الصرف وإصدار السند</span>
+  <span class="form-submit-label">تأكيد الصرف وإصدار السند الرسمي</span>
 </button>
 </form>
-
-<section class="dispense-history-panel" aria-labelledby="dispense-history-heading">
-  <div class="dispense-history-heading">
-    <div>
-      <span class="dispense-history-eyebrow"><i class="bi bi-clock-history"></i> سجل العمليات</span>
-      <h2 id="dispense-history-heading">آخر عمليات صرف الديزل</h2>
-      <p>راجع تفاصيل السند أو افتح التعديل مباشرة من بطاقة العملية.</p>
-    </div>
-    <span class="dispense-history-count">{{ dispenses|length }} عملية</span>
-  </div>
-  <div class="dispense-history-list">
-    {% for row in dispenses %}
-    <article class="dispense-history-card">
-      <div class="dispense-history-card-head">
-        <div class="dispense-history-icon"><i class="bi bi-droplet-half"></i></div>
-        <div class="dispense-history-title">
-          <strong>صرف ديزل · {{ row.document.number }}</strong>
-          <span>{{ row.farmer.name }} · {{ row.tank.name }}</span>
-        </div>
-        <span class="dispense-history-status">معتمد</span>
-      </div>
-      <div class="dispense-history-metrics">
-        <div><small>الكمية</small><strong>{{ row.drums|clean_number }} <em>دبة</em></strong><span>{{ row.liters|clean_number }} لتر</span></div>
-        <div><small>الإجمالي</small><strong>{{ row.total_amount|clean_number }}</strong><span>{{ project_settings.currency }}</span></div>
-        <div><small>المدفوع</small><strong>{{ row.paid_amount|clean_number }}</strong><span>{{ project_settings.currency }}</span></div>
-        <div class="{% if row.credit_amount>0 %}has-credit{% endif %}"><small>المتبقي</small><strong>{{ row.credit_amount|clean_number }}</strong><span>{{ project_settings.currency }}</span></div>
-      </div>
-      <div class="dispense-history-meta">
-        <span><i class="bi bi-calendar3"></i>{{ row.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
-        <span><i class="bi bi-person-badge"></i>{{ row.employee.display_name }}</span>
-        {% if row.notes %}<span class="dispense-history-note"><i class="bi bi-chat-left-text"></i>{{ row.notes }}</span>{% endif %}
-      </div>
-      <div class="dispense-history-actions">
-        <a class="dispense-history-action" href="{{ url_for('documents.view',document_id=row.document_id) }}"><i class="bi bi-receipt"></i><span>فتح السند</span></a>
-        {% if current_user.has_role("manager") or row.employee_id==current_user.id %}
-        <a class="dispense-history-action is-edit" href="{{ url_for('sales.edit_dispense',dispense_id=row.id) }}"><i class="bi bi-pencil-square"></i><span>تعديل الصرف</span></a>
-        {% endif %}
-      </div>
-    </article>
-    {% else %}
-    <div class="dispense-history-empty"><i class="bi bi-journal-check"></i><strong>لا توجد عمليات صرف مسجلة</strong><span>ستظهر عمليات الصرف المعتمدة هنا تلقائيًا.</span></div>
-    {% endfor %}
-  </div>
-</section>
-
-<style>
-.dispense-history-panel{margin:30px 0 12px}
-.dispense-history-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:0 0 16px}
-.dispense-history-eyebrow{display:inline-flex;align-items:center;gap:7px;color:#0f766e;font-size:.82rem;font-weight:800}
-.dispense-history-heading h2{margin:7px 0 5px;font-size:1.22rem;font-weight:850;color:var(--text-color,#172033)}
-.dispense-history-heading p{margin:0;color:var(--muted-color,#718096);font-size:.9rem}
-.dispense-history-count{white-space:nowrap;background:#e7f7f3;color:#0d766e;border:1px solid #c3ece3;border-radius:999px;padding:7px 12px;font-weight:800;font-size:.84rem}
-.dispense-history-list{display:grid;gap:14px}
-.dispense-history-card{position:relative;overflow:hidden;padding:17px;border:1px solid #e1e8ef;border-radius:20px;background:linear-gradient(145deg,#fff 0%,#f8fbfd 100%);box-shadow:0 8px 24px rgba(15,23,42,.055)}
-.dispense-history-card:before{content:"";position:absolute;inset:0 0 0 auto;width:4px;background:linear-gradient(180deg,#14b8a6,#2563eb)}
-.dispense-history-card-head{display:flex;align-items:center;gap:12px}
-.dispense-history-icon{display:grid;place-items:center;width:47px;height:47px;flex:0 0 47px;border-radius:15px;background:linear-gradient(135deg,#d9fbf2,#e0edff);color:#0f766e;font-size:1.35rem}
-.dispense-history-title{min-width:0;flex:1;display:grid;gap:4px}
-.dispense-history-title strong{font-size:.98rem;font-weight:850;color:#172033}
-.dispense-history-title span{font-size:.85rem;color:#64748b;overflow-wrap:anywhere}
-.dispense-history-status{font-size:.77rem;font-weight:800;color:#087f5b;background:#e1f8ed;padding:5px 9px;border-radius:999px}
-.dispense-history-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:16px 0 12px}
-.dispense-history-metrics>div{min-width:0;border:1px solid #e7edf3;background:#fff;border-radius:13px;padding:10px}
-.dispense-history-metrics small,.dispense-history-metrics span{display:block;color:#64748b;font-size:.74rem}
-.dispense-history-metrics strong{display:block;margin:5px 0 2px;color:#172033;font-size:1.04rem;font-weight:850;overflow-wrap:anywhere}
-.dispense-history-metrics em{font-size:.72rem;font-style:normal;color:#64748b}
-.dispense-history-metrics .has-credit strong{color:#b45309}
-.dispense-history-meta{display:flex;flex-wrap:wrap;gap:7px 15px;color:#64748b;font-size:.8rem}
-.dispense-history-meta span{display:inline-flex;align-items:center;gap:6px}
-.dispense-history-note{overflow-wrap:anywhere}
-.dispense-history-actions{display:flex;flex-wrap:wrap;gap:9px;border-top:1px solid #e8edf3;margin-top:14px;padding-top:13px}
-.dispense-history-action{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:39px;padding:8px 13px;border:1px solid #dbe4ed;border-radius:12px;background:#fff;color:#334155;text-decoration:none;font-size:.85rem;font-weight:800}
-.dispense-history-action:hover{background:#f1f5f9;color:#0f172a}
-.dispense-history-action.is-edit{border-color:#a7e8dd;background:#e8fbf7;color:#0f766e}
-.dispense-history-action.is-edit:hover{background:#d3f8ef;color:#115e59}
-.dispense-history-empty{display:grid;justify-items:center;gap:7px;border:1px dashed #cbd5e1;background:#f8fafc;border-radius:18px;padding:28px 16px;text-align:center;color:#64748b}
-.dispense-history-empty i{font-size:1.9rem;color:#0f766e}
-.dispense-history-empty strong{color:#334155}
-@media(max-width:575px){.dispense-history-heading{gap:8px}.dispense-history-heading p{font-size:.82rem}.dispense-history-card{padding:13px}.dispense-history-icon{width:40px;height:40px;flex-basis:40px}.dispense-history-title strong{font-size:.9rem}.dispense-history-status{font-size:.7rem;padding:4px 7px}.dispense-history-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dispense-history-metrics>div{padding:9px}.dispense-history-actions>*{flex:1}}
-</style>
 
 <script>
 (function(){
 const farmerInfo={{farmer_info|tojson}};
 const farmerSelect=document.getElementById("farmer_id");
-
-function fmt(v,digits){const n=Number(v||0);return n.toFixed(digits||3).replace(/\\.?0+$/,"");}
+function fmt(value,digits){const n=Number(value||0);return Number.isFinite(n)?n.toLocaleString("en-US",{maximumFractionDigits:digits||3}):"0";}
 function refreshFarmerInfo(){
-  const data=farmerInfo[farmerSelect?.value] || {};
+  const data=farmerInfo[farmerSelect?.value]||{};
   document.getElementById("farmer_quota").textContent=fmt(data.quota_drums,1);
   document.getElementById("farmer_consumed").textContent=fmt(data.consumed_drums,1);
   document.getElementById("farmer_remaining_quota").textContent=fmt(data.remaining_quota_drums,1);
@@ -145,36 +69,33 @@ function refreshFarmerInfo(){
 }
 farmerSelect?.addEventListener("change",refreshFarmerInfo);
 refreshFarmerInfo();
-
 const drumLiters={{project_settings.drum_liters|float}};
 const drums=document.getElementById("drums"),price=document.getElementById("sale_price"),paid=document.getElementById("paid_amount");
-const liters=document.getElementById("liters_preview"),total=document.getElementById("total_preview"),credit=document.getElementById("credit_preview");
-function recalc(){const d=parseFloat(drums?.value||0),p=parseFloat(price?.value||0),a=parseFloat(paid?.value||0),l=d*drumLiters,t=l*p,c=Math.max(t-a,0);liters.textContent=fmt(l,1);total.textContent=fmt(t,2);credit.textContent=fmt(c,2);}
-["input","change"].forEach(evt=>[drums,price,paid].forEach(x=>x?.addEventListener(evt,recalc)));recalc();
+const ids=["liters_preview","total_preview","paid_preview","credit_preview"];
+function recalc(){
+ const d=parseFloat(drums?.value||0),p=parseFloat(price?.value||0),a=parseFloat(paid?.value||0);
+ const l=d*drumLiters,t=l*p,c=Math.max(t-a,0);
+ document.getElementById("liters_preview").textContent=fmt(l,1);
+ document.getElementById("total_preview").textContent=fmt(t,2);
+ document.getElementById("paid_preview").textContent=fmt(a,2);
+ document.getElementById("credit_preview").textContent=fmt(c,2);
+}
+["input","change"].forEach(evt=>[drums,price,paid].forEach(input=>input?.addEventListener(evt,recalc)));
+recalc();
+document.querySelectorAll("form.mobile-form").forEach(form=>form.addEventListener("submit",function(){
+ const button=form.querySelector(".form-submit-loading");
+ if(!button||button.classList.contains("is-loading"))return;
+ button.classList.add("is-loading");button.setAttribute("aria-busy","true");button.disabled=true;
+ const icon=button.querySelector(".form-submit-icon"),label=button.querySelector(".form-submit-label");
+ if(icon)icon.innerHTML="";if(label)label.textContent="جارٍ تأكيد الصرف…";
+}));
 })();
 </script>
 <style>
-.form-submit-loading{position:relative;overflow:hidden;transition:opacity .18s ease,transform .18s ease}
-.form-submit-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 18px}
-.form-submit-label{display:inline-flex;align-items:center;justify-content:center}
-.form-submit-loading.is-loading{cursor:wait;pointer-events:none;opacity:.92}
-.form-submit-loading.is-loading .form-submit-icon{width:18px;height:18px;border:2px solid rgba(255,255,255,.34);border-top-color:#fff;border-radius:50%;animation:form-submit-spin .72s linear infinite}
-.form-submit-loading.is-loading .form-submit-icon i{display:none}
-@keyframes form-submit-spin{to{transform:rotate(360deg)}}
+body.admin-theme-water-pos .dispense-form-heading .page-heading {min-width:0}
+body.admin-theme-water-pos .dispense-submit {width:100%;min-height:50px;display:flex;align-items:center;justify-content:center;gap:9px}
+body.admin-theme-water-pos .dispense-calculation {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+body.admin-theme-water-pos .dispense-calculation>div {min-width:0;padding:10px 7px;border:1px solid #e0e6ef;border-radius:12px;background:#f7f9fc;text-align:center}
+body.admin-theme-water-pos .dispense-calculation strong {overflow-wrap:anywhere}
 </style>
-<script>
-document.querySelectorAll("form.mobile-form").forEach(function(form){
-  form.addEventListener("submit",function(){
-    var button=form.querySelector(".form-submit-loading");
-    if(!button || button.classList.contains("is-loading")) return;
-    var iconWrap=button.querySelector(".form-submit-icon");
-    var label=button.querySelector(".form-submit-label");
-    button.classList.add("is-loading");
-    button.setAttribute("aria-busy","true");
-    button.disabled=true;
-    if(iconWrap) iconWrap.innerHTML="";
-    if(label) label.textContent="جارٍ تأكيد الصرف…";
-  });
-});
-</script>
 {% endblock %}

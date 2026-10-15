@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="dispense-ledger">
+  <div class="page-heading-row dispense-ledger-heading">
+    <div class="page-heading"><h1>سجل صرف الديزل</h1><p>متابعة عمليات الصرف المعتمدة وإجماليات الكميات والمبالغ حسب المزارع والفترة.</p></div>
+    <a class="primary-btn dispense-add-btn" href="{{url_for('sales.dispense_create')}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>
+  </div>
+
+  <div class="dispense-ledger-kpis">
+    <article><small>عدد العمليات</small><strong>{{totals.count|clean_number}}</strong><span>عملية</span></article>
+    <article><small>إجمالي الدباب</small><strong>{{totals.drums|clean_number}}</strong><span>دبة</span></article>
+    <article><small>إجمالي اللترات</small><strong>{{totals.liters|clean_number}}</strong><span>لتر</span></article>
+    <article><small>إجمالي قيمة الصرف</small><strong>{{totals.total_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></article>
+    <article><small>إجمالي المدفوع</small><strong>{{totals.paid_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></article>
+    <article class="{% if totals.credit_amount>0 %}is-credit{% endif %}"><small>إجمالي المتبقي</small><strong>{{totals.credit_amount|clean_number}}</strong><span>{{project_settings.currency}}</span></article>
+  </div>
+
+  <form method="get" action="{{url_for('sales.dispense')}}" class="dispense-ledger-filters">
+    <label class="dispense-ledger-search"><span><i class="bi bi-search"></i></span><input type="search" name="q" value="{{search}}" placeholder="بحث باسم المزارع أو الهاتف أو رقم السند" aria-label="بحث في عمليات الصرف"></label>
+    <label><span>المزارع</span><select name="farmer_id"><option value="">كل المزارعين</option>{% for farmer in farmer_options %}<option value="{{farmer.id}}" {% if farmer_id|string==farmer.id|string %}selected{% endif %}>{{farmer.name}} · {{farmer.code}}</option>{% endfor %}</select></label>
+    <div class="dispense-ledger-date-fields">
+      <label><span>من تاريخ</span><input type="date" name="date_from" value="{{date_from}}"></label>
+      <label><span>إلى تاريخ</span><input type="date" name="date_to" value="{{date_to}}"></label>
+    </div>
+    <label><span>ترتيب النتائج</span><select name="sort"><option value="newest" {% if sort=="newest" %}selected{% endif %}>الأحدث أولًا</option><option value="oldest" {% if sort=="oldest" %}selected{% endif %}>الأقدم أولًا</option><option value="farmer" {% if sort=="farmer" %}selected{% endif %}>حسب اسم المزارع</option><option value="amount" {% if sort=="amount" %}selected{% endif %}>الأعلى قيمة</option></select></label>
+    <div class="dispense-filter-actions"><button class="primary-btn" type="submit"><i class="bi bi-funnel"></i><span>تطبيق الفرز</span></button><a class="secondary-btn" href="{{url_for('sales.dispense')}}"><i class="bi bi-arrow-counterclockwise"></i><span>مسح</span></a></div>
+  </form>
+
+  <div class="dispense-ledger-results-head"><strong>عمليات الصرف</strong><span>{{total_count|clean_number}} نتيجة مطابقة</span></div>
+  <div class="dispense-ledger-list">
+  {% for row in dispenses %}
+    <article class="dispense-ledger-card">
+      <div class="dispense-ledger-card-head">
+        <span class="dispense-ledger-icon"><i class="bi bi-droplet-fill"></i></span>
+        <div class="dispense-ledger-identity"><strong>{{row.farmer.name}}</strong><small>{{row.farmer.code}} · {{row.farmer.phone or "لا يوجد هاتف"}}</small><span>سند الصرف {{row.document.number}} · {{row.created_at.strftime("%Y-%m-%d %H:%M")}}</span></div>
+        <span class="dispense-ledger-status">معتمد</span>
+      </div>
+      <div class="dispense-ledger-card-metrics">
+        <div><small>الكمية</small><strong>{{row.drums|clean_number}} <em>دبة</em></strong><span>{{row.liters|clean_number}} لتر</span></div>
+        <div><small>الإجمالي</small><strong>{{row.total_amount|clean_number}}</strong><span>{{settings.currency}}</span></div>
+        <div><small>المدفوع</small><strong>{{row.paid_amount|clean_number}}</strong><span>{{settings.currency}}</span></div>
+        <div class="{% if row.credit_amount>0 %}is-credit{% endif %}"><small>المتبقي</small><strong>{{row.credit_amount|clean_number}}</strong><span>{{settings.currency}}</span></div>
+      </div>
+      <div class="dispense-ledger-meta"><span><i class="bi bi-person-badge"></i>{{row.employee.display_name}}</span><span><i class="bi bi-fuel-pump"></i>{{row.tank.name}}</span>{% if row.notes %}<span class="dispense-ledger-note"><i class="bi bi-chat-left-text"></i>{{row.notes}}</span>{% endif %}</div>
+      <div class="dispense-ledger-actions">
+        <a class="secondary-btn" href="{{url_for('documents.view',document_id=row.document_id)}}"><i class="bi bi-receipt"></i><span>السند الرسمي</span></a>
+        {% if current_user.has_role("manager") or row.employee_id==current_user.id %}<a class="secondary-btn" href="{{url_for('sales.edit_dispense',dispense_id=row.id)}}"><i class="bi bi-pencil-square"></i><span>تعديل الصرف</span></a>{% endif %}
+      </div>
+    </article>
+  {% else %}
+    <div class="dispense-ledger-empty"><i class="bi bi-journal-x"></i><strong>لا توجد عمليات مطابقة</strong><span>غيّر معايير البحث أو التاريخ، أو ابدأ بتسجيل عملية صرف جديدة.</span><a class="primary-btn" href="{{url_for('sales.dispense_create')}}"><i class="bi bi-plus-lg"></i> إضافة صرف</a></div>
+  {% endfor %}
+  </div>
+
+  {% if pages>1 %}
+  <nav class="dispense-ledger-pagination" aria-label="صفحات سجل الصرف">
+    {% if page>1 %}<a class="secondary-btn" href="{{url_for('sales.dispense',q=search,farmer_id=farmer_id,date_from=date_from,date_to=date_to,sort=sort,page=page-1)}}"><i class="bi bi-chevron-right"></i> السابق</a>{% endif %}
+    <span>صفحة {{page}} من {{pages}}</span>
+    {% if page<pages %}<a class="secondary-btn" href="{{url_for('sales.dispense',q=search,farmer_id=farmer_id,date_from=date_from,date_to=date_to,sort=sort,page=page+1)}}">التالي <i class="bi bi-chevron-left"></i></a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+<style>
+.dispense-ledger{min-width:0}
+.dispense-ledger-heading{align-items:flex-start;gap:12px}
+.dispense-ledger-heading .page-heading{min-width:0}
+.dispense-ledger-heading .page-heading p{max-width:580px}
+.dispense-add-btn{display:inline-flex;min-height:47px;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;padding:10px 17px;border-radius:12px;font-weight:850;white-space:nowrap}
+.dispense-ledger-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:11px 0 14px}
+.dispense-ledger-kpis article{display:flex;min-width:0;min-height:82px;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:9px 6px;border:1px solid #e0e6ef;border-radius:13px;background:#f7f9fc;text-align:center}
+.dispense-ledger-kpis small{color:#66758a;font-size:11px;font-weight:750;line-height:1.35}
+.dispense-ledger-kpis strong{color:#202b3d;font-size:clamp(15px,3.8vw,21px);font-weight:900;line-height:1.3;overflow-wrap:anywhere}
+.dispense-ledger-kpis span{color:#7b8798;font-size:10px}
+.dispense-ledger-kpis .is-credit{border-color:#f0d8d8;background:#fff8f8}
+.dispense-ledger-filters{display:grid;gap:9px;margin:0 0 16px;padding:12px;border:1px solid #e0e6ef;border-radius:16px;background:#fff}
+.dispense-ledger-filters label{display:flex;min-width:0;flex-direction:column;gap:5px;color:#344054;font-size:12px;font-weight:800}
+.dispense-ledger-filters label>span{display:block}
+.dispense-ledger-filters input,.dispense-ledger-filters select{width:100%;min-width:0;min-height:43px;padding:8px 10px;border:1px solid #d7deea;border-radius:11px;background:#fff;color:#202b3d;font:inherit;font-size:13px}
+.dispense-ledger-filters input:focus,.dispense-ledger-filters select:focus{outline:3px solid rgba(26,86,219,.10);border-color:#7da3f0}
+.dispense-ledger-search{display:grid!important;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:6px!important;min-height:45px;padding:3px 7px;border:1px solid #d7deea;border-radius:11px}
+.dispense-ledger-search>span{display:grid;place-items:center;height:32px;border-radius:9px;background:#edf3ff;color:#1a56db}
+.dispense-ledger-search input{border:0!important;outline:0!important;box-shadow:none!important}
+.dispense-ledger-date-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.dispense-filter-actions{display:flex;gap:8px}
+.dispense-filter-actions>*{display:inline-flex;flex:1;align-items:center;justify-content:center;gap:6px;min-height:43px}
+.dispense-ledger-results-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 10px;color:#344054}
+.dispense-ledger-results-head strong{font-size:16px;font-weight:900}
+.dispense-ledger-results-head span{color:#7b8798;font-size:11px}
+.dispense-ledger-list{display:grid;gap:11px}
+.dispense-ledger-card{min-width:0;padding:13px;border:1px solid #e0e6ef;border-radius:15px;background:#fff;box-shadow:0 3px 12px rgba(20,32,52,.035)}
+.dispense-ledger-card-head{display:flex;min-width:0;align-items:center;gap:10px}
+.dispense-ledger-icon{display:grid;flex:0 0 40px;width:40px;height:40px;place-items:center;border:1px solid #d6e3fb;border-radius:12px;background:#edf3ff;color:#1a56db;font-size:19px}
+.dispense-ledger-identity{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.dispense-ledger-identity strong{color:#202b3d;font-size:14px;font-weight:900;overflow-wrap:anywhere}
+.dispense-ledger-identity small,.dispense-ledger-identity span{color:#718096;font-size:10px;line-height:1.45;overflow-wrap:anywhere}
+.dispense-ledger-status{flex:0 0 auto;padding:5px 8px;border:1px solid #bfe7ce;border-radius:999px;background:#eaf7ef;color:#26784c;font-size:10px;font-weight:850}
+.dispense-ledger-card-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:12px 0 9px}
+.dispense-ledger-card-metrics>div{min-width:0;padding:8px;border:1px solid #e6ebf2;border-radius:11px;background:#f8faff}
+.dispense-ledger-card-metrics small,.dispense-ledger-card-metrics span{display:block;color:#718096;font-size:10px}
+.dispense-ledger-card-metrics strong{display:block;margin:3px 0 1px;color:#202b3d;font-size:15px;font-weight:900;overflow-wrap:anywhere}
+.dispense-ledger-card-metrics em{font-size:10px;font-style:normal;font-weight:600;color:#718096}
+.dispense-ledger-card-metrics .is-credit{border-color:#f0d8d8;background:#fff8f8}
+.dispense-ledger-card-metrics .is-credit strong{color:#b42318}
+.dispense-ledger-meta{display:flex;flex-wrap:wrap;gap:7px 12px;color:#718096;font-size:11px;line-height:1.5}
+.dispense-ledger-meta span{display:inline-flex;align-items:center;gap:5px}
+.dispense-ledger-note{overflow-wrap:anywhere}
+.dispense-ledger-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px;padding-top:10px;border-top:1px solid #edf0f5}
+.dispense-ledger-actions>*{display:inline-flex;flex:1 1 130px;align-items:center;justify-content:center;gap:6px;min-height:41px;padding:7px 9px;font-size:12px}
+.dispense-ledger-empty{display:grid;justify-items:center;gap:8px;padding:25px 14px;border:1px dashed #d5deeb;border-radius:15px;background:#fafbfe;color:#718096;text-align:center}
+.dispense-ledger-empty>i{font-size:25px;color:#1a56db}
+.dispense-ledger-empty strong{color:#344054}
+.dispense-ledger-empty .primary-btn{display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:8px 15px}
+.dispense-ledger-pagination{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px}
+.dispense-ledger-pagination>*{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px}
+.dispense-ledger-pagination>span{color:#718096;font-size:12px}
+@media(min-width:768px){
+ .dispense-ledger-kpis{grid-template-columns:repeat(6,minmax(0,1fr))}
+ .dispense-ledger-filters{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr);align-items:end}
+ .dispense-ledger-filters>.dispense-ledger-search{grid-column:1/-1}
+ .dispense-ledger-date-fields{grid-column:auto}
+ .dispense-ledger-card-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:575px){
+ .dispense-ledger-heading{display:flex;flex-direction:column;align-items:stretch}
+ .dispense-add-btn{width:100%}
+ .dispense-ledger-kpis{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .dispense-ledger-kpis article{min-height:75px;padding:7px 4px}
+ .dispense-ledger-filters{padding:10px}
+ .dispense-ledger-card{padding:11px}
+ .dispense-ledger-card-head{align-items:flex-start}
+ .dispense-ledger-status{padding:4px 6px}
+ .dispense-ledger-results-head strong{font-size:14px}
+}
+body.admin-theme-water-pos .dispense-ledger-kpis article{border-color:#e1e6ef;background:#f7f9fc;box-shadow:none}
+body.admin-theme-water-pos .dispense-ledger-filters{box-shadow:0 2px 10px rgba(20,32,52,.025)}
+</style>
+{% endblock %}
