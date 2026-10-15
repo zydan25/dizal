@@ -84,3 +84,95 @@ body.employee-controls-water-pos .farmer-operation-item .operation-main span { w
 body.employee-controls-water-pos .farmer-operation-item .operation-value { display:none; }
 body.employee-controls-water-pos .farmer-operation-actions { grid-area:actions; display:flex; width:100%; min-width:0; flex-wrap:wrap; gap:7px; margin:0; }
 body.employee-controls-water-pos .farmer-operation-action { flex:1 1 115px; min-width:0; white-space:normal; justify-content:center; }
+
+/* Bakary-inspired account profile/cards/dialogs. */
+body.admin-theme-water-pos .account-page-heading,
+body.employee-controls-water-pos .account-page-heading { margin-bottom:14px; }
+body.admin-theme-water-pos .account-profile-hero,
+body.employee-controls-water-pos .account-profile-hero {
+  display:flex; align-items:center; gap:14px; margin-bottom:13px; padding:16px;
+  border:1px solid #e0e6ef; border-radius:18px; background:#fff;
+}
+body.admin-theme-water-pos .account-avatar-large,
+body.employee-controls-water-pos .account-avatar-large {
+  display:grid; flex:0 0 58px; width:58px; height:58px; place-items:center; border:1px solid #cbd9f7;
+  border-radius:17px; background:#eaf1ff; color:#1a56db; font-size:24px; font-weight:900;
+}
+body.admin-theme-water-pos .account-summary-text,
+body.employee-controls-water-pos .account-summary-text { min-width:0; flex:1 1 auto; }
+body.admin-theme-water-pos .account-status-pill,
+body.employee-controls-water-pos .account-status-pill { display:inline-flex; align-items:center; gap:6px; padding:5px 9px; border:1px solid #bfe7ce; border-radius:999px; background:#eaf7ef; color:#26784c; font-size:11px; font-weight:800; }
+body.admin-theme-water-pos .account-status-pill > span,
+body.employee-controls-water-pos .account-status-pill > span { width:7px; height:7px; border-radius:50%; background:#24965c; }
+body.admin-theme-water-pos .account-summary-text h2,
+body.employee-controls-water-pos .account-summary-text h2 { margin:7px 0 3px; color:#171b26; font-size:19px; font-weight:900; overflow-wrap:anywhere; }
+body.admin-theme-water-pos .account-phone-value,
+body.employee-controls-water-pos .account-phone-value { margin:0; color:#667085; font-size:13px; }
+body.admin-theme-water-pos .role-chip-row,
+body.employee-controls-water-pos .role-chip-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+body.admin-theme-water-pos .role-chip,
+body.employee-controls-water-pos .role-chip { display:inline-flex; max-width:100%; padding:4px 8px; border:1px solid #e1e7f0; border-radius:9px; background:#f7f9fc; color:#536075; font-size:10px; font-weight:750; overflow-wrap:anywhere; }
+body.admin-theme-water-pos .account-settings-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; margin-bottom:14px; }
+body.employee-controls-water-pos .account-settings-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:9px; margin-bottom:14px; }
+body.admin-theme-water-pos .account-setting-card,
+body.employee-controls-water-pos .account-setting-card {
+  display:flex; width:100%; min-width:0; align-items:center; gap:10px; padding:14px 12px;
+  border:1px solid #e1e7f0; border-radius:16px; background:#fff; color:#344054; text-align:right;
+  box-shadow:0 3px 11px rgba(20,32,52,.035); cursor:pointer;
+}
+body.admin-theme-water-pos .account-setting-card:hover { border-color:#cbd8ec; background:#fbfcff; }
+body.admin-theme-water-pos .account-setting-icon,
+body.employee-controls-water-pos .account-setting-icon { display:grid; flex:0 0 42px; width:42px; height:42px; place-items:center; border:1px solid #d6e3fb; border-radius:13px; background:#edf3ff; color:#1a56db; font-size:21px; font-weight:800; }
+body.admin-theme-water-pos .account-setting-icon--security,
+body.employee-controls-water-pos .account-setting-icon--security { border-color:#cfe9dc; background:#edf9f2; color:#247c48; }
+body.admin-theme-water-pos .account-setting-copy,
+body.employee-controls-water-pos .account-setting-copy { display:flex; min-width:0; flex:1 1 auto; flex-direction:column; gap:3px; }
+body.admin-theme-water-pos .account-setting-copy strong,
+body.employee-controls-water-pos .account-setting-copy strong { color:#273246; font-size:13px; font-weight:850; }
+body.admin-theme-water-pos .account-setting-copy small,
+body.employee-controls-water-pos .account-setting-copy small { color:#7b8798; font-size:10px; line-height:1.45; }
+body.admin-theme-water-pos .account-setting-action,
+body.employee-controls-water-pos .account-setting-action { color:#1a56db; font-size:11px; font-weight:850; white-space:nowrap; }
+body.admin-theme-water-pos .app-form-dialog,
+body.employee-controls-water-pos .app-form-dialog { width:min(94vw,560px); max-width:560px; max-height:min(88dvh,900px); overflow:auto; padding:0; border:1px solid #dfe5ee; border-radius:20px; background:#fff; color:#202b3d; box-shadow:0 22px 70px rgba(20,32,52,.2); }
+body.admin-theme-water-pos .app-form-dialog::backdrop,
+body.employee-controls-water-pos .app-form-dialog::backdrop { background:rgba(19,29,46,.48); backdrop-filter:blur(2px); }
+body.admin-theme-water-pos .app-dialog-header,
+body.employee-controls-water-pos .app-dialog-header { position:sticky; top:0; z-index:1; display:flex; align-items:center; gap:10px; padding:15px 16px 12px; border-bottom:1px solid #e9edf3; background:rgba(255,255,255,.97); }
+body.admin-theme-water-pos .app-dialog-mark,
+body.employee-controls-water-pos .app-dialog-mark { display:grid; flex:0 0 41px; width:41px; height:41px; place-items:center; border:1px solid #d6e3fb; border-radius:13px; background:#edf3ff; color:#1a56db; font-size:22px; }
+body.admin-theme-water-pos .app-dialog-mark--security,
+body.employee-controls-water-pos .app-dialog-mark--security { border-color:#cfe9dc; background:#edf9f2; color:#247c48; }
+body.admin-theme-water-pos .app-dialog-header > div:nth-child(2),
+body.employee-controls-water-pos .app-dialog-header > div:nth-child(2) { min-width:0; flex:1 1 auto; }
+body.admin-theme-water-pos .app-dialog-header h2,
+body.employee-controls-water-pos .app-dialog-header h2 { margin:0; color:#1d2939; font-size:16px; font-weight:900; }
+body.admin-theme-water-pos .app-dialog-header p:last-child,
+body.employee-controls-water-pos .app-dialog-header p:last-child { margin:3px 0 0; color:#778399; font-size:11px; line-height:1.5; }
+body.admin-theme-water-pos .app-dialog-close,
+body.employee-controls-water-pos .app-dialog-close { display:grid; flex:0 0 36px; width:36px; height:36px; place-items:center; border:1px solid #e1e7f0; border-radius:11px; background:#fff; color:#667085; font-size:23px; }
+body.admin-theme-water-pos .account-modal-form,
+body.employee-controls-water-pos .account-modal-form { display:flex; flex-direction:column; gap:13px; padding:15px 16px 17px; }
+body.admin-theme-water-pos .account-modal-divider,
+body.employee-controls-water-pos .account-modal-divider { display:flex; align-items:center; gap:8px; margin:3px 0 -2px; padding:9px 0; border-bottom:1px solid #edf0f5; color:#344054; font-size:12px; font-weight:850; }
+body.admin-theme-water-pos .app-dialog-note,
+body.employee-controls-water-pos .app-dialog-note { padding:11px 12px; border:1px solid #dfe7f5; border-radius:11px; background:#f7f9fd; color:#526078; font-size:12px; line-height:1.7; }
+body.admin-theme-water-pos .app-dialog-actions,
+body.employee-controls-water-pos .app-dialog-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:2px; }
+body.admin-theme-water-pos .app-dialog-actions > *,
+body.employee-controls-water-pos .app-dialog-actions > * { flex:1 1 140px; }
+body.admin-theme-water-pos .app-dialog-actions .button-wide,
+body.employee-controls-water-pos .app-dialog-actions .button-wide { min-height:46px; }
+@media (max-width:620px) {
+  body.admin-theme-water-pos .account-settings-grid { grid-template-columns:minmax(0,1fr); gap:9px; }
+  body.admin-theme-water-pos .account-profile-hero,
+  body.employee-controls-water-pos .account-profile-hero { align-items:flex-start; padding:14px; gap:11px; }
+  body.admin-theme-water-pos .account-avatar-large,
+  body.employee-controls-water-pos .account-avatar-large { flex-basis:52px; width:52px; height:52px; font-size:21px; }
+  body.admin-theme-water-pos .account-summary-text h2,
+  body.employee-controls-water-pos .account-summary-text h2 { font-size:17px; }
+  body.admin-theme-water-pos .app-dialog-actions,
+  body.employee-controls-water-pos .app-dialog-actions { flex-direction:column; align-items:stretch; }
+  body.admin-theme-water-pos .app-dialog-actions > *,
+  body.employee-controls-water-pos .app-dialog-actions > * { width:100%; flex:auto; }
+}

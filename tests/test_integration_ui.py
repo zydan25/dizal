@@ -54,6 +54,11 @@ def test_employee_sees_own_farmer_account_and_operations_only():
     app=make_app()
     manager_id=seed(app)
     with app.app_context():
+        settings=ProjectSettings.get()
+        settings.admin_theme="water_pos"
+        settings.employee_dashboard_theme="water"
+        settings.admin_bottom_nav_enabled=False
+        settings.employee_bottom_nav_enabled=True
         employee_role=Role(name="employee",description="employee",label="موظف")
         db.session.add(employee_role)
         db.session.flush()
@@ -80,7 +85,18 @@ def test_employee_sees_own_farmer_account_and_operations_only():
     client=app.test_client()
     response=client.post("/auth/login",data={"identifier":"employee","password":"secret"},follow_redirects=True)
     assert response.status_code==200
-    assert "مزارع الموظف" in response.get_data(as_text=True)
+    html=response.get_data(as_text=True)
+    assert "مزارع الموظف" in html
+    assert "employee-controls-water-pos" in html
+    assert "employee-form-theme-water-pos.css" in html
+    assert "admin-theme-water-pos.css" not in html
+    assert "employee-theme-water.css" in html
+    assert 'class="water-header"' in html
+    assert 'class="water-menu-panel"' in html
+    assert 'class="bottom-nav d-lg-none"' in html
+    account_html=client.get("/auth/account").get_data(as_text=True)
+    assert "employee-form-theme-water-pos.css" in account_html
+    assert "admin-theme-water-pos.css" not in account_html
     assert client.get(f"/sales/farmer/{own_id}").status_code==200
     assert client.get(f"/reports/my-operations").status_code==200
     assert client.get(f"/sales/farmer/{other_id}").status_code==403
@@ -114,6 +130,8 @@ def test_settings_palette_and_font_scale_persist():
         "color_preset":"violet",
         "font_scale":"1.05",
         "admin_theme":"water_pos",
+        "admin_bottom_nav_enabled":"0",
+        "employee_bottom_nav_enabled":"1",
         "font_family":"Tajawal",
         "radius":"14px",
     },follow_redirects=True)
@@ -124,8 +142,11 @@ def test_settings_palette_and_font_scale_persist():
         assert settings.secondary_color=="#9333ea"
         assert settings.font_scale=="1.05"
         assert settings.admin_theme=="water_pos"
+        assert settings.admin_bottom_nav_enabled is False
+        assert settings.employee_bottom_nav_enabled is True
         assert settings.allow_employee_sale_price_override is True
     assert "admin-theme-water-pos.css" in response.get_data(as_text=True)
+    assert 'class="bottom-nav d-lg-none"' not in response.get_data(as_text=True)
 
 def test_template_numeric_output_removes_trailing_decimal_zeroes():
     app=make_app()

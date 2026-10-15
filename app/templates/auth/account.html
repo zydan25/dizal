@@ -1,5 +1,65 @@
 {% extends "base.html" %}
 {% block content %}
+{% if project_settings.admin_theme == "water_pos" %}
+<section class="page-heading-row account-page-heading">
+  <div><p class="eyebrow">الحساب الشخصي</p><h1>{% if user.has_role("manager") %}إعدادات حساب المدير{% else %}إعدادات الحساب الشخصي{% endif %}</h1><p class="heading-subtitle">إدارة بيانات الدخول والاسم والهاتف وكلمة المرور.</p></div>
+</section>
+<section class="content-card account-profile-hero">
+  <div class="account-avatar account-avatar-large">{{ (user.display_name or user.username)[:1] }}</div>
+  <div class="account-summary-text">
+    <span class="account-status-pill"><span></span> الحساب نشط</span>
+    <h2>{{ user.display_name or user.username }}</h2>
+    <p class="account-phone-value" dir="ltr">{{ user.phone or "لا يوجد رقم هاتف" }}</p>
+    <div class="role-chip-row"><span class="role-chip">{% if user.has_role("manager") %}مدير المشروع{% else %}موظف{% endif %}</span><span class="role-chip">{{ user.username }}</span></div>
+  </div>
+</section>
+<section class="account-settings-grid" aria-label="إعدادات الحساب">
+  <button type="button" class="account-setting-card" data-open-dialog="profile-edit-dialog">
+    <span class="account-setting-icon">♙</span><span class="account-setting-copy"><strong>الاسم ورقم الهاتف</strong><small>تعديل الاسم وبيانات الدخول والتواصل</small></span><span class="account-setting-action">تعديل <b>←</b></span>
+  </button>
+  <button type="button" class="account-setting-card" data-open-dialog="password-edit-dialog">
+    <span class="account-setting-icon account-setting-icon--security">⌑</span><span class="account-setting-copy"><strong>كلمة المرور</strong><small>تغيير كلمة المرور مع التحقق من الحالية</small></span><span class="account-setting-action">تحديث <b>←</b></span>
+  </button>
+</section>
+<dialog class="app-form-dialog" id="profile-edit-dialog" aria-labelledby="profile-edit-title" data-auto-open="{{ 'true' if open_dialog == 'profile' else 'false' }}">
+  <div class="app-dialog-header">
+    <div class="app-dialog-mark">♙</div><div><p class="eyebrow">بيانات الحساب</p><h2 id="profile-edit-title">تعديل الاسم ورقم الهاتف</h2><p>سيُستخدم اسم المستخدم ورقم الهاتف لتسجيل الدخول.</p></div>
+    <button type="button" class="app-dialog-close" data-close-dialog aria-label="إغلاق">×</button>
+  </div>
+  <form method="post" class="form-stack account-modal-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="profile">
+    <div class="form-field"><label class="field-label" for="account-display-name">الاسم الظاهر</label><input class="form-control" id="account-display-name" name="display_name" value="{{ user.display_name or '' }}" autocomplete="name" required></div>
+    <div class="form-field"><label class="field-label" for="account-username">اسم المستخدم</label><input class="form-control" id="account-username" name="username" value="{{ user.username or '' }}" autocomplete="username" required></div>
+    <div class="form-row">
+      <div class="form-field"><label class="field-label" for="account-phone">رقم الهاتف</label><input class="form-control" id="account-phone" name="phone" value="{{ user.phone or '' }}" inputmode="tel" autocomplete="tel"></div>
+      <div class="form-field"><label class="field-label" for="account-email">البريد الإلكتروني</label><input class="form-control" id="account-email" name="email" type="email" value="{{ user.email or '' }}" autocomplete="email"></div>
+    </div>
+    {% if user.has_role("manager") %}
+    <div class="account-modal-divider"><i class="bi bi-receipt"></i><span>هوية المدير في السندات</span></div>
+    <div class="form-row">
+      <div class="form-field"><label class="field-label" for="document-manager-name">اسم المدير في السندات</label><input class="form-control" id="document-manager-name" name="document_manager_name" value="{{ settings.manager_name or user.display_name or '' }}"></div>
+      <div class="form-field"><label class="field-label" for="document-manager-phone">هاتف المدير في السندات</label><input class="form-control" id="document-manager-phone" name="document_manager_phone" value="{{ settings.manager_phone or user.phone or '' }}" inputmode="tel"></div>
+    </div>
+    {% endif %}
+    <div class="app-dialog-note">تُحفظ بيانات الحساب بعد التحقق من الاسم واسم المستخدم وعدم تكرار رقم الهاتف.</div>
+    <div class="app-dialog-actions"><button class="primary-button button-wide submit-loading" type="submit" data-loading-text="جارٍ حفظ البيانات...">حفظ البيانات</button><button class="secondary-button" type="button" data-close-dialog>إلغاء</button></div>
+  </form>
+</dialog>
+<dialog class="app-form-dialog" id="password-edit-dialog" aria-labelledby="password-edit-title" data-auto-open="{{ 'true' if open_dialog == 'password' else 'false' }}">
+  <div class="app-dialog-header">
+    <div class="app-dialog-mark app-dialog-mark--security">⌑</div><div><p class="eyebrow">الأمان</p><h2 id="password-edit-title">تغيير كلمة المرور</h2><p>اختر كلمة مرور جديدة لا تقل عن 6 أحرف.</p></div>
+    <button type="button" class="app-dialog-close" data-close-dialog aria-label="إغلاق">×</button>
+  </div>
+  <form method="post" class="form-stack account-modal-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="password">
+    <div class="form-field"><label class="field-label" for="account-current-password">كلمة المرور الحالية</label><input class="form-control" id="account-current-password" name="current_password" type="password" autocomplete="current-password" required></div>
+    <div class="form-field"><label class="field-label" for="account-new-password">كلمة المرور الجديدة</label><input class="form-control" id="account-new-password" name="new_password" type="password" autocomplete="new-password" minlength="6" required></div>
+    <div class="form-field"><label class="field-label" for="account-confirm-password">تأكيد كلمة المرور</label><input class="form-control" id="account-confirm-password" name="confirm_password" type="password" autocomplete="new-password" minlength="6" required></div>
+    <div class="app-dialog-note">تُطلب كلمة المرور الحالية لحماية حسابك من التغيير غير المصرّح به.</div>
+    <div class="app-dialog-actions"><button class="primary-button button-wide submit-loading" type="submit" data-loading-text="جارٍ تحديث كلمة المرور...">تحديث كلمة المرور</button><button class="secondary-button" type="button" data-close-dialog>إلغاء</button></div>
+  </form>
+</dialog>
+{% else %}
 <div class="page-heading-row">
   <div class="page-heading"><h1>حسابي</h1><p>إدارة بيانات الدخول والاسم والهاتف وكلمة المرور{% if current_user.has_role("manager") %} وبيانات المدير الظاهرة في السندات{% endif %}.</p></div>
   <span class="status-chip status-approved"><i class="bi bi-shield-check"></i> حساب نشط</span>
@@ -50,4 +110,5 @@
 
   <button class="primary-btn account-save" type="submit"><i class="bi bi-check2-circle"></i><span>حفظ بيانات الحساب</span></button>
 </form>
+{% endif %}
 {% endblock %}

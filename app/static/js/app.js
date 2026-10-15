@@ -136,6 +136,108 @@ function installNumberWords(){
 window.DizalNumberWords={installNumberWords,arNumberWords,unitWords};
 installNumberWords();
 
+
+// Water POS searchable selects. Employee CSS uses a separate body class and
+// never styles the employee home, navigation tree or bottom navigation.
+(function(){
+  const body=document.body;
+  const on=body.classList.contains("admin-theme-water-pos") || body.classList.contains("employee-controls-water-pos");
+  const selector=on
+    ? "select:not([multiple]):not([data-native-select='true']):not(.smart-select-native)"
+    : "select[data-searchable='true']:not([multiple]):not([data-native-select='true']):not(.smart-select-native)";
+  document.querySelectorAll(selector).forEach(function(select){
+    if(select.dataset.searchEnhanced==="true" || !select.parentElement) return;
+    select.dataset.searchEnhanced="true";
+    const wrapper=document.createElement("div"); wrapper.className="smart-select"; wrapper.dataset.selectName=select.name||"";
+    select.parentElement.insertBefore(wrapper,select); wrapper.appendChild(select);
+    select.classList.add("smart-select-native"); select.setAttribute("aria-hidden","true"); select.tabIndex=-1;
+    const trigger=document.createElement("button"); trigger.type="button"; trigger.className="smart-select-trigger";
+    trigger.setAttribute("aria-expanded","false"); trigger.setAttribute("aria-haspopup","listbox");
+    const label=(select.getAttribute("aria-label") || Array.from(select.labels||[]).map(l=>l.textContent.trim()).join(" ") || "اختيار").replace(/\s+/g," ").trim();
+    trigger.setAttribute("aria-label",label+"، فتح القائمة");
+    const menu=document.createElement("div"); menu.className="smart-select-menu"; menu.hidden=true;
+    const search=document.createElement("input"); search.type="search"; search.className="smart-select-search";
+    search.placeholder="بحث فوري..."; search.setAttribute("aria-label","بحث في الخيارات"); search.autocomplete="off";
+    const options=document.createElement("div"); options.className="smart-select-options"; options.setAttribute("role","listbox");
+    menu.append(search,options); wrapper.append(trigger,menu);
+    function syncValue(){
+      const selected=select.options[select.selectedIndex]; trigger.textContent=selected?selected.textContent.trim():"اختر...";
+      trigger.disabled=select.disabled; trigger.setAttribute("aria-required",String(select.required));
+      options.querySelectorAll("button").forEach(function(button){
+        const selectedNow=button.dataset.value===select.value;
+        button.classList.toggle("is-selected",selectedNow); button.setAttribute("aria-selected",String(selectedNow));
+        button.disabled=button.dataset.disabled==="true";
+      });
+    }
+    function applySearch(){
+      const needle=search.value.trim().toLocaleLowerCase();
+      options.querySelectorAll("button").forEach(button=>{button.hidden=!button.textContent.toLocaleLowerCase().includes(needle);});
+    }
+    function renderOptions(){
+      options.replaceChildren();
+      Array.from(select.options).forEach(function(option){
+        const button=document.createElement("button"); button.type="button"; button.className="smart-select-option";
+        button.textContent=option.textContent.trim(); button.dataset.value=option.value; button.dataset.disabled=String(option.disabled);
+        button.setAttribute("role","option"); button.setAttribute("aria-selected",String(option.selected)); button.disabled=option.disabled;
+        button.addEventListener("click",function(){
+          if(option.disabled) return;
+          select.value=option.value; select.dispatchEvent(new Event("change",{bubbles:true})); syncValue(); closeMenu(true);
+        });
+        options.appendChild(button);
+      });
+      syncValue(); applySearch();
+    }
+    function closeMenu(returnFocus){
+      menu.hidden=true; trigger.setAttribute("aria-expanded","false"); wrapper.classList.remove("is-open");
+      if(returnFocus) trigger.focus();
+    }
+    function openMenu(){
+      document.querySelectorAll(".smart-select.is-open").forEach(function(other){
+        if(other===wrapper) return;
+        other.classList.remove("is-open");
+        const m=other.querySelector(".smart-select-menu"),t=other.querySelector(".smart-select-trigger");
+        if(m)m.hidden=true; if(t)t.setAttribute("aria-expanded","false");
+      });
+      renderOptions(); menu.hidden=false; wrapper.classList.add("is-open");
+      trigger.setAttribute("aria-expanded","true"); search.value=""; applySearch(); search.focus();
+    }
+    trigger.addEventListener("click",()=>menu.hidden?openMenu():closeMenu(false));
+    trigger.addEventListener("keydown",function(event){
+      if(["ArrowDown","Enter"," "].includes(event.key)){event.preventDefault();if(menu.hidden)openMenu();else search.focus();}
+    });
+    search.addEventListener("input",applySearch);
+    search.addEventListener("keydown",function(event){
+      if(event.key==="Escape"){event.preventDefault();closeMenu(true);}
+      if(event.key==="ArrowDown"){event.preventDefault();options.querySelector("button:not([hidden]):not(:disabled)")?.focus();}
+    });
+    select.addEventListener("change",renderOptions);
+    select.form?.addEventListener("reset",()=>window.setTimeout(renderOptions,0));
+    document.addEventListener("click",event=>{if(!wrapper.contains(event.target))closeMenu(false);});
+    document.addEventListener("invalid",function(event){if(event.target===select){event.preventDefault();openMenu();trigger.focus();}},true);
+    const observer=new MutationObserver(renderOptions);
+    observer.observe(select,{childList:true,subtree:true,attributes:true,attributeFilter:["disabled","label","selected"]});
+    renderOptions();
+  });
+})();
+
+(function(){
+  document.querySelectorAll("dialog.app-form-dialog").forEach(function(dialog){
+    dialog.querySelectorAll("[data-close-dialog]").forEach(button=>button.addEventListener("click",()=>dialog.close()));
+    dialog.addEventListener("click",function(event){
+      if(event.target!==dialog)return;
+      const r=dialog.getBoundingClientRect();
+      if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();
+    });
+    if(dialog.dataset.autoOpen==="true" && typeof dialog.showModal==="function")dialog.showModal();
+  });
+  document.addEventListener("click",function(event){
+    const button=event.target.closest?.("[data-open-dialog]");
+    if(!button)return;
+    const dialog=document.getElementById(button.dataset.openDialog);
+    if(dialog && typeof dialog.showModal==="function")dialog.showModal();
+  });
+})();
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {});
