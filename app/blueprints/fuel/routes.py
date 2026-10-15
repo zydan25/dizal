@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal,InvalidOperation
 from flask import abort,current_app,flash,redirect,render_template,request,url_for
 from flask_login import current_user
 from sqlalchemy import func
@@ -147,7 +148,7 @@ def edit_supply(purchase_id):
         return redirect(url_for("fuel.supply"))
 
     form_error=False
-    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).all()
+    tanks=_operational_tanks(active_only=True)
     if request.method=="POST":
         try:
             tank_id=int(request.form.get("tank_id") or 0)
@@ -341,7 +342,17 @@ def edit_tank(tank_id):
             if len(new_name)>160:
                 raise ValueError("اسم الخزان طويل جدًا؛ الحد الأقصى 160 حرفًا. اكتب اسمًا مختصرًا، وضع التفاصيل في الملاحظات.")
             tank.name=new_name
-            tank.capacity_liters=request.form.get("capacity_liters") or None
+            capacity_raw=(request.form.get("capacity_liters") or "").strip()
+            if capacity_raw:
+                try:
+                    capacity_value=Decimal(capacity_raw.replace(",",""))
+                except (InvalidOperation,ValueError,TypeError) as exc:
+                    raise ValueError("سعة الخزان يجب أن تكون رقمًا صالحًا باللتر.") from exc
+                if not capacity_value.is_finite() or capacity_value<=0:
+                    raise ValueError("سعة الخزان يجب أن تكون أكبر من صفر، أو اترك الحقل فارغًا إذا لم تكن محددة.")
+                tank.capacity_liters=capacity_value
+            else:
+                tank.capacity_liters=None
             tank.location=(request.form.get("location") or "").strip() or None
             tank.notes=(request.form.get("notes") or "").strip() or None
             tank.is_active=request.form.get("is_active")=="1"
