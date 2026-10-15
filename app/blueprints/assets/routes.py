@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import Asset,Cashbox,CapitalContribution,DocumentAttachment,FuelTank,User
+from ...models import Asset,Cashbox,CapitalContribution,DocumentAttachment,FuelPurchase,FuelStockMovement,FuelTank,User
 from ...services.assets import create_asset,update_asset_cost
 from ...services.asset_attachments import add_asset_attachments,cleanup_asset_uploads
 from ...services.audit import audit
@@ -18,6 +18,20 @@ from . import assets_bp
 def index():
     assets=Asset.query.order_by(Asset.id.desc()).all()
     tanks=FuelTank.query.order_by(FuelTank.id.desc()).all()
+    tank_ids=[tank.id for tank in tanks]
+    linked_assets=Asset.query.filter(Asset.tank_id.in_(tank_ids)).all() if tank_ids else []
+    linked_by_tank={asset.tank_id:asset for asset in linked_assets}
+    purchase_tank_ids={row[0] for row in db.session.query(FuelPurchase.tank_id).filter(FuelPurchase.tank_id.in_(tank_ids)).distinct().all()} if tank_ids else set()
+    movement_tank_ids={row[0] for row in db.session.query(FuelStockMovement.tank_id).filter(FuelStockMovement.tank_id.in_(tank_ids)).distinct().all()} if tank_ids else set()
+    tanks=[
+        tank for tank in tanks
+        if not (
+            (asset:=linked_by_tank.get(tank.id)) is not None
+            and "خزان" not in (asset.category or "")
+            and tank.id not in purchase_tank_ids
+            and tank.id not in movement_tank_ids
+        )
+    ]
     tank_rows=[{"tank":tank,"stock_liters":current_stock_liters(tank.id)} for tank in tanks]
     capital_total=db.session.query(func.coalesce(func.sum(CapitalContribution.amount),0)).filter(CapitalContribution.status=="approved").scalar() or 0
     return render_template("assets/index.html",assets=assets,tank_rows=tank_rows,capital_total=capital_total)
