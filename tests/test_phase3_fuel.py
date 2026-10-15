@@ -60,6 +60,49 @@ def test_long_tank_name_is_rejected_before_database_flush():
         assert Asset.query.count()==0
 
 
+def test_tank_capacity_edit_updates_capacity_but_preserves_real_outbound():
+    app=make_app()
+    manager_id,employee_id,employee_box_id,tank_id=seed(app)
+    with app.app_context():
+        tank=FuelTank.query.get(tank_id)
+        tank.capacity_liters=Decimal("2000")
+        db.session.add_all([
+            FuelStockMovement(tank_id=tank_id,direction="IN",movement_type="purchase",liters=Decimal("1800"),created_by_id=manager_id),
+            FuelStockMovement(tank_id=tank_id,direction="OUT",movement_type="dispense",liters=Decimal("400"),created_by_id=manager_id),
+        ])
+        db.session.commit()
+
+    client=app.test_client()
+    login=client.post("/auth/login",data={"identifier":"manager","password":"secret"},follow_redirects=True)
+    assert login.status_code==200
+    response=client.post(f"/fuel/tanks/{tank_id}/edit",data={
+        "name":"الخزان الرئيسي",
+        "capacity_liters":"3000",
+        "location":"حوش الخزان",
+        "is_active":"1",
+        "notes":"تم تحديث السعة",
+    },follow_redirects=True)
+    assert response.status_code==200
+
+    with app.app_context():
+        tank=FuelTank.query.get(tank_id)
+        assert tank.capacity_liters==Decimal("3000")
+        actual_outbound=sum(
+            Decimal(str(row.liters))
+            for row in FuelStockMovement.query.filter_by(tank_id=tank_id,direction="OUT").all()
+        )
+        assert actual_outbound==Decimal("400")
+
+    listing=client.get("/fuel/tanks")
+    assert listing.status_code==200
+    assert "3000 لتر" in listing.get_data(as_text=True)
+    detail=client.get(f"/fuel/tanks/{tank_id}")
+    assert detail.status_code==200
+    detail_html=detail.get_data(as_text=True)
+    assert "3000 لتر" in detail_html
+    assert "400 لتر" in detail_html
+
+
 def test_supply_is_pending_then_approved():
     app=make_app()
     manager_id,employee_id,employee_box_id,tank_id=seed(app)
