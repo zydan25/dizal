@@ -39,6 +39,29 @@ def _supply_cashbox_balance(user_id):
     return balance(box.id) if box else None
 
 
+def _operational_tanks(active_only=False,newest_first=False):
+    query=FuelTank.query
+    if active_only:
+        query=query.filter_by(is_active=True)
+    query=query.order_by(FuelTank.id.desc() if newest_first else FuelTank.id.asc())
+    tanks=query.all()
+    if not tanks:
+        return []
+    ids=[tank.id for tank in tanks]
+    assets=Asset.query.filter(Asset.tank_id.in_(ids)).all()
+    linked={row.tank_id:row for row in assets}
+    visible=[]
+    for tank in tanks:
+        asset=linked.get(tank.id)
+        if asset and "خزان" not in (asset.category or ""):
+            has_purchase=FuelPurchase.query.filter_by(tank_id=tank.id).first()
+            has_movement=FuelStockMovement.query.filter_by(tank_id=tank.id).first()
+            if not has_purchase and not has_movement:
+                continue
+        visible.append(tank)
+    return visible
+
+
 @fuel_bp.route("/supply",methods=["GET","POST"])
 @permission_required("fuel.supply.create")
 def supply():
@@ -55,10 +78,12 @@ def supply():
             if selected_tank_id:
                 tank_id=int(selected_tank_id)
             else:
-                first_tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).first()
+                first_tank=next(iter(_operational_tanks(active_only=True)),None)
                 if not first_tank:
                     raise ValueError("لا يوجد خزان فعال.")
                 tank_id=first_tank.id
+            if not any(row.id==tank_id for row in _operational_tanks(active_only=True)):
+                raise ValueError("الخزان المحدد غير صالح أو ليس خزان ديزل تشغيليًا.")
             row=create_purchase(
                 employee_id=employee_id,
                 tank_id=tank_id,
@@ -96,7 +121,7 @@ def supply():
         if current_user.has_role("manager")
         else FuelPurchase.query.filter_by(employee_id=current_user.id).order_by(FuelPurchase.id.desc()).limit(50).all()
     )
-    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).all()
+    tanks=_operational_tanks(active_only=True)
     employees=User.query.filter_by(is_employee=True,active=True).order_by(User.display_name).all() if current_user.has_role("manager") else []
     selected_tank_id=request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
     settings=ProjectSettings.get()
@@ -126,6 +151,8 @@ def edit_supply(purchase_id):
     if request.method=="POST":
         try:
             tank_id=int(request.form.get("tank_id") or 0)
+            if not any(row.id==tank_id for row in _operational_tanks(active_only=True)):
+                raise ValueError("الخزان المحدد غير صالح أو ليس خزان ديزل تشغيليًا.")
             new_row=update_purchase(
                 purchase=purchase,
                 tank_id=tank_id,
@@ -214,7 +241,7 @@ def approve(purchase_id):
 @fuel_bp.get("/stock")
 @permission_required("fuel.stock.view")
 def stock():
-    tanks=FuelTank.query.filter_by(is_active=True).all()
+    tanks=_operational_tanks(active_only=True)
     rows=[{"tank":tank,"stock":current_stock_liters(tank.id)} for tank in tanks]
     return render_template("fuel/stock.html",rows=rows,total=current_stock_liters())
 
@@ -291,7 +318,7 @@ def tanks():
             db.session.rollback()
             cleanup_asset_uploads(saved_upload_keys,current_app.config["UPLOAD_FOLDER"])
             flash("تعذر حفظ الخزان أو مرفقاته بسبب خطأ في قاعدة البيانات. لم يتم اعتماد العملية.","danger")
-    tanks=FuelTank.query.order_by(FuelTank.id.desc()).all()
+    tanks=_operational_tanks(newest_first=True)
     ids=[tank.id for tank in tanks]
     linked=Asset.query.filter(Asset.tank_id.in_(ids)).all() if ids else []
     asset_map={asset.tank_id:asset for asset in linked}
