@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from app import create_app
 from app.extensions import db
-from app.models import User,Role,ProjectSettings,Cashbox
+from app.models import User,Role,ProjectSettings,Cashbox,FuelTank
 from app.services.cashbox import balance
 from app.services.capital import add_capital,allocate_to_employee
 from app.services.assets import create_asset
@@ -49,3 +49,18 @@ def test_document_number_is_generated():
         doc=create_document("DOC","اختبار سند",manager_id)
         assert doc.number.startswith("DOC-")
         assert len(doc.number.split("-")[-1])==6
+
+
+def test_equipment_asset_cannot_create_operational_tank_from_checkbox():
+    app=make_app()
+    manager_id,_=seed(app)
+    with app.app_context():
+        add_capital(Decimal("10000"),"تمويل اختبار المعدة",manager_id,"")
+        central=Cashbox.query.filter_by(box_type="central",is_active=True).first()
+        asset=create_asset(
+            "ميزان إلكتروني","مضخة / معدة",Decimal("1000"),date.today(),
+            central.id,manager_id,create_tank=True,tank_capacity_liters=Decimal("500")
+        )
+        db.session.commit()
+        assert asset.tank_id is None
+        assert FuelTank.query.count()==0
