@@ -113,6 +113,38 @@ def test_employee_sees_own_farmer_account_and_operations_only():
     assert client.get(f"/sales/farmer/{other_id}").status_code==403
 
 
+def test_dispense_ledger_and_creation_form_render():
+    app=make_app()
+    seed(app)
+    client=app.test_client()
+    login=client.post("/auth/login",data={"identifier":"manager","password":"secret"},follow_redirects=True)
+    assert login.status_code==200
+
+    ledger=client.get("/sales/dispense")
+    assert ledger.status_code==200
+    ledger_html=ledger.get_data(as_text=True)
+    assert "سجل صرف الديزل" in ledger_html
+    assert "إضافة صرف" in ledger_html
+    assert "من تاريخ" in ledger_html
+    assert "كل المزارعين" in ledger_html
+    assert "إجمالي قيمة الصرف" in ledger_html
+
+    form=client.get("/sales/dispense/new")
+    assert form.status_code==200
+    form_html=form.get_data(as_text=True)
+    assert "إضافة صرف ديزل" in form_html
+    assert 'action="/sales/dispense"' in form_html
+    assert "آخر عمليات صرف الديزل" not in form_html
+
+    with app.app_context():
+        for name in [
+            "sales/dispenses.html",
+            "sales/dispense.html",
+            "documents/print.html",
+            "documents/view.html",
+        ]:
+            app.jinja_env.get_template(name)
+
 def test_unauthenticated_protected_pages_redirect_to_login():
     app=make_app()
     client=app.test_client()
@@ -158,7 +190,7 @@ def test_settings_palette_and_font_scale_persist():
         assert settings.allow_employee_sale_price_override is True
     rendered_html=response.get_data(as_text=True)
     assert "admin-theme-water-pos.css" in rendered_html
-    assert "20261015-water-pos-admin-v3" in rendered_html
+    assert "20261015-water-pos-admin-v4" in rendered_html
     assert "20261015-water-pos-controls-v1" in rendered_html
     assert 'class="bottom-nav d-lg-none"' not in response.get_data(as_text=True)
 

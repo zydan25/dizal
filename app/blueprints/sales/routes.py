@@ -81,32 +81,31 @@ def dispense_create():
 @sales_bp.route("/dispense",methods=["GET","POST"])
 @permission_required("fuel.dispense")
 def dispense():
-        if request.method=="POST":
-            try:
-                farmer=Farmer.query.get_or_404(int(request.form["farmer_id"]))
-                employee=selected_employee(farmer)
-                tank_id=request.form.get("tank_id")
-                if tank_id:
-                    tank=FuelTank.query.get_or_404(int(tank_id))
-                else:
-                    tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).first()
-                    if not tank:
-                        raise ValueError("لا يوجد خزان فعال.")
-                settings=ProjectSettings.get()
-                if current_user.has_role("manager") or settings.allow_employee_sale_price_override:
-                    price=request.form.get("sale_price_per_liter") or settings.default_sale_price_per_liter
-                else:
-                    price=settings.default_sale_price_per_liter
-                row=create_dispense(employee,farmer,tank.id,request.form.get("drums"),price,request.form.get("paid_amount") or 0,request.form.get("notes"))
-                audit("fuel.dispense.created","fuel_dispense",row.id,after={"farmer_id":farmer.id,"employee_id":employee.id,"drums":str(row.drums),"liters":str(row.liters),"total":str(row.total_amount),"credit":str(row.credit_amount),"cost":str(row.cost_amount),"document_id":row.document_id})
-                db.session.commit()
-                flash("تم تسجيل صرف الديزل وإصدار سند الصرف.","success")
-                return redirect(url_for("sales.dispense"))
-            except ValueError as exc:
-                db.session.rollback()
-                flash(str(exc),"danger")
+    if request.method=="POST":
+        try:
+            farmer=Farmer.query.get_or_404(int(request.form["farmer_id"]))
+            employee=selected_employee(farmer)
+            tank_id=request.form.get("tank_id")
+            if tank_id:
+                tank=FuelTank.query.get_or_404(int(tank_id))
+            else:
+                tank=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).first()
+                if not tank:
+                    raise ValueError("لا يوجد خزان فعال.")
+            settings=ProjectSettings.get()
+            if current_user.has_role("manager") or settings.allow_employee_sale_price_override:
+                price=request.form.get("sale_price_per_liter") or settings.default_sale_price_per_liter
+            else:
+                price=settings.default_sale_price_per_liter
+            row=create_dispense(employee,farmer,tank.id,request.form.get("drums"),price,request.form.get("paid_amount") or 0,request.form.get("notes"))
+            audit("fuel.dispense.created","fuel_dispense",row.id,after={"farmer_id":farmer.id,"employee_id":employee.id,"drums":str(row.drums),"liters":str(row.liters),"total":str(row.total_amount),"credit":str(row.credit_amount),"cost":str(row.cost_amount),"document_id":row.document_id})
+            db.session.commit()
+            flash("تم تسجيل صرف الديزل وإصدار سند الصرف.","success")
+            return redirect(url_for("sales.dispense"))
+        except ValueError as exc:
+            db.session.rollback()
+            flash(str(exc),"danger")
         return _render_dispense_form()
-
     from datetime import date,datetime,time,timedelta,timezone
     from math import ceil
     from sqlalchemy import func,or_
