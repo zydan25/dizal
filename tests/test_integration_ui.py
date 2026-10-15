@@ -86,8 +86,8 @@ def test_employee_sees_own_farmer_account_and_operations_only():
     assert response.status_code==200
     html=response.get_data(as_text=True)
     assert "مزارع الموظف" in html
-    assert "employee-controls-water-pos" in html
-    assert "employee-form-theme-water-pos.css" in html
+    assert "employee-controls-water-pos" not in html
+    assert "employee-form-theme-water-pos.css" not in html
     assert "admin-theme-water-pos.css" not in html
     assert client.get(f"/sales/farmer/{own_id}").status_code==200
 
@@ -102,9 +102,13 @@ def test_employee_sees_own_farmer_account_and_operations_only():
     assert 'class="water-header"' in water_home
     assert 'class="water-menu-panel"' in water_home
     assert 'class="bottom-nav d-lg-none"' in water_home
+    assert "employee-form-theme-water-pos.css" not in water_home
     account_html=client.get("/auth/account").get_data(as_text=True)
     assert "employee-form-theme-water-pos.css" in account_html
+    assert "employee-controls-water-pos" in account_html
     assert "admin-theme-water-pos.css" not in account_html
+    farmer_html=client.get(f"/sales/farmer/{own_id}").get_data(as_text=True)
+    assert "employee-form-theme-water-pos.css" in farmer_html
     assert client.get(f"/reports/my-operations").status_code==200
     assert client.get(f"/sales/farmer/{other_id}").status_code==403
 
