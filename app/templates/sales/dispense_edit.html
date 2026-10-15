@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading-row dispense-edit-heading">
+  <div class="page-heading">
+    <span class="dispense-edit-eyebrow"><i class="bi bi-pencil-square"></i> تصحيح عملية مسجلة</span>
+    <h1>تعديل صرف الديزل</h1>
+    <p>{{ dispense.document.number }} · {{ dispense.farmer.name }} · {{ dispense.created_at.strftime("%Y-%m-%d %H:%M") }}</p>
+  </div>
+  <a class="secondary-btn" href="{{ url_for('farmers.detail',farmer_id=dispense.farmer_id) }}"><i class="bi bi-arrow-right"></i><span>العودة لسجل المزارع</span></a>
+</div>
+
+<div class="dispense-edit-warning">
+  <i class="bi bi-shield-check"></i>
+  <div><strong>تصحيح آمن ومحفوظ في السجل</strong><span>عند الحفظ سيُعكس السند القديم محاسبيًا ومخزنيًا، ثم يُصدر سند بديل بالبيانات الجديدة. لن تُحذف الحركة الأصلية من سجل التدقيق.</span></div>
+</div>
+
+<div class="dispense-edit-summary">
+  <div><small>المزارع</small><strong>{{ dispense.farmer.name }}</strong></div>
+  <div><small>الموظف المسؤول</small><strong>{{ dispense.employee.display_name }}</strong></div>
+  <div><small>الخزان الحالي</small><strong>{{ dispense.tank.name }}</strong></div>
+  <div><small>الكمية الحالية</small><strong>{{ dispense.drums|clean_number }} دبة</strong></div>
+</div>
+
+<form method="post" class="mobile-form card-form dispense-edit-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="dispense-edit-section-title"><i class="bi bi-sliders"></i><span>بيانات الصرف الجديدة</span></div>
+  <label>الخزان
+    <select name="tank_id" required>
+      {% for tank in tanks %}
+      <option value="{{ tank.id }}" {% if tank.id==dispense.tank_id %}selected{% endif %}>{{ tank.name }} · {{ tank.code }}</option>
+      {% else %}<option value="">لا يوجد خزان فعال</option>{% endfor %}
+    </select>
+    <small class="field-help">سيتم إعادة احتساب المخزون حسب الخزان والكمية الجديدين.</small>
+  </label>
+
+  <div class="two-col">
+    <label>عدد الدباب
+      <input name="drums" id="edit-drums" type="number" step="0.1" min="0.1" inputmode="decimal" value="{{ dispense.drums|clean_number }}" required>
+    </label>
+    <label>سعر اللتر
+      <input name="sale_price_per_liter" id="edit-price" type="number" step="0.001" min="0.001" inputmode="decimal" value="{{ dispense.sale_price_per_liter|clean_number }}" {% if not current_user.has_role("manager") and not settings.allow_employee_sale_price_override %}readonly{% endif %} required>
+      <small class="field-help">{% if current_user.has_role("manager") %}يمكنك تحديد سعر اللتر لهذه العملية.{% elif settings.allow_employee_sale_price_override %}يسمح إعداد المشروع بتغيير السعر.{% else %}السعر مأخوذ من إعدادات المدير ولا يمكن تغييره من حساب الموظف.{% endif %}</small>
+    </label>
+  </div>
+
+  <label>المدفوع الآن
+    <input name="paid_amount" id="edit-paid" type="number" step="0.001" min="0" inputmode="decimal" value="{{ dispense.paid_amount|clean_number }}" required>
+  </label>
+
+  <div class="dispense-edit-calculation">
+    <div><small>إجمالي اللترات</small><strong id="edit-liters">0</strong><span>لتر</span></div>
+    <div><small>إجمالي الصرف</small><strong id="edit-total">0</strong><span>{{ project_settings.currency }}</span></div>
+    <div><small>المتبقي على المزارع</small><strong id="edit-credit">0</strong><span>{{ project_settings.currency }}</span></div>
+  </div>
+
+  <label>ملاحظات
+    <textarea name="notes" rows="3" placeholder="أضف سبب التعديل أو أي توضيح...">{{ dispense.notes or "" }}</textarea>
+  </label>
+
+  <div class="dispense-edit-submit-row">
+    <a class="secondary-btn" href="{{ url_for('farmers.detail',farmer_id=dispense.farmer_id) }}"><i class="bi bi-x-lg"></i><span>إلغاء</span></a>
+    <button class="primary-btn dispense-edit-submit" type="submit" onclick="return confirm('سيُعكس السند الأصلي ويصدر سند بديل مع الاحتفاظ بسجل التدقيق. هل تريد المتابعة؟')"><i class="bi bi-check2-circle"></i><span>حفظ التصحيح وإصدار السند البديل</span></button>
+  </div>
+</form>
+
+<style>
+.dispense-edit-heading .page-heading h1{margin:7px 0}
+.dispense-edit-eyebrow{display:inline-flex;align-items:center;gap:7px;color:#0f766e;font-size:.83rem;font-weight:850}
+.dispense-edit-warning{display:flex;align-items:flex-start;gap:13px;margin:18px 0;padding:15px;border:1px solid #b9e7db;border-radius:17px;background:linear-gradient(125deg,#effcf7,#eff6ff);color:#0f766e}
+.dispense-edit-warning>i{font-size:1.45rem;flex:0 0 auto}
+.dispense-edit-warning div{display:grid;gap:5px}
+.dispense-edit-warning strong{font-size:.93rem}
+.dispense-edit-warning span{font-size:.84rem;line-height:1.65;color:#475569}
+.dispense-edit-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:17px 0}
+.dispense-edit-summary>div{border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc;padding:12px;min-width:0}
+.dispense-edit-summary small{display:block;color:#64748b;font-size:.75rem;margin-bottom:5px}
+.dispense-edit-summary strong{display:block;color:#172033;font-size:.9rem;overflow-wrap:anywhere}
+.dispense-edit-form{border:1px solid #e0e7ef;border-radius:21px;box-shadow:0 10px 28px rgba(15,23,42,.055);padding:20px}
+.dispense-edit-section-title{display:flex;align-items:center;gap:8px;margin:0 0 12px;color:#0f766e;font-weight:850}
+.dispense-edit-calculation{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:5px 0 18px}
+.dispense-edit-calculation>div{display:grid;gap:4px;text-align:center;background:#f1f8fa;border:1px solid #dcebed;border-radius:14px;padding:12px 8px}
+.dispense-edit-calculation small,.dispense-edit-calculation span{font-size:.75rem;color:#64748b}
+.dispense-edit-calculation strong{font-size:1.15rem;font-weight:900;color:#172033;overflow-wrap:anywhere}
+.dispense-edit-submit-row{display:flex;gap:10px;align-items:center;margin-top:5px}
+.dispense-edit-submit-row .dispense-edit-submit{flex:1;justify-content:center}
+@media(max-width:575px){.dispense-edit-heading{align-items:flex-start;gap:8px}.dispense-edit-heading .secondary-btn span{display:none}.dispense-edit-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.dispense-edit-form{padding:14px}.dispense-edit-submit-row{align-items:stretch;flex-direction:column-reverse}.dispense-edit-submit-row>*{width:100%;justify-content:center}}
+</style>
+
+<script>
+(function(){
+  const drumLiters={{ project_settings.drum_liters|float }};
+  const drums=document.getElementById("edit-drums");
+  const price=document.getElementById("edit-price");
+  const paid=document.getElementById("edit-paid");
+  const liters=document.getElementById("edit-liters");
+  const total=document.getElementById("edit-total");
+  const credit=document.getElementById("edit-credit");
+  function fmt(value,digits){return Number(value||0).toLocaleString("en-US",{maximumFractionDigits:digits||2});}
+  function recalc(){
+    const l=Number(drums?.value||0)*drumLiters;
+    const t=l*Number(price?.value||0);
+    const p=Number(paid?.value||0);
+    if(liters)liters.textContent=fmt(l,3);
+    if(total)total.textContent=fmt(t,2);
+    if(credit)credit.textContent=fmt(Math.max(t-p,0),2);
+  }
+  [drums,price,paid].forEach(el=>{el?.addEventListener("input",recalc);el?.addEventListener("change",recalc);});
+  recalc();
+})();
+</script>
+{% endblock %}

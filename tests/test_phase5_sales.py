@@ -39,6 +39,12 @@ def seed_stock(app,manager_id,employee_id):
         approve_purchase(purchase,manager_id)
         db.session.commit()
 
+def test_dispense_edit_template_compiles():
+    app=make_app()
+    with app.app_context():
+        app.jinja_env.get_template("sales/dispense_edit.html")
+
+
 def test_dispense_updates_stock_debt_cashbox_and_cost():
     app=make_app()
     manager_id,employee_id,box_id,tank_id,farmer_id=seed(app)

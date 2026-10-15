@@ -1,12 +1,15 @@
+from decimal import Decimal,InvalidOperation
 from flask import flash,redirect,render_template,request,url_for,abort
 from flask_login import current_user
 from ...decorators import permission_required
 from ...extensions import db
-from ...models import Document,Farmer,FarmerPayment,FarmerQuotaMovement,FuelDispense,FuelTank,User,ProjectSettings
+from ...models import Document,EmployeeSettlement,Farmer,FarmerPayment,FarmerPaymentAllocation,FarmerQuotaMovement,FuelDispense,FuelTank,JournalEntry,User,ProjectSettings
 from ...permissions import user_has_permission
 from ...services.audit import audit
 from ...services.farmers import project_diesel_capacity
 from ...services.sales import create_dispense,create_general_sale,farmer_account,farmer_account_metrics,register_payment
+from ...services.fuel import current_stock_liters
+from ...services.reversals import reverse_document
 from . import sales_bp
 
 def selected_employee(farmer=None):
@@ -69,7 +72,176 @@ def dispense():
         if selected_farmer:
             selected_employee_id=str(selected_farmer.assigned_employee_id or "")
     selected_tank_id=request.args.get("tank_id") or (str(tanks[0].id) if tanks else "")
-    return render_template("sales/dispense.html",farmers=farmers,tanks=tanks,employees=employees,settings=settings,farmer_info=farmer_info,selected_farmer_id=selected_farmer_id,selected_employee_id=selected_employee_id,selected_tank_id=selected_tank_id)
+    dispense_query=FuelDispense.query.filter_by(status="approved",sale_type="farmer").order_by(FuelDispense.created_at.desc(),FuelDispense.id.desc())
+    if not current_user.has_role("manager"):
+        dispense_query=dispense_query.filter_by(employee_id=current_user.id)
+    dispenses=dispense_query.limit(60).all()
+    return render_template("sales/dispense.html",farmers=farmers,tanks=tanks,employees=employees,settings=settings,farmer_info=farmer_info,selected_farmer_id=selected_farmer_id,selected_employee_id=selected_employee_id,selected_tank_id=selected_tank_id,dispenses=dispenses)
+
+
+def _can_edit_dispense(row):
+    return bool(
+        current_user.has_role("manager")
+        or (
+            row.employee_id==current_user.id
+            and row.farmer is not None
+            and row.farmer.assigned_employee_id==current_user.id
+        )
+    )
+
+
+def _dispense_edit_block_reason(row):
+    if row.sale_type!="farmer" or row.farmer is None:
+        return "يمكن تعديل صرف المزارعين من هذه الشاشة فقط."
+    if row.status!="approved" or row.document.status!="approved":
+        return "هذا الصرف ليس معتمدًا أو سبق تصحيحه."
+    if row.farmer.status!="approved":
+        return "لا يمكن تعديل صرف لأن حساب المزارع لم يعد معتمدًا."
+    allocation=(
+        db.session.query(FarmerPaymentAllocation.id)
+        .join(FarmerPayment,FarmerPaymentAllocation.payment_id==FarmerPayment.id)
+        .join(Document,FarmerPayment.document_id==Document.id)
+        .filter(
+            FarmerPaymentAllocation.dispense_id==row.id,
+            Document.status!="reversed",
+        )
+        .first()
+    )
+    if allocation:
+        return "لا يمكن تعديل هذا الصرف لأنه مرتبط بسند قبض سابق. اعكس سند القبض أولًا حتى لا تتغير مديونية المزارع بأثر غير صحيح."
+    event_date=row.created_at.date()
+    settled=EmployeeSettlement.query.filter(
+        EmployeeSettlement.employee_id==row.employee_id,
+        EmployeeSettlement.status=="approved",
+        EmployeeSettlement.period_start<=event_date,
+        EmployeeSettlement.period_end>=event_date,
+    ).first()
+    if settled:
+        return "لا يمكن تعديل هذا الصرف لأن فترة الموظف التي ينتمي إليها معتمدة في التسويات."
+    return None
+
+
+@sales_bp.route("/dispense/<int:dispense_id>/edit",methods=["GET","POST"])
+@permission_required("fuel.dispense")
+def edit_dispense(dispense_id):
+    dispense=FuelDispense.query.get_or_404(dispense_id)
+    if not _can_edit_dispense(dispense):
+        abort(403)
+
+    block_reason=_dispense_edit_block_reason(dispense)
+    if block_reason:
+        flash(block_reason,"danger")
+        if dispense.farmer_id:
+            return redirect(url_for("farmers.detail",farmer_id=dispense.farmer_id))
+        return redirect(url_for("sales.dispense"))
+
+    settings=ProjectSettings.get()
+    tanks=FuelTank.query.filter_by(is_active=True).order_by(FuelTank.id.asc()).all()
+    if request.method=="POST":
+        try:
+            farmer=dispense.farmer
+            employee=dispense.employee
+            tank_id=int(request.form.get("tank_id") or 0)
+            tank=FuelTank.query.filter_by(id=tank_id,is_active=True).first()
+            if not tank:
+                raise ValueError("اختر خزانًا فعالًا.")
+            try:
+                drums=Decimal(str(request.form.get("drums") or ""))
+                paid=Decimal(str(request.form.get("paid_amount") or 0))
+                if current_user.has_role("manager") or settings.allow_employee_sale_price_override:
+                    raw_price=request.form.get("sale_price_per_liter") or settings.default_sale_price_per_liter
+                else:
+                    raw_price=settings.default_sale_price_per_liter
+                price=Decimal(str(raw_price))
+            except (InvalidOperation,TypeError,ValueError):
+                raise ValueError("تحقق من عدد الدباب والمدفوع وسعر اللتر؛ يجب إدخال أرقام صحيحة.")
+
+            if drums<=0 or price<=0:
+                raise ValueError("عدد الدباب وسعر اللتر يجب أن يكونا أكبر من صفر.")
+            if paid<0:
+                raise ValueError("المدفوع لا يمكن أن يكون سالبًا.")
+            liters=drums*Decimal(str(settings.drum_liters))
+            total=liters*price
+            if paid>total:
+                raise ValueError("المدفوع لا يمكن أن يتجاوز قيمة الصرف.")
+            available_quota=farmer_account(farmer)["remaining_quota_drums"]+Decimal(str(dispense.drums))
+            if drums>available_quota:
+                raise ValueError(f"المتبقي للمزارع بعد احتساب الصرف الحالي هو {available_quota} دبة.")
+            available_stock=current_stock_liters(tank.id)
+            if tank.id==dispense.tank_id:
+                available_stock+=Decimal(str(dispense.liters))
+            if liters>available_stock:
+                raise ValueError("المخزون في الخزان المحدد لا يكفي للكمية الجديدة.")
+
+            before={
+                "document_number":dispense.document.number,
+                "farmer_id":dispense.farmer_id,
+                "employee_id":dispense.employee_id,
+                "tank_id":dispense.tank_id,
+                "drums":str(dispense.drums),
+                "liters":str(dispense.liters),
+                "sale_price_per_liter":str(dispense.sale_price_per_liter),
+                "total_amount":str(dispense.total_amount),
+                "paid_amount":str(dispense.paid_amount),
+                "credit_amount":str(dispense.credit_amount),
+                "notes":dispense.notes,
+            }
+            original_created_at=dispense.created_at
+            original_issue_date=dispense.document.issue_date
+            compensation_snapshot={
+                "type":dispense.employee_compensation_type or "fixed",
+                "value":str(dispense.employee_compensation_value or 0),
+            }
+
+            # Keep the original approved document as an auditable reversal, then
+            # post a replacement sale through the normal stock/accounting flow.
+            reversal=reverse_document(
+                dispense.document,current_user.id,
+                "تصحيح صرف ديزل بناءً على تعديل السجل؛ راجع سند الصرف البديل في سجل التدقيق."
+            )
+            replacement=create_dispense(
+                employee,farmer,tank.id,drums,price,paid,
+                (request.form.get("notes") or "").strip() or None,
+                compensation_snapshot=compensation_snapshot,
+            )
+            # Keep the operational occurrence date while the correction itself
+            # is traceable through the newly created reversal and replacement documents.
+            replacement.created_at=original_created_at
+            replacement.document.issue_date=original_issue_date
+            for entry in JournalEntry.query.filter_by(document_id=replacement.document_id).all():
+                entry.entry_date=original_created_at.date()
+
+            audit(
+                "fuel.dispense.corrected","fuel_dispense",dispense.id,
+                before=before,
+                after={
+                    "status":"reversed",
+                    "reversal_document_id":reversal.id,
+                    "replacement_dispense_id":replacement.id,
+                    "replacement_document_id":replacement.document_id,
+                    "drums":str(replacement.drums),
+                    "liters":str(replacement.liters),
+                    "total_amount":str(replacement.total_amount),
+                    "credit_amount":str(replacement.credit_amount),
+                },
+            )
+            audit(
+                "fuel.dispense.replacement_created","fuel_dispense",replacement.id,
+                after={"corrected_from_dispense_id":dispense.id,"document_id":replacement.document_id},
+            )
+            db.session.commit()
+            flash(f"تم تصحيح الصرف وإصدار السند البديل {replacement.document.number}.","success")
+            return redirect(url_for("farmers.detail",farmer_id=farmer.id))
+        except (ValueError,TypeError,InvalidOperation) as exc:
+            db.session.rollback()
+            flash(str(exc),"danger")
+            dispense=FuelDispense.query.get_or_404(dispense_id)
+
+    return render_template(
+        "sales/dispense_edit.html",
+        dispense=dispense,tanks=tanks,settings=settings,
+    )
+
 
 @sales_bp.route("/payment",methods=["GET","POST"])
 @permission_required("farmer.payment.create")

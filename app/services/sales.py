@@ -105,7 +105,7 @@ def farmer_account(farmer):
         "remaining_credit_drums":remaining_quota,
     }
 
-def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amount=0,notes=None):
+def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amount=0,notes=None,compensation_snapshot=None):
     if farmer.status!="approved": raise ValueError("لا يمكن صرف الديزل لمزارع غير معتمد.")
     if farmer.assigned_employee_id!=employee.id: raise ValueError("المزارع غير تابع لهذا الموظف.")
     drums=Decimal(str(drums));price=Decimal(str(sale_price_per_liter));paid=Decimal(str(paid_amount or 0));settings=ProjectSettings.get()
@@ -126,8 +126,18 @@ def create_dispense(employee,farmer,tank_id,drums,sale_price_per_liter,paid_amou
     db.session.add(row);db.session.flush();document.source_id=str(row.id)
     cost_amount=consume_fifo(tank_id,liters,row.id,employee.id);row.cost_amount=cost_amount;row.gross_profit=total-cost_amount
     db.session.add(FuelStockMovement(tank_id=tank_id,direction="OUT",movement_type="dispense",liters=liters,unit_cost=(cost_amount/liters if liters else 0),source_type="fuel_dispense",source_id=str(row.id),document_id=document.id,created_by_id=employee.id))
-    from .compensation import apply_employee_compensation_snapshot
-    apply_employee_compensation_snapshot(row,employee.employee_profile)
+    if compensation_snapshot is None:
+        from .compensation import apply_employee_compensation_snapshot
+        apply_employee_compensation_snapshot(row,employee.employee_profile)
+    else:
+        from .compensation import calculate_commission_amount
+        salary_type=compensation_snapshot.get("type") or "fixed"
+        salary_value=Decimal(str(compensation_snapshot.get("value") or 0))
+        row.employee_compensation_type=salary_type
+        row.employee_compensation_value=salary_value
+        row.employee_commission_amount=calculate_commission_amount(
+            salary_type,salary_value,liters=row.liters,drums=row.drums,gross_profit=row.gross_profit
+        )
     from .accounting import post_sale,post_commission_accrual
     post_sale(row,employee.id)
     post_commission_accrual(row,employee.id)

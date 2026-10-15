@@ -48,7 +48,7 @@
 <div class="operation-card-list" id="farmer-operations-list">
 {% for item in operations %}
 {% set row=item.row %}
-<a class="operation-card farmer-operation-item" href="{{url_for('documents.view',document_id=row.document_id)}}"
+<article class="operation-card farmer-operation-item"
    data-kind="{{item.kind}}" data-date="{{row.created_at.isoformat()}}" data-search="{{(row.document.number ~ ' ' ~ ('سداد' if item.kind=='payment' else 'صرف ديزل') ~ ' ' ~ (row.amount|string if item.kind=='payment' else row.drums|string) ~ ' ' ~ row.created_at.strftime('%Y-%m-%d'))|lower}}">
   <div class="operation-icon {% if item.kind=="payment" %}operation-payment{% else %}operation-dispense{% endif %}"><i class="bi {% if item.kind=="payment" %}bi-cash-coin{% else %}bi-droplet-fill{% endif %}"></i></div>
   <div class="operation-main">
@@ -57,8 +57,13 @@
     <small>{{row.created_at.strftime("%Y-%m-%d %H:%M")}}</small>
   </div>
   <div class="operation-value">{% if item.kind=="payment" %}<b>{{row.amount|clean_number}}</b><small>تحصيل</small>{% else %}<b>{{row.drums|clean_number}}</b><small>دبة</small>{% endif %}</div>
-  <i class="bi bi-chevron-left"></i>
-</a>
+  <div class="farmer-operation-actions">
+    <a class="farmer-operation-action" href="{{url_for('documents.view',document_id=row.document_id)}}" title="فتح السند"><i class="bi bi-receipt"></i><span>السند</span></a>
+    {% if item.kind=="dispense" and (current_user.has_role("manager") or row.employee_id==current_user.id) %}
+    <a class="farmer-operation-action is-edit" href="{{url_for('sales.edit_dispense',dispense_id=row.id)}}" title="تعديل صرف الديزل"><i class="bi bi-pencil-square"></i><span>تعديل الصرف</span></a>
+    {% endif %}
+  </div>
+</article>
 {% else %}<div class="empty-state" id="farmer-no-operations"><i class="bi bi-journal-x"></i><strong>لا توجد معاملات</strong><span>ستظهر السحبيات والتحصيلات هنا.</span></div>{% endfor %}
 </div>
 
@@ -97,6 +102,14 @@
 </form>
 {% endif %}
 
+<style>
+.farmer-operation-actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-inline-start:auto}
+.farmer-operation-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:35px;padding:6px 10px;border:1px solid #dbe4ed;border-radius:11px;background:#fff;color:#334155;text-decoration:none;font-size:.78rem;font-weight:800;white-space:nowrap}
+.farmer-operation-action:hover{background:#f1f5f9;color:#0f172a}
+.farmer-operation-action.is-edit{border-color:#a7e8dd;background:#e8fbf7;color:#0f766e}
+.farmer-operation-action.is-edit:hover{background:#d3f8ef;color:#115e59}
+@media(max-width:575px){.farmer-operation-actions{width:100%;margin-inline-start:0}.farmer-operation-action{flex:1}}
+</style>
 <script>
 (function(){
   const search=document.getElementById("farmer-operation-search");

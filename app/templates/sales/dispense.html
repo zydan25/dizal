@@ -49,6 +49,87 @@
   <span class="form-submit-label">تأكيد الصرف وإصدار السند</span>
 </button>
 </form>
+
+<section class="dispense-history-panel" aria-labelledby="dispense-history-heading">
+  <div class="dispense-history-heading">
+    <div>
+      <span class="dispense-history-eyebrow"><i class="bi bi-clock-history"></i> سجل العمليات</span>
+      <h2 id="dispense-history-heading">آخر عمليات صرف الديزل</h2>
+      <p>راجع تفاصيل السند أو افتح التعديل مباشرة من بطاقة العملية.</p>
+    </div>
+    <span class="dispense-history-count">{{ dispenses|length }} عملية</span>
+  </div>
+  <div class="dispense-history-list">
+    {% for row in dispenses %}
+    <article class="dispense-history-card">
+      <div class="dispense-history-card-head">
+        <div class="dispense-history-icon"><i class="bi bi-droplet-half"></i></div>
+        <div class="dispense-history-title">
+          <strong>صرف ديزل · {{ row.document.number }}</strong>
+          <span>{{ row.farmer.name }} · {{ row.tank.name }}</span>
+        </div>
+        <span class="dispense-history-status">معتمد</span>
+      </div>
+      <div class="dispense-history-metrics">
+        <div><small>الكمية</small><strong>{{ row.drums|clean_number }} <em>دبة</em></strong><span>{{ row.liters|clean_number }} لتر</span></div>
+        <div><small>الإجمالي</small><strong>{{ row.total_amount|clean_number }}</strong><span>{{ project_settings.currency }}</span></div>
+        <div><small>المدفوع</small><strong>{{ row.paid_amount|clean_number }}</strong><span>{{ project_settings.currency }}</span></div>
+        <div class="{% if row.credit_amount>0 %}has-credit{% endif %}"><small>المتبقي</small><strong>{{ row.credit_amount|clean_number }}</strong><span>{{ project_settings.currency }}</span></div>
+      </div>
+      <div class="dispense-history-meta">
+        <span><i class="bi bi-calendar3"></i>{{ row.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+        <span><i class="bi bi-person-badge"></i>{{ row.employee.display_name }}</span>
+        {% if row.notes %}<span class="dispense-history-note"><i class="bi bi-chat-left-text"></i>{{ row.notes }}</span>{% endif %}
+      </div>
+      <div class="dispense-history-actions">
+        <a class="dispense-history-action" href="{{ url_for('documents.view',document_id=row.document_id) }}"><i class="bi bi-receipt"></i><span>فتح السند</span></a>
+        {% if current_user.has_role("manager") or row.employee_id==current_user.id %}
+        <a class="dispense-history-action is-edit" href="{{ url_for('sales.edit_dispense',dispense_id=row.id) }}"><i class="bi bi-pencil-square"></i><span>تعديل الصرف</span></a>
+        {% endif %}
+      </div>
+    </article>
+    {% else %}
+    <div class="dispense-history-empty"><i class="bi bi-journal-check"></i><strong>لا توجد عمليات صرف مسجلة</strong><span>ستظهر عمليات الصرف المعتمدة هنا تلقائيًا.</span></div>
+    {% endfor %}
+  </div>
+</section>
+
+<style>
+.dispense-history-panel{margin:30px 0 12px}
+.dispense-history-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:0 0 16px}
+.dispense-history-eyebrow{display:inline-flex;align-items:center;gap:7px;color:#0f766e;font-size:.82rem;font-weight:800}
+.dispense-history-heading h2{margin:7px 0 5px;font-size:1.22rem;font-weight:850;color:var(--text-color,#172033)}
+.dispense-history-heading p{margin:0;color:var(--muted-color,#718096);font-size:.9rem}
+.dispense-history-count{white-space:nowrap;background:#e7f7f3;color:#0d766e;border:1px solid #c3ece3;border-radius:999px;padding:7px 12px;font-weight:800;font-size:.84rem}
+.dispense-history-list{display:grid;gap:14px}
+.dispense-history-card{position:relative;overflow:hidden;padding:17px;border:1px solid #e1e8ef;border-radius:20px;background:linear-gradient(145deg,#fff 0%,#f8fbfd 100%);box-shadow:0 8px 24px rgba(15,23,42,.055)}
+.dispense-history-card:before{content:"";position:absolute;inset:0 0 0 auto;width:4px;background:linear-gradient(180deg,#14b8a6,#2563eb)}
+.dispense-history-card-head{display:flex;align-items:center;gap:12px}
+.dispense-history-icon{display:grid;place-items:center;width:47px;height:47px;flex:0 0 47px;border-radius:15px;background:linear-gradient(135deg,#d9fbf2,#e0edff);color:#0f766e;font-size:1.35rem}
+.dispense-history-title{min-width:0;flex:1;display:grid;gap:4px}
+.dispense-history-title strong{font-size:.98rem;font-weight:850;color:#172033}
+.dispense-history-title span{font-size:.85rem;color:#64748b;overflow-wrap:anywhere}
+.dispense-history-status{font-size:.77rem;font-weight:800;color:#087f5b;background:#e1f8ed;padding:5px 9px;border-radius:999px}
+.dispense-history-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:16px 0 12px}
+.dispense-history-metrics>div{min-width:0;border:1px solid #e7edf3;background:#fff;border-radius:13px;padding:10px}
+.dispense-history-metrics small,.dispense-history-metrics span{display:block;color:#64748b;font-size:.74rem}
+.dispense-history-metrics strong{display:block;margin:5px 0 2px;color:#172033;font-size:1.04rem;font-weight:850;overflow-wrap:anywhere}
+.dispense-history-metrics em{font-size:.72rem;font-style:normal;color:#64748b}
+.dispense-history-metrics .has-credit strong{color:#b45309}
+.dispense-history-meta{display:flex;flex-wrap:wrap;gap:7px 15px;color:#64748b;font-size:.8rem}
+.dispense-history-meta span{display:inline-flex;align-items:center;gap:6px}
+.dispense-history-note{overflow-wrap:anywhere}
+.dispense-history-actions{display:flex;flex-wrap:wrap;gap:9px;border-top:1px solid #e8edf3;margin-top:14px;padding-top:13px}
+.dispense-history-action{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:39px;padding:8px 13px;border:1px solid #dbe4ed;border-radius:12px;background:#fff;color:#334155;text-decoration:none;font-size:.85rem;font-weight:800}
+.dispense-history-action:hover{background:#f1f5f9;color:#0f172a}
+.dispense-history-action.is-edit{border-color:#a7e8dd;background:#e8fbf7;color:#0f766e}
+.dispense-history-action.is-edit:hover{background:#d3f8ef;color:#115e59}
+.dispense-history-empty{display:grid;justify-items:center;gap:7px;border:1px dashed #cbd5e1;background:#f8fafc;border-radius:18px;padding:28px 16px;text-align:center;color:#64748b}
+.dispense-history-empty i{font-size:1.9rem;color:#0f766e}
+.dispense-history-empty strong{color:#334155}
+@media(max-width:575px){.dispense-history-heading{gap:8px}.dispense-history-heading p{font-size:.82rem}.dispense-history-card{padding:13px}.dispense-history-icon{width:40px;height:40px;flex-basis:40px}.dispense-history-title strong{font-size:.9rem}.dispense-history-status{font-size:.7rem;padding:4px 7px}.dispense-history-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dispense-history-metrics>div{padding:9px}.dispense-history-actions>*{flex:1}}
+</style>
+
 <script>
 (function(){
 const farmerInfo={{farmer_info|tojson}};
