@@ -65,6 +65,8 @@ def index():
         admin_theme=request.form.get("admin_theme",settings.admin_theme or "classic")
         if admin_theme not in {"classic","water_pos"}: admin_theme="classic"
         settings.admin_theme=admin_theme
+        settings.admin_bottom_nav_enabled=request.form.get("admin_bottom_nav_enabled")=="1"
+        settings.employee_bottom_nav_enabled=request.form.get("employee_bottom_nav_enabled")=="1"
         selected_palette=request.form.get("color_preset") or ""
         if selected_palette in PALETTES:
             colors=PALETTES[selected_palette]

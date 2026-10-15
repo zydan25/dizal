@@ -1,4 +1,5 @@
 <!doctype html>
+{% set employee_surface = current_user.is_authenticated and current_user.is_employee and not user_has_permission(current_user,'users.manage') %}
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -19,13 +20,17 @@
 {% if current_user.is_authenticated and current_user.is_employee and project_settings.employee_dashboard_theme == 'water' and not user_has_permission(current_user,'users.manage') %}
 <link href="{{url_for('static',filename='css/employee-theme-water.css',v='20261009-7')}}" rel="stylesheet">
 {% endif %}
-{% if project_settings.admin_theme == 'water_pos' and (not current_user.is_authenticated or not current_user.is_employee or user_has_permission(current_user,'users.manage')) %}
-<link href="{{url_for('static',filename='css/admin-theme-water-pos.css',v='20261015-water-pos-admin')}}" rel="stylesheet">
+{% if project_settings.admin_theme == 'water_pos' %}
+  {% if employee_surface %}
+<link href="{{url_for('static',filename='css/employee-form-theme-water-pos.css',v='20261015-employee-form-water-pos-v1')}}" rel="stylesheet">
+  {% else %}
+<link href="{{url_for('static',filename='css/admin-theme-water-pos.css',v='20261015-water-pos-admin-v2')}}" rel="stylesheet">
+  {% endif %}
 {% endif %}
 <style>:root{--primary:{{project_settings.primary_color}};--secondary:{{project_settings.secondary_color}};--accent:{{project_settings.accent_color}};--surface:{{project_settings.surface_color}};--danger:{{project_settings.danger_color}};--radius:{{project_settings.radius}};--font-scale:{{project_settings.font_scale or '1'}};--font-family:"{{project_settings.font_family}}",Tajawal,sans-serif}.app-logo{max-height:36px;max-width:120px;object-fit:contain}</style>
 <title>{{project_settings.project_name}} | Dizal</title>
 </head>
-<body class="{% if project_settings.admin_theme == 'water_pos' and (not current_user.is_authenticated or not current_user.is_employee or user_has_permission(current_user,'users.manage')) %}admin-theme-water-pos {% endif %}{% if current_user.is_authenticated and current_user.is_employee and project_settings.employee_dashboard_theme == 'water' and not user_has_permission(current_user,'users.manage') %}employee-theme-water{% endif %}" data-currency="{{project_settings.currency}}" data-drum-liters="{{project_settings.drum_liters|clean_number}}">
+<body class="{% if project_settings.admin_theme == 'water_pos' %}{% if employee_surface %}employee-controls-water-pos {% else %}admin-theme-water-pos {% endif %}{% endif %}{% if employee_surface and project_settings.employee_dashboard_theme == 'water' %}employee-theme-water{% endif %}" data-currency="{{project_settings.currency}}" data-drum-liters="{{project_settings.drum_liters|clean_number}}">
 {% if current_user.is_authenticated %}
 <div class="app-shell">
 <aside class="sidebar" id="sidebar">
@@ -144,12 +149,14 @@
 </section>
 </main>
 </div>
+{% if (employee_surface and project_settings.employee_bottom_nav_enabled) or (not employee_surface and project_settings.admin_bottom_nav_enabled) %}
 <nav class="bottom-nav d-lg-none">
 <a href="{{url_for('dashboard.index')}}"><i class="bi bi-grid"></i><span>الرئيسية</span></a>
 <a href="{{url_for('farmers.index')}}"><i class="bi bi-people"></i><span>المزارعون</span></a>
 <a href="{{url_for('sales.dispense')}}"><i class="bi bi-droplet"></i><span>صرف</span></a>
 <button data-sidebar-open aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i><span>القائمة</span></button>
 </nav>
+{% endif %}
 <div class="scrim d-none" data-sidebar-close></div>
 {% else %}
 </section>

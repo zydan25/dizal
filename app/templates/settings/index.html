@@ -30,6 +30,12 @@
 </select>
 </label>
 <div class="info-card settings-help"><i class="bi bi-info-circle"></i><span>هذا الخيار يغيّر لوحة الموظف الرئيسية فقط. تبقى لوحة المدير وبقية الصفحات على تصميمها الحالي.</span></div>
+<div class="section-title"><h2>الشريط السفلي</h2><span>إعداد مستقل للمدير والموظف</span></div>
+<div class="bottom-navigation-settings two-col">
+  <label class="switch-field"><span>إظهار الشريط السفلي للمدير</span><input type="checkbox" name="admin_bottom_nav_enabled" value="1" {% if settings.admin_bottom_nav_enabled %}checked{% endif %}><small>{% if settings.admin_bottom_nav_enabled %}مفعّل في واجهات الإدارة{% else %}مخفي في واجهات الإدارة{% endif %}</small></label>
+  <label class="switch-field"><span>إظهار الشريط السفلي للموظف</span><input type="checkbox" name="employee_bottom_nav_enabled" value="1" {% if settings.employee_bottom_nav_enabled %}checked{% endif %}><small>{% if settings.employee_bottom_nav_enabled %}مفعّل في واجهات الموظف{% else %}مخفي في واجهات الموظف{% endif %}</small></label>
+</div>
+<div class="info-card settings-help"><i class="bi bi-info-circle"></i><span>يمكن إظهار الشريط للمدير وإخفاؤه عن الموظف أو العكس. إخفاؤه لا يعطّل الصفحات؛ تبقى متاحة من القائمة الرئيسية.</span></div>
 <div class="section-title"><h2>ثيم الإدارة الكامل</h2><span>تبديل تصميم جميع واجهات الإدارة</span></div>
 <label>تصميم واجهة الإدارة
 <select name="admin_theme" id="admin_theme">
