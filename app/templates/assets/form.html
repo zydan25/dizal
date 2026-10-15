@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row"><div class="page-heading"><h1>{% if editing %}تعديل الأصل{% else %}شراء/إضافة أصل{% endif %}</h1><p>{% if editing %}تعديل بيانات الأصل والقيمة المالية المرتبطة به بأمان عند توفر الشروط المحاسبية.{% else %}اختر الصندوق، وإذا كان الأصل خزانًا فعّل الربط ليُنشأ الخزان التشغيلي تلقائيًا.{% endif %}</p></div>{% if asset %}<span class="status-chip">{{asset.asset_code}}</span>{% endif %}</div>
+<div class="page-heading-row"><div class="page-heading"><h1>{% if editing %}تعديل الأصل{% else %}شراء/إضافة أصل{% endif %}</h1><p>{% if editing %}تعديل بيانات الأصل والقيمة المالية المرتبطة به بأمان عند توفر الشروط المحاسبية.{% else %}اختر فئة الأصل؛ لا يُنشأ خزان تشغيلي إلا عند اختيار فئة «خزان ديزل».{% endif %}</p></div>{% if asset %}<span class="status-chip">{{asset.asset_code}}</span>{% endif %}</div>
 <form method="post" enctype="multipart/form-data" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>اسم الأصل<input name="name" value="{{asset.name if asset else ''}}" required></label>
@@ -15,7 +15,7 @@
 </div>
 <div id="tank-details" class="asset-tank-details" {% if not asset or "خزان" not in asset.category %}hidden{% endif %}>
 <label>سعة الخزان باللتر<input name="tank_capacity_liters" type="number" step="0.001" min="1" value="{{asset.tank.capacity_liters|clean_number if asset and asset.tank else ''}}" data-unit="liter"></label>
-{% if not editing %}<label class="check-row"><input type="checkbox" name="create_tank" value="1" checked> <span>إنشاء الخزان التشغيلي وربطه بهذا الأصل</span></label>{% else %}<div class="info-card"><i class="bi bi-link-45deg"></i><span>{% if asset.tank %}هذا الأصل مرتبط بالخزان {{asset.tank.code}}.{% else %}يمكن إنشاء الخزان من شاشة الخزانات لهذا الأصل القديم.{% endif %}</span></div>{% endif %}
+{% if not editing %}<label class="check-row"><input type="checkbox" id="create-tank-checkbox" name="create_tank" value="1" disabled> <span>إنشاء الخزان التشغيلي وربطه بهذا الأصل</span></label>{% else %}<div class="info-card"><i class="bi bi-link-45deg"></i><span>{% if asset.tank %}هذا الأصل مرتبط بالخزان {{asset.tank.code}}.{% else %}يمكن إنشاء الخزان من شاشة الخزانات لهذا الأصل القديم.{% endif %}</span></div>{% endif %}
 </div>
 <label>تاريخ الشراء<input name="acquisition_date" type="date" value="{{today}}" required></label>
 {% if not editing %}<label>الصندوق الدافع<select name="payer_cashbox_id" required>{% for box in cashboxes %}<option value="{{box.id}}">{{box.name}}</option>{% endfor %}</select></label>{% endif %}
@@ -40,7 +40,12 @@
 {% if not editing %}<script>
 (function(){
  const s=document.getElementById("asset-category"),box=document.getElementById("tank-details");
- function sync(){if(s&&box)box.hidden=!s.value.includes("خزان");}
+ function sync(){
+  const isTank=!!s&&s.value.includes("خزان");
+  if(box)box.hidden=!isTank;
+  const checkbox=box?.querySelector("#create-tank-checkbox");
+  if(checkbox){checkbox.disabled=!isTank;checkbox.checked=isTank;}
+}
  s?.addEventListener("change",sync);sync();
 })();
 </script>{% endif %}
