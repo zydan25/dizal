@@ -1,7 +1,8 @@
 from decimal import Decimal
+from io import BytesIO
 from app import create_app
 from app.extensions import db
-from app.models import Cashbox,Permission,ProjectSettings,Role,RolePermission,User,Document,JournalEntry,CapitalContribution,Farmer
+from app.models import Asset,Cashbox,DocumentAttachment,Permission,ProjectSettings,Role,RolePermission,User,Document,JournalEntry,CapitalContribution,Farmer
 from app.permissions import PERMISSIONS
 from app.services.capital import add_capital
 from app.services.cashbox import balance
@@ -144,6 +145,80 @@ def test_dispense_ledger_and_creation_form_render():
             "documents/view.html",
         ]:
             app.jinja_env.get_template(name)
+
+def test_asset_multiple_attachments_on_purchase_and_edit(tmp_path):
+    app=make_app()
+    manager_id=seed(app)
+    app.config["UPLOAD_FOLDER"]=str(tmp_path/"uploads")
+    with app.app_context():
+        add_capital(Decimal("100000"),"رأس مال اختبار",manager_id,"لتمويل شراء الأصل")
+        db.session.commit()
+        cashbox_id=Cashbox.query.filter_by(box_type="central",is_active=True).first().id
+
+    client=app.test_client()
+    login=client.post("/auth/login",data={"identifier":"manager","password":"secret"},follow_redirects=True)
+    assert login.status_code==200
+    form_html=client.get("/assets/new").get_data(as_text=True)
+    assert 'enctype="multipart/form-data"' in form_html
+    assert 'name="attachments" multiple' in form_html
+
+    created=client.post("/assets/new",data={
+        "name":"معدات اختبار",
+        "category":"أصل ثابت",
+        "cost":"1000",
+        "acquisition_date":"2026-10-15",
+        "payer_cashbox_id":str(cashbox_id),
+        "custodian_user_id":"",
+        "location":"المستودع",
+        "notes":"اختبار المرفقات",
+        "create_tank":"",
+        "attachments":[
+            (BytesIO(b"%PDF-1.7\\nreceipt one\\n%%EOF"),"invoice-one.pdf"),
+            (BytesIO(b"%PDF-1.7\\nreceipt two\\n%%EOF"),"invoice-two.pdf"),
+        ],
+    },follow_redirects=True)
+    assert created.status_code==200
+    assert "تم إرفاق 2 ملف" in created.get_data(as_text=True)
+
+    with app.app_context():
+        asset=Asset.query.filter_by(name="معدات اختبار").one()
+        asset_id=asset.id
+        attached=DocumentAttachment.query.filter_by(document_id=asset.document_id).order_by(DocumentAttachment.id).all()
+        assert [item.original_name for item in attached]==["invoice-one.pdf","invoice-two.pdf"]
+        first_attachment_id=attached[0].id
+
+    detail_response=client.get(f"/assets/{asset_id}")
+    assert detail_response.status_code==200
+    assert "invoice-one.pdf" in detail_response.get_data(as_text=True)
+    download=client.get(f"/assets/{asset_id}/attachments/{first_attachment_id}")
+    assert download.status_code==200
+    assert download.data.startswith(b"%PDF")
+
+    edited=client.post(f"/assets/{asset_id}/edit",data={
+        "name":"معدات اختبار",
+        "category":"أصل ثابت",
+        "cost":"1000.000",
+        "acquisition_date":"2026-10-15",
+        "custodian_user_id":"",
+        "location":"المستودع",
+        "status":"active",
+        "notes":"تم تحديث بيانات الأصل",
+        "attachments":[(BytesIO(b"%PDF-1.7\\nreceipt three\\n%%EOF"),"invoice-three.pdf")],
+    },follow_redirects=True)
+    assert edited.status_code==200
+    assert "تمت إضافة 1 مرفق" in edited.get_data(as_text=True)
+
+    with app.app_context():
+        asset=Asset.query.get(asset_id)
+        attached=DocumentAttachment.query.filter_by(document_id=asset.document_id).order_by(DocumentAttachment.id).all()
+        assert len(attached)==3
+        assert attached[-1].original_name=="invoice-three.pdf"
+
+    assert client.get(f"/assets/{asset_id}").status_code==200
+    with app.app_context():
+        for template_name in ("assets/form.html","assets/detail.html"):
+            app.jinja_env.get_template(template_name)
+
 
 def test_unauthenticated_protected_pages_redirect_to_login():
     app=make_app()

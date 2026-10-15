@@ -14,4 +14,21 @@
 <div class="detail-line"><strong>الصندوق الدافع</strong><span>{{asset.payer_cashbox.name if asset.payer_cashbox else "—"}}</span></div>
 <div class="detail-line"><strong>الملاحظات</strong><span>{{asset.notes or "لا توجد ملاحظات"}}</span></div>
 </div>
+<section class="asset-detail-attachments">
+  <div class="section-title"><h2>سندات ومرفقات الأصل</h2><span>{{asset.document.attachments|length if asset.document else 0}} ملف</span></div>
+  {% if asset.document and asset.document.attachments %}
+  <div class="entity-list">
+    {% for item in asset.document.attachments|sort(attribute="created_at",reverse=true) %}
+    <div class="entity-row">
+      <div class="avatar"><i class="bi {% if item.mime_type=='application/pdf' %}bi-file-earmark-pdf{% else %}bi-file-earmark-image{% endif %}"></i></div>
+      <div class="entity-main"><strong>{{item.original_name}}</strong><small>{{item.mime_type or "ملف"}} · {{((item.size_bytes or 0)/1024)|round(1)|clean_number}} كيلوبايت</small></div>
+      <div class="d-flex flex-wrap gap-1"><a class="small-icon-btn" href="{{url_for('assets.attachment',asset_id=asset.id,attachment_id=item.id)}}" target="_blank" rel="noopener" title="فتح" aria-label="فتح"><i class="bi bi-eye"></i></a><a class="small-icon-btn" href="{{url_for('assets.attachment',asset_id=asset.id,attachment_id=item.id,download=1)}}" title="تنزيل" aria-label="تنزيل"><i class="bi bi-download"></i></a></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="bi bi-paperclip"></i><strong>لا توجد مرفقات لهذا الأصل</strong><span>يمكنك رفع سند الشراء أو الفواتير من صفحة تعديل الأصل.</span></div>
+  {% endif %}
+</section>
+<style>.asset-detail-attachments{margin-top:18px}.asset-detail-attachments .entity-main{min-width:0}.asset-detail-attachments .entity-main strong{overflow-wrap:anywhere}</style>
 {% endblock %}

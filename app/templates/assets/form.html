@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-heading-row"><div class="page-heading"><h1>{% if editing %}تعديل الأصل{% else %}شراء/إضافة أصل{% endif %}</h1><p>{% if editing %}تعديل بيانات الأصل والقيمة المالية المرتبطة به بأمان عند توفر الشروط المحاسبية.{% else %}اختر الصندوق، وإذا كان الأصل خزانًا فعّل الربط ليُنشأ الخزان التشغيلي تلقائيًا.{% endif %}</p></div>{% if asset %}<span class="status-chip">{{asset.asset_code}}</span>{% endif %}</div>
-<form method="post" class="mobile-form card-form">
+<form method="post" enctype="multipart/form-data" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
 <label>اسم الأصل<input name="name" value="{{asset.name if asset else ''}}" required></label>
 <div class="two-col">
@@ -22,6 +22,20 @@
 <label>المسؤول<select name="custodian_user_id"><option value="">بدون</option>{% for e in employees %}<option value="{{e.id}}" {% if asset and asset.custodian_user_id==e.id %}selected{% endif %}>{{e.display_name}}</option>{% endfor %}</select></label>
 <div class="two-col"><label>الموقع<input name="location" value="{{asset.location if asset else ''}}"></label>{% if editing %}<label>الحالة<select name="status"><option value="active" {% if asset.status=="active" %}selected{% endif %}>فعال</option><option value="maintenance" {% if asset.status=="maintenance" %}selected{% endif %}>صيانة</option><option value="retired" {% if asset.status=="retired" %}selected{% endif %}>متقاعد</option></select></label>{% endif %}</div>
 <label>ملاحظات<textarea name="notes" rows="3">{{asset.notes if asset else ''}}</textarea></label>
+<section class="asset-attachments-field">
+  <label>سندات الشراء والمرفقات
+    <input type="file" name="attachments" multiple accept=".pdf,.png,.jpg,.jpeg,.webp" aria-describedby="asset-attachments-help">
+  </label>
+  <small class="field-help" id="asset-attachments-help">يمكن رفع حتى 10 ملفات في المرة الواحدة بصيغة PDF أو صور PNG/JPG/WEBP. الحد الإجمالي لحجم الطلب 10 ميجابايت.</small>
+  {% if editing and asset.document and asset.document.attachments %}
+  <div class="asset-attachments-current">
+    <strong>المرفقات المحفوظة ({{asset.document.attachments|length}})</strong>
+    {% for item in asset.document.attachments|sort(attribute="created_at",reverse=true) %}
+    <div class="asset-attachment-row"><i class="bi {% if item.mime_type=='application/pdf' %}bi-file-earmark-pdf{% else %}bi-file-earmark-image{% endif %}"></i><span>{{item.original_name}}</span><a href="{{url_for('assets.attachment',asset_id=asset.id,attachment_id=item.id)}}" target="_blank" rel="noopener">فتح</a><a href="{{url_for('assets.attachment',asset_id=asset.id,attachment_id=item.id,download=1)}}">تنزيل</a></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
 <div class="info-card"><i class="bi bi-info-circle"></i><span>شراء الخزان هنا يسجل كأصل ثابت، يخصم من الصندوق المختار، وينشئ خزانًا تشغيليًا يظهر أيضًا في «الخزانات» إذا كان خيار الربط مفعّلًا.</span></div>{% if editing and financial_editable %}<div class="info-card"><i class="bi bi-shield-check"></i><span>عند تغيير القيمة سيُحدّث النظام قيمة الأصل وحركة الصندوق والقيد المحاسبي معًا. قبل الحفظ يتحقق النظام من سلامة السند والقيد وحركة الصندوق ومن كفاية الرصيد، وإلا يرفض التعديل بالكامل دون حفظ جزئي.</span></div>{% elif editing %}<div class="info-card"><i class="bi bi-lock"></i><span>القيمة المالية غير قابلة للتعديل من هذه الشاشة لأن السند غير معتمد أو حركة الصرف الأصلية غير موجودة. يمكن تعديل البيانات التشغيلية فقط.</span></div>{% endif %}
 {% if not editing %}<script>
 (function(){
@@ -32,4 +46,14 @@
 </script>{% endif %}
 <button class="primary-btn{% if not editing %} submit-loading{% endif %}" type="submit" {% if not editing %}data-loading-text="جارٍ حفظ الأصل والشراء…"{% endif %}><i class="bi bi-check2"></i><span>{% if editing %}حفظ التعديلات{% else %}حفظ الأصل والشراء{% endif %}</span></button>
 </form>
+<style>
+.asset-attachments-field{display:grid;gap:8px;padding:13px;border:1px solid #e0e6ef;border-radius:14px;background:#fbfcfe}
+.asset-attachments-field>label{margin:0}.asset-attachments-field input[type=file]{width:100%;min-width:0}
+.asset-attachments-field .field-help{display:block;color:#64748b;font-size:11px;line-height:1.6}
+.asset-attachments-current{display:grid;gap:7px;padding-top:10px;border-top:1px solid #e4e9f0}
+.asset-attachments-current>strong{font-size:12px;color:#344054}
+.asset-attachment-row{display:flex;min-width:0;align-items:center;gap:8px;padding:8px 9px;border:1px solid #e0e6ef;border-radius:10px;background:#fff;font-size:12px}
+.asset-attachment-row>i{flex:0 0 auto;color:#1a56db}.asset-attachment-row>span{flex:1;min-width:0;overflow-wrap:anywhere}
+.asset-attachment-row>a{flex:0 0 auto;color:#174fb8;font-weight:800;text-decoration:none}
+</style>
 {% endblock %}
