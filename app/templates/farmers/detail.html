@@ -28,11 +28,11 @@
 </div>
 
 <div class="action-row farmer-detail-actions">
-  {% if farmer.status=="approved" %}<a class="primary-btn" href="{{url_for('sales.dispense')}}?farmer_id={{farmer.id}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>{% endif %}
+  {% if farmer.status=="approved" %}<a class="primary-btn" href="{{url_for('sales.dispense_create')}}?farmer_id={{farmer.id}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>{% endif %}
   {% if farmer.status in ["approved","suspended"] %}<a class="secondary-btn farmer-pay-btn" href="{{url_for('sales.payment')}}?farmer_id={{farmer.id}}"><i class="bi bi-cash-coin"></i><span>{% if farmer.status=="suspended" %}تحصيل الرصيد{% else %}سداد{% endif %}</span></a>{% endif %}
   <a class="secondary-btn" href="{{url_for('sales.farmer_account_view',farmer_id=farmer.id)}}"><i class="bi bi-file-earmark-text"></i><span>كشف الحساب</span></a>
   <button class="secondary-btn print-action" type="button" onclick="window.print()"><i class="bi bi-printer"></i><span>طباعة</span></button>
-  {% if can_change_quota %}<a class="secondary-btn quota-action" href="#quota-edit"><i class="bi bi-sliders"></i><span>تعديل الكمية المتفق عليها</span></a>{% endif %}
+  {% if can_change_quota %}<a class="secondary-btn quota-action" href="#quota-edit" onclick="document.getElementById('quota-edit').open=true"><i class="bi bi-sliders"></i><span>تعديل الكمية المتفق عليها</span></a>{% endif %}
   {% if can_edit_farmer %}<a class="secondary-btn" href="{{url_for('farmers.edit',farmer_id=farmer.id)}}"><i class="bi bi-pencil"></i><span>تعديل الملف والمرفقات</span></a>{% endif %}
 </div>
 
@@ -76,13 +76,15 @@
 </div>
 
 {% if can_change_quota %}
-<div class="section-title" id="quota-edit"><h2>الكمية المتفق عليها</h2><span>تعديل الكمية بالدبة مع تسجيل السبب</span></div>
-<form method="post" action="{{url_for('farmers.quota',farmer_id=farmer.id)}}" class="mobile-form card-form farmer-quota-form">
-<input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-<label>الكمية المتفق عليها بالدبة<input name="quota_drums" type="number" step="0.1" min="0" value="{{farmer.quota_drums|clean_number}}" required></label>
-<label>سبب التعديل<textarea name="reason" rows="2" required placeholder="سبب رفع أو خفض الحد"></textarea></label>
-<button class="primary-btn"><i class="bi bi-check2"></i><span>حفظ الحد الأعلى</span></button>
-</form>
+<details class="quota-edit-collapsible" id="quota-edit">
+  <summary><span class="quota-edit-summary-icon"><i class="bi bi-sliders"></i></span><span class="quota-edit-summary-copy"><strong>الكمية المتفق عليها</strong><small>تعديل السقف وتسجيل سبب التغيير</small></span><i class="bi bi-chevron-down quota-edit-chevron"></i></summary>
+  <form method="post" action="{{url_for('farmers.quota',farmer_id=farmer.id)}}" class="mobile-form card-form farmer-quota-form">
+    <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+    <label>الكمية المتفق عليها بالدبة<input name="quota_drums" type="number" step="0.1" min="0" value="{{farmer.quota_drums|clean_number}}" required></label>
+    <label>سبب التعديل<textarea name="reason" rows="2" required placeholder="سبب رفع أو خفض الحد"></textarea></label>
+    <button class="primary-btn" type="submit"><i class="bi bi-check2"></i><span>حفظ الكمية المتفق عليها</span></button>
+  </form>
+</details>
 {% endif %}
 
 <div class="section-title"><h2>المرفقات</h2><span>{{farmer.documents|length}} ملف</span></div>

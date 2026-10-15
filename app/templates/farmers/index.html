@@ -6,7 +6,7 @@
     {% if project_settings.admin_theme != "water_pos" %}<p>بطاقات تشغيلية سريعة: السحب، المتبقي، الرصيد المستحق، والإجراءات.</p>{% endif %}
   </div>
   <div class="header-actions">
-    <a class="primary-btn" href="{{url_for('sales.dispense')}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>
+    <a class="primary-btn" href="{{url_for('sales.dispense_create')}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>
     <a class="secondary-btn" href="{{url_for('sales.payment')}}"><i class="bi bi-cash-coin"></i><span>دفع</span></a>
     {% if user_has_permission(current_user,"farmers.create") %}<a class="primary-btn" href="{{url_for('farmers.new')}}"><i class="bi bi-plus-lg"></i><span>إضافة مزارع</span></a>{% endif %}
   </div>
@@ -77,7 +77,7 @@
   <div class="farmer-card-actions">
     <a class="small-icon-btn" href="{{url_for('sales.farmer_account_view',farmer_id=farmer.id)}}" aria-label="عرض كشف الحساب" title="كشف الحساب"><i class="bi bi-file-earmark-text"></i></a>
     {% if farmer.status in ["approved","suspended"] %}
-      <a class="small-icon-btn" href="{{url_for('sales.dispense')}}?farmer_id={{farmer.id}}" aria-label="صرف ديزل" title="صرف ديزل"><i class="bi bi-droplet-fill"></i></a>
+      <a class="small-icon-btn" href="{{url_for('sales.dispense_create')}}?farmer_id={{farmer.id}}" aria-label="صرف ديزل" title="صرف ديزل"><i class="bi bi-droplet-fill"></i></a>
       <a class="small-icon-btn" href="{{url_for('sales.payment')}}?farmer_id={{farmer.id}}" aria-label="دفع" title="دفع"><i class="bi bi-cash-coin"></i></a>
     {% endif %}
     {% if current_user.has_role("manager") or farmer.status in ["submitted","changes_requested"] %}
