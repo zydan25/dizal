@@ -2,6 +2,7 @@ from datetime import date
 from flask import abort,current_app,flash,redirect,render_template,request,url_for
 from flask_login import current_user
 from sqlalchemy import func
+from sqlalchemy.exc import DataError
 from ...decorators import permission_required
 from ...extensions import db
 from ...models import Asset,Cashbox,FuelPurchase,FuelStockMovement,FuelTank,ProjectSettings,User
@@ -240,10 +241,13 @@ def tanks():
     if request.method=="POST":
         try:
             name=(request.form.get("name") or "").strip()
+            if not name:
+                raise ValueError("اسم الخزان مطلوب.")
+            if len(name)>160:
+                raise ValueError("اسم الخزان طويل جدًا؛ الحد الأقصى 160 حرفًا. اكتب اسمًا مختصرًا، وضع تفاصيل المشتريات في حقل الملاحظات.")
             cost=request.form.get("asset_cost")
             cashbox_id=request.form.get("payer_cashbox_id")
             capacity=request.form.get("capacity_liters") or None
-            if not name: raise ValueError("اسم الخزان مطلوب.")
             if not cost or not cashbox_id: raise ValueError("قيمة الخزان والصندوق الدافع مطلوبان.")
             asset=create_asset(
                 name=name,category="خزان ديزل",cost=cost,
@@ -264,7 +268,12 @@ def tanks():
             flash("تم إنشاء الخزان وتسجيله تلقائيًا كأصل ثابت مع خصم قيمته من الصندوق المحدد.","success")
             return redirect(url_for("fuel.tanks"))
         except (ValueError,TypeError) as exc:
-            db.session.rollback();flash(str(exc),"danger")
+            db.session.rollback()
+            flash(str(exc),"danger")
+        except DataError:
+            current_app.logger.exception("Database rejected tank fields; transaction rolled back.")
+            db.session.rollback()
+            flash("تعذر حفظ الخزان لأن إحدى القيم النصية تجاوزت الحد المسموح به. تحقق من اسم الخزان والحقول النصية ثم أعد المحاولة.","danger")
     tanks=FuelTank.query.order_by(FuelTank.id.desc()).all()
     ids=[tank.id for tank in tanks]
     linked=Asset.query.filter(Asset.tank_id.in_(ids)).all() if ids else []
@@ -280,7 +289,12 @@ def edit_tank(tank_id):
     tank=FuelTank.query.get_or_404(tank_id)
     if request.method=="POST":
         try:
-            tank.name=(request.form.get("name") or tank.name).strip()
+            new_name=(request.form.get("name") or tank.name or "").strip()
+            if not new_name:
+                raise ValueError("اسم الخزان مطلوب.")
+            if len(new_name)>160:
+                raise ValueError("اسم الخزان طويل جدًا؛ الحد الأقصى 160 حرفًا. اكتب اسمًا مختصرًا، وضع التفاصيل في الملاحظات.")
+            tank.name=new_name
             tank.capacity_liters=request.form.get("capacity_liters") or None
             tank.location=(request.form.get("location") or "").strip() or None
             tank.notes=(request.form.get("notes") or "").strip() or None
@@ -292,6 +306,10 @@ def edit_tank(tank_id):
         except (ValueError,TypeError) as exc:
             db.session.rollback()
             flash(str(exc),"danger")
+        except DataError:
+            current_app.logger.exception("Database rejected updated tank fields; transaction rolled back.")
+            db.session.rollback()
+            flash("تعذر تحديث الخزان لأن إحدى القيم النصية تجاوزت الحد المسموح به. تحقق من اسم الخزان والحقول النصية ثم أعد المحاولة.","danger")
     return render_template("fuel/tank_form.html",tank=tank)
 
 @fuel_bp.get("/tanks/<int:tank_id>")

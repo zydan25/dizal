@@ -7,7 +7,10 @@
 <div class="collapse" id="new-tank">
 <form method="post" class="mobile-form card-form">
 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-<label>اسم الخزان<input name="name" required autofocus placeholder="مثال: الخزان الرئيسي"></label>
+<label>اسم الخزان
+<input name="name" required maxlength="160" autocomplete="off" aria-describedby="tank-name-help" placeholder="مثال: الخزان الرئيسي">
+<small class="field-help" id="tank-name-help">اسم مختصر للخزان، بحد أقصى 160 حرفًا. ضع تفاصيل الشراء في الملاحظات.</small>
+</label>
 <div class="two-col">
 <label>قيمة شراء الخزان<input name="asset_cost" type="number" step="0.001" min="0.001" required inputmode="decimal"></label>
 <label>تاريخ الشراء<input name="purchase_date" type="date" value="{{today}}" required></label>

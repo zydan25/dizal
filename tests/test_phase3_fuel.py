@@ -31,6 +31,35 @@ def seed(app):
         db.session.commit()
         return manager.id,employee.id,employee_box.id,tank.id
 
+def test_long_tank_name_is_rejected_before_database_flush():
+    app=make_app()
+    manager_id,employee_id,employee_box_id,tank_id=seed(app)
+    client=app.test_client()
+    login=client.post("/auth/login",data={"identifier":"manager","password":"secret"},follow_redirects=True)
+    assert login.status_code==200
+    with app.app_context():
+        cashbox_id=Cashbox.query.filter_by(box_type="central",is_active=True).first().id
+        initial_tanks=FuelTank.query.count()
+
+    response=client.post("/fuel/tanks",data={
+        "name":"قائمة مشتريات طويلة، " * 12,
+        "asset_cost":"1000",
+        "purchase_date":date.today().isoformat(),
+        "capacity_liters":"1000",
+        "payer_cashbox_id":str(cashbox_id),
+        "location":"حوش البيت",
+        "notes":"",
+    },follow_redirects=True)
+    assert response.status_code==200
+    html=response.get_data(as_text=True)
+    assert "اسم الخزان طويل جدًا" in html
+    assert "إضافة خزان" in html
+    with app.app_context():
+        assert FuelTank.query.count()==initial_tanks
+        from app.models import Asset
+        assert Asset.query.count()==0
+
+
 def test_supply_is_pending_then_approved():
     app=make_app()
     manager_id,employee_id,employee_box_id,tank_id=seed(app)
