@@ -156,7 +156,10 @@ def test_settings_palette_and_font_scale_persist():
         assert settings.admin_bottom_nav_enabled is False
         assert settings.employee_bottom_nav_enabled is True
         assert settings.allow_employee_sale_price_override is True
-    assert "admin-theme-water-pos.css" in response.get_data(as_text=True)
+    rendered_html=response.get_data(as_text=True)
+    assert "admin-theme-water-pos.css" in rendered_html
+    assert "20261015-water-pos-admin-v3" in rendered_html
+    assert "20261015-water-pos-controls-v1" in rendered_html
     assert 'class="bottom-nav d-lg-none"' not in response.get_data(as_text=True)
 
 def test_template_numeric_output_removes_trailing_decimal_zeroes():
