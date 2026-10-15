@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-heading-row">
+<div class="page-heading-row farmers-page-heading">
   <div class="page-heading">
     <h1>المزارعون</h1>
-    <p>بطاقات تشغيلية سريعة: السحب، المتبقي، الرصيد المستحق، والإجراءات.</p>
+    {% if project_settings.admin_theme != "water_pos" %}<p>بطاقات تشغيلية سريعة: السحب، المتبقي، الرصيد المستحق، والإجراءات.</p>{% endif %}
   </div>
   <div class="header-actions">
     <a class="primary-btn" href="{{url_for('sales.dispense')}}"><i class="bi bi-plus-lg"></i><span>إضافة صرف</span></a>
