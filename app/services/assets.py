@@ -5,6 +5,8 @@ from .documents import create_document
 
 def create_asset(name,category,cost,acquisition_date,payer_cashbox_id,created_by_id,custodian_user_id=None,location=None,notes=None,create_tank=False,tank_capacity_liters=None):
     create_tank = bool(create_tank and "خزان" in (category or ""))
+    # The category is authoritative: hidden checked inputs can still be submitted by browsers.
+    create_tank = bool(create_tank and "خزان" in (category or ""))
     if float(cost)<=0: raise ValueError("قيمة الأصل يجب أن تكون أكبر من صفر.")
     code=f"AST-{Asset.query.count()+1:06d}"
     document=create_document("AST","سند شراء أصل",created_by_id,source_type="asset")
