@@ -30,6 +30,14 @@
 </select>
 </label>
 <div class="info-card settings-help"><i class="bi bi-info-circle"></i><span>هذا الخيار يغيّر لوحة الموظف الرئيسية فقط. تبقى لوحة المدير وبقية الصفحات على تصميمها الحالي.</span></div>
+<div class="section-title"><h2>ثيم الإدارة الكامل</h2><span>تبديل تصميم جميع واجهات الإدارة</span></div>
+<label>تصميم واجهة الإدارة
+<select name="admin_theme" id="admin_theme">
+  <option value="classic" {% if settings.admin_theme != "water_pos" %}selected{% endif %}>الثيم الأول — Dizal الحالي</option>
+  <option value="water_pos" {% if settings.admin_theme == "water_pos" %}selected{% endif %}>الثيم الثاني — Water POS</option>
+</select>
+</label>
+<div class="info-card settings-help"><i class="bi bi-palette2"></i><span>يطبّق التصميم على الرئيسية والمنيو والصفحات والنماذج والحقول الرقمية والمبالغ وقوائم الاختيار والبحث والفرز والبطاقات والإحصائيات وصفحة حسابي. لا يغيّر البيانات أو الصلاحيات أو الروابط أو العمليات الحسابية، ويمكنك الرجوع إلى الثيم الأول في أي وقت.</span></div>
 <div class="section-title"><h2>مظهر النظام</h2><span>اختيار جاهز بدل إدخال أكواد الألوان</span></div>
 <label>مجموعة الألوان
 <select name="color_preset" id="color_preset">

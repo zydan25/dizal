@@ -1,0 +1,884 @@
+/*
+ * Water POS administration theme for Dizal.
+ * Opt-in and completely scoped to .admin-theme-water-pos: when the classic
+ * theme is selected, this file is not loaded and current styles stay intact.
+ */
+body.admin-theme-water-pos {
+  color-scheme: light;
+  --primary: #1a56db;
+  --primary-soft: #eaf1ff;
+  --secondary: #4f46e5;
+  --accent: #10b981;
+  --page-bg: #f6f8fb;
+  --surface: #ffffff;
+  --text: #171b26;
+  --muted: #667085;
+  --border: #e2e7ef;
+  --danger: #c62828;
+  --radius: 15px;
+  --radius-lg: 20px;
+  --radius-md: 15px;
+  --touch-target: 48px;
+  --font-scale: 1;
+  --font-family: "Tajawal", Tahoma, Arial, sans-serif;
+  background: var(--page-bg) !important;
+  color: var(--text) !important;
+  font-family: "Tajawal", Tahoma, Arial, sans-serif !important;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.admin-theme-water-pos *,
+body.admin-theme-water-pos *::before,
+body.admin-theme-water-pos *::after { box-sizing: border-box; }
+
+body.admin-theme-water-pos button,
+body.admin-theme-water-pos input,
+body.admin-theme-water-pos select,
+body.admin-theme-water-pos textarea { font-family: inherit; }
+
+body.admin-theme-water-pos .app-shell,
+body.admin-theme-water-pos .main-area,
+body.admin-theme-water-pos .page-wrap,
+body.admin-theme-water-pos .guest-main,
+body.admin-theme-water-pos .guest-content {
+  background: var(--page-bg);
+  color: var(--text);
+}
+
+/* Header and navigation: crisp white surfaces, fine borders and compact groups. */
+body.admin-theme-water-pos .topbar {
+  min-height: 66px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 9px 16px;
+  gap: 10px;
+  background: rgba(255,255,255,.97);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(21,35,60,.025);
+  backdrop-filter: blur(12px);
+}
+body.admin-theme-water-pos .top-user {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  color: var(--text);
+  text-decoration: none;
+}
+body.admin-theme-water-pos .top-user small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+body.admin-theme-water-pos .top-user strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.admin-theme-water-pos .sidebar {
+  width: 264px;
+  border-left: 1px solid #dfe5ee;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(20,34,58,.035);
+}
+body.admin-theme-water-pos .sidebar-head {
+  min-height: 72px;
+  padding: 14px 14px;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+}
+body.admin-theme-water-pos .sidebar-head .app-logo,
+body.admin-theme-water-pos .sidebar-head .brand-mark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 13px;
+}
+body.admin-theme-water-pos .brand-copy strong {
+  color: #171b26;
+  font-size: 14px;
+  font-weight: 800;
+}
+body.admin-theme-water-pos .brand-copy small {
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+body.admin-theme-water-pos .sidebar-scroll {
+  padding: 10px 9px 14px;
+  scrollbar-color: #d7dfeb transparent;
+}
+body.admin-theme-water-pos .nav-section {
+  margin: 0 0 8px;
+  overflow: hidden;
+  border: 1px solid #e3e8f0;
+  border-radius: 13px;
+  background: #fff;
+  transition: border-color .16s ease, background .16s ease;
+}
+body.admin-theme-water-pos .nav-section.open,
+body.admin-theme-water-pos .nav-section:focus-within {
+  border-color: #d4dfef;
+}
+body.admin-theme-water-pos .nav-section-head {
+  width: 100%;
+  min-height: 43px;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  color: #273246;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: right;
+  transition: background .15s ease, color .15s ease;
+}
+body.admin-theme-water-pos .nav-section-head > span {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+body.admin-theme-water-pos .nav-section-head > span > i:first-child {
+  display: inline-grid;
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+  place-items: center;
+  border: 1px solid #e3e9f2;
+  border-radius: 9px;
+  background: #f6f8fc;
+  color: var(--primary);
+  font-size: 15px;
+}
+body.admin-theme-water-pos .nav-chevron {
+  margin-inline-start: auto;
+  color: #6b778b;
+  font-size: 11px;
+}
+body.admin-theme-water-pos .nav-section.open > .nav-section-head,
+body.admin-theme-water-pos .nav-section-head:hover {
+  background: #edf3ff;
+  color: #1748ae;
+}
+body.admin-theme-water-pos .nav-children {
+  padding: 3px 7px 8px;
+  border-top: 1px solid #edf0f5;
+  background: #fff;
+}
+body.admin-theme-water-pos .nav-item {
+  display: flex;
+  min-height: 39px;
+  align-items: center;
+  gap: 9px;
+  margin-top: 3px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #475467;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+body.admin-theme-water-pos .nav-item i {
+  width: 22px;
+  flex: 0 0 22px;
+  color: #66758a;
+  font-size: 14px;
+  text-align: center;
+}
+body.admin-theme-water-pos .nav-item:hover {
+  border-color: #e0e7f0;
+  background: #f6f8fc;
+  color: #1d2939;
+}
+body.admin-theme-water-pos .nav-item.active {
+  border-color: #d6e3fb;
+  background: var(--primary-soft);
+  color: #1748ae;
+  font-weight: 800;
+}
+body.admin-theme-water-pos .nav-item.active i { color: var(--primary); }
+body.admin-theme-water-pos .sidebar-account {
+  margin: 7px 10px 5px;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8faff;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+body.admin-theme-water-pos .sidebar-account i { color: var(--primary); }
+body.admin-theme-water-pos .sidebar-logout {
+  margin: 0 10px 9px;
+  padding: 0;
+}
+body.admin-theme-water-pos .sidebar-logout button {
+  min-height: 42px;
+  width: 100%;
+  border: 1px solid #f1d5d7;
+  border-radius: 12px;
+  background: #fff8f8;
+  color: #a12631;
+  font-size: 13px;
+  font-weight: 800;
+}
+body.admin-theme-water-pos .sidebar-credit {
+  padding: 11px 12px 13px;
+  border-top: 1px solid #edf0f5;
+  background: #fbfaff;
+}
+body.admin-theme-water-pos .icon-btn,
+body.admin-theme-water-pos .small-icon-btn {
+  border: 1px solid #e0e6ef;
+  border-radius: 12px;
+  background: #fff;
+  color: #344054;
+  box-shadow: 0 1px 2px rgba(16,24,40,.025);
+}
+body.admin-theme-water-pos .icon-btn:hover,
+body.admin-theme-water-pos .small-icon-btn:hover {
+  border-color: #cbd8ec;
+  background: #f4f7fc;
+  color: var(--primary);
+}
+body.admin-theme-water-pos .bottom-nav {
+  border-top: 1px solid #e1e7f0;
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 -4px 18px rgba(22,35,58,.05);
+  backdrop-filter: blur(12px);
+}
+body.admin-theme-water-pos .bottom-nav a,
+body.admin-theme-water-pos .bottom-nav button {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 750;
+}
+body.admin-theme-water-pos .bottom-nav a i,
+body.admin-theme-water-pos .bottom-nav button i { font-size: 18px; }
+body.admin-theme-water-pos .bottom-nav .active,
+body.admin-theme-water-pos .bottom-nav .is-active,
+body.admin-theme-water-pos .bottom-nav a:focus-visible {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* Page headings, sections and surfaces. */
+body.admin-theme-water-pos .page-wrap { padding-top: 19px; }
+body.admin-theme-water-pos .page-heading-row {
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+body.admin-theme-water-pos .page-heading h1,
+body.admin-theme-water-pos .page-heading-row h1 {
+  color: #171b26;
+  font-size: clamp(23px, 4.4vw, 30px);
+  font-weight: 850;
+  letter-spacing: -.25px;
+  line-height: 1.3;
+}
+body.admin-theme-water-pos .page-heading p,
+body.admin-theme-water-pos .heading-subtitle {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+body.admin-theme-water-pos .content-card,
+body.admin-theme-water-pos .mobile-form.card-form,
+body.admin-theme-water-pos .account-card,
+body.admin-theme-water-pos .account-section,
+body.admin-theme-water-pos .dashboard-panel,
+body.admin-theme-water-pos .farmer-detail-hero,
+body.admin-theme-water-pos .document-setting-card,
+body.admin-theme-water-pos .document-live-preview {
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(20,32,52,.025);
+}
+body.admin-theme-water-pos .content-card {
+  margin-bottom: 14px;
+  padding: 18px 16px;
+}
+body.admin-theme-water-pos .mobile-form.card-form {
+  margin-bottom: 15px;
+  padding: 17px 16px;
+}
+body.admin-theme-water-pos .section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0 12px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #edf0f5;
+}
+body.admin-theme-water-pos .section-title:first-child { margin-top: 0; }
+body.admin-theme-water-pos .section-title h2 {
+  margin: 0;
+  color: #171b26;
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+body.admin-theme-water-pos .section-title p,
+body.admin-theme-water-pos .section-title span {
+  color: var(--muted);
+  font-size: 11px;
+}
+body.admin-theme-water-pos .settings-help,
+body.admin-theme-water-pos .info-card {
+  border-color: #dfe7f5;
+  border-radius: 12px;
+  background: #f7f9fd;
+  color: #526078;
+}
+body.admin-theme-water-pos .info-card i { color: var(--primary); }
+body.admin-theme-water-pos .empty-state,
+body.admin-theme-water-pos .water-empty {
+  border: 1px dashed #d5deeb;
+  border-radius: 13px;
+  background: #fafbfe;
+  color: #68758a;
+}
+body.admin-theme-water-pos hr { border-color: #e7ecf3; opacity: 1; }
+
+/* Consistent form layouts and inputs, including money, search, sorting and selects. */
+body.admin-theme-water-pos .mobile-form,
+body.admin-theme-water-pos .card-form,
+body.admin-theme-water-pos .account-form {
+  color: var(--text);
+}
+body.admin-theme-water-pos .mobile-form label,
+body.admin-theme-water-pos .card-form label,
+body.admin-theme-water-pos .account-form label,
+body.admin-theme-water-pos .form-field .field-label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  color: #273246;
+  font-size: 13px;
+  font-weight: 800;
+}
+body.admin-theme-water-pos .two-col {
+  gap: 11px;
+  align-items: start;
+}
+body.admin-theme-water-pos .mobile-form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+body.admin-theme-water-pos .mobile-form select,
+body.admin-theme-water-pos .mobile-form textarea,
+body.admin-theme-water-pos .account-form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+body.admin-theme-water-pos .account-form select,
+body.admin-theme-water-pos .account-form textarea,
+body.admin-theme-water-pos .form-control,
+body.admin-theme-water-pos input.form-control,
+body.admin-theme-water-pos select.form-select,
+body.admin-theme-water-pos textarea.form-control {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  margin-top: 0;
+  padding: 10px 12px;
+  border: 1px solid #d7deea;
+  border-radius: 12px;
+  outline: none;
+  background-color: #fff;
+  color: #202b3d;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: 0 1px 2px rgba(16,24,40,.025);
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+body.admin-theme-water-pos textarea,
+body.admin-theme-water-pos textarea.form-control { min-height: 90px; resize: vertical; }
+body.admin-theme-water-pos .mobile-form input::placeholder,
+body.admin-theme-water-pos .mobile-form textarea::placeholder,
+body.admin-theme-water-pos .form-control::placeholder { color: #8a94a4; opacity: 1; }
+body.admin-theme-water-pos .mobile-form input:focus,
+body.admin-theme-water-pos .mobile-form select:focus,
+body.admin-theme-water-pos .mobile-form textarea:focus,
+body.admin-theme-water-pos .account-form input:focus,
+body.admin-theme-water-pos .account-form select:focus,
+body.admin-theme-water-pos .account-form textarea:focus,
+body.admin-theme-water-pos .form-control:focus,
+body.admin-theme-water-pos .form-select:focus {
+  border-color: #7da3f0;
+  outline: 3px solid rgba(26,86,219,.10);
+  outline-offset: 0;
+  box-shadow: none;
+}
+body.admin-theme-water-pos input[type="number"],
+body.admin-theme-water-pos input[inputmode="decimal"],
+body.admin-theme-water-pos input[inputmode="numeric"],
+body.admin-theme-water-pos input[inputmode="tel"],
+body.admin-theme-water-pos .money-input,
+body.admin-theme-water-pos .amount-input,
+body.admin-theme-water-pos .price-input {
+  font-variant-numeric: tabular-nums;
+}
+body.admin-theme-water-pos input[type="number"],
+body.admin-theme-water-pos input[inputmode="decimal"],
+body.admin-theme-water-pos input.money-input,
+body.admin-theme-water-pos input.amount-input,
+body.admin-theme-water-pos input.price-input {
+  direction: ltr;
+  text-align: right;
+}
+body.admin-theme-water-pos input[type="checkbox"],
+body.admin-theme-water-pos input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+body.admin-theme-water-pos input[type="file"] {
+  min-height: 44px;
+  padding: 7px;
+  border: 1px dashed #cbd7e8;
+  border-radius: 11px;
+  background: #f8faff;
+}
+body.admin-theme-water-pos input[type="file"]::file-selector-button {
+  min-height: 32px;
+  margin-inline-end: 8px;
+  padding: 4px 10px;
+  border: 1px solid #d9e3f3;
+  border-radius: 8px;
+  background: #edf3ff;
+  color: #1748ae;
+  font: inherit;
+  font-weight: 800;
+}
+body.admin-theme-water-pos .sort-select,
+body.admin-theme-water-pos .farmer-search,
+body.admin-theme-water-pos .search-box,
+body.admin-theme-water-pos .search-toolbar,
+body.admin-theme-water-pos .filter-row,
+body.admin-theme-water-pos .filter-bar {
+  border-color: #dfe6ef;
+}
+body.admin-theme-water-pos .sort-select,
+body.admin-theme-water-pos .farmer-search,
+body.admin-theme-water-pos .search-box {
+  border-radius: 12px;
+  background: #fff;
+}
+body.admin-theme-water-pos .sort-select select,
+body.admin-theme-water-pos .farmer-search input,
+body.admin-theme-water-pos .search-box input,
+body.admin-theme-water-pos .search-toolbar select {
+  min-height: 42px;
+  border-color: transparent;
+  background-color: transparent;
+  color: #344054;
+  font-family: inherit;
+  font-size: 13px;
+}
+body.admin-theme-water-pos .sort-select select:focus,
+body.admin-theme-water-pos .farmer-search input:focus,
+body.admin-theme-water-pos .search-box input:focus {
+  outline: none;
+  box-shadow: none;
+}
+body.admin-theme-water-pos .smart-select { min-width: 0; }
+body.admin-theme-water-pos .smart-select-trigger {
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #d7deea;
+  border-radius: 12px;
+  background: #fff;
+  color: #202b3d;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(16,24,40,.025);
+}
+body.admin-theme-water-pos .smart-select.is-open .smart-select-trigger,
+body.admin-theme-water-pos .smart-select-trigger:focus {
+  border-color: #7da3f0;
+  outline: 3px solid rgba(26,86,219,.10);
+}
+body.admin-theme-water-pos .smart-select-menu {
+  border: 1px solid #d7deea;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(18,32,58,.15);
+}
+body.admin-theme-water-pos .smart-select-search {
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #dde3ed;
+  border-radius: 9px;
+  font-size: 14px;
+}
+body.admin-theme-water-pos .smart-select-option,
+body.admin-theme-water-pos .smart-select-menu button,
+body.admin-theme-water-pos .smart-select-menu [role="option"] {
+  min-height: 40px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  color: #344054;
+  font-size: 13px;
+  text-align: right;
+}
+body.admin-theme-water-pos .smart-select-option:hover,
+body.admin-theme-water-pos .smart-select-menu button:hover,
+body.admin-theme-water-pos .smart-select-menu [role="option"]:hover {
+  background: #edf3ff;
+  color: #1748ae;
+}
+
+/* Action buttons, chips and status labels. */
+body.admin-theme-water-pos .primary-btn,
+body.admin-theme-water-pos .secondary-btn,
+body.admin-theme-water-pos .success-btn,
+body.admin-theme-water-pos .danger-btn,
+body.admin-theme-water-pos .primary-button,
+body.admin-theme-water-pos .secondary-button,
+body.admin-theme-water-pos .quiet-button {
+  min-height: 42px;
+  border-radius: 11px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: none;
+  transition: transform .12s ease, background-color .15s ease, border-color .15s ease;
+}
+body.admin-theme-water-pos .primary-btn,
+body.admin-theme-water-pos .primary-button {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+body.admin-theme-water-pos .primary-btn:hover,
+body.admin-theme-water-pos .primary-button:hover {
+  border-color: #1748ae;
+  background: #1748ae;
+  color: #fff;
+}
+body.admin-theme-water-pos .secondary-btn,
+body.admin-theme-water-pos .secondary-button,
+body.admin-theme-water-pos .quiet-button {
+  border: 1px solid #d7deea;
+  background: #fff;
+  color: #344054;
+}
+body.admin-theme-water-pos .secondary-btn:hover,
+body.admin-theme-water-pos .secondary-button:hover,
+body.admin-theme-water-pos .quiet-button:hover {
+  border-color: #cbd8ec;
+  background: #f4f7fc;
+  color: #1d2939;
+}
+body.admin-theme-water-pos .success-btn {
+  border: 1px solid #b8dfc7;
+  background: #edf9f1;
+  color: #246b3d;
+}
+body.admin-theme-water-pos .danger-btn {
+  border: 1px solid #edc4c7;
+  background: #fff3f4;
+  color: #a12631;
+}
+body.admin-theme-water-pos .status-chip,
+body.admin-theme-water-pos .status-badge,
+body.admin-theme-water-pos .badge,
+body.admin-theme-water-pos .status-pill {
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+}
+body.admin-theme-water-pos .status-approved { border-color: #c4e7d1; background: #eaf7ef; color: #26784c; }
+body.admin-theme-water-pos .status-draft { border-color: #e2e7ef; background: #f1f5f9; color: #475569; }
+body.admin-theme-water-pos .status-reversed { border-color: #e4d5f6; background: #f3e8ff; color: #6b21a8; }
+body.admin-theme-water-pos .status-cancelled { border-color: #e2e7ef; background: #f8fafc; color: #64748b; }
+body.admin-theme-water-pos .status-submitted { border-color: #f4dfa4; background: #fff4d7; color: #9b7000; }
+body.admin-theme-water-pos .status-rejected { border-color: #f3cccc; background: #fdeaea; color: #a52c2c; }
+body.admin-theme-water-pos .status-suspended { border-color: #e1d9ef; background: #f0edf8; color: #62458e; }
+body.admin-theme-water-pos .field-error,
+body.admin-theme-water-pos .invalid-feedback { color: #b42318; font-size: 12px; font-weight: 800; }
+
+/* Dashboard KPIs, trends, balances and entity cards, with no data/links removed. */
+body.admin-theme-water-pos .stats-grid,
+body.admin-theme-water-pos .dashboard-kpis {
+  gap: 9px;
+}
+body.admin-theme-water-pos .dashboard-kpis {
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  margin-top: 12px;
+}
+body.admin-theme-water-pos .dashboard-kpi {
+  display: flex;
+  min-width: 0;
+  min-height: 114px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 12px 8px;
+  border: 1px solid #e0e5ed;
+  border-radius: 15px;
+  background: #f5f7fc;
+  color: #111827;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(17,24,39,.025);
+}
+body.admin-theme-water-pos .dashboard-kpi .kpi-icon {
+  display: grid;
+  position: static;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #111827;
+  font-size: 26px;
+}
+body.admin-theme-water-pos .dashboard-kpi .kpi-body {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+body.admin-theme-water-pos .dashboard-kpi small {
+  max-width: 100%;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: normal;
+}
+body.admin-theme-water-pos .dashboard-kpi strong {
+  color: #111827;
+  font-size: clamp(16px, 2.8vw, 21px);
+  font-weight: 850;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+body.admin-theme-water-pos .dashboard-kpi span {
+  color: #748197;
+  font-size: 11px;
+  line-height: 1.35;
+}
+body.admin-theme-water-pos .dashboard-kpi.is-success,
+body.admin-theme-water-pos .dashboard-kpi.is-danger,
+body.admin-theme-water-pos .dashboard-kpi.is-primary,
+body.admin-theme-water-pos .dashboard-kpi.is-warning,
+body.admin-theme-water-pos .dashboard-kpi-featured {
+  border-color: #e0e5ed;
+  background: #f5f7fc;
+}
+body.admin-theme-water-pos .dashboard-kpi.is-success strong,
+body.admin-theme-water-pos .dashboard-kpi.is-danger strong,
+body.admin-theme-water-pos .dashboard-kpi.is-primary strong { color: #111827; }
+body.admin-theme-water-pos .dashboard-panel {
+  border-radius: 17px;
+  padding: 14px;
+  box-shadow: 0 2px 9px rgba(20,32,52,.025);
+}
+body.admin-theme-water-pos .dashboard-panel .section-title { margin-top: 0; }
+body.admin-theme-water-pos .trend-row,
+body.admin-theme-water-pos .dashboard-tank,
+body.admin-theme-water-pos .operation-card,
+body.admin-theme-water-pos .entity-row,
+body.admin-theme-water-pos .backup-row {
+  border-color: #e6ebf2;
+  border-radius: 12px;
+}
+body.admin-theme-water-pos .dashboard-tank,
+body.admin-theme-water-pos .operation-card,
+body.admin-theme-water-pos .entity-row,
+body.admin-theme-water-pos .backup-row {
+  background: #fff;
+}
+body.admin-theme-water-pos .stat-card,
+body.admin-theme-water-pos .compact-stats > div,
+body.admin-theme-water-pos .page-stats-compact .stat-card,
+body.admin-theme-water-pos .farmer-metrics > div,
+body.admin-theme-water-pos .employee-metrics > div,
+body.admin-theme-water-pos .entity-card-metrics > div {
+  border: 1px solid #e3e8f0;
+  border-radius: 11px;
+  background: #f7f9fc;
+  box-shadow: none;
+}
+body.admin-theme-water-pos .entity-card,
+body.admin-theme-water-pos .farmer-card,
+body.admin-theme-water-pos .employee-card,
+body.admin-theme-water-pos .tank-card,
+body.admin-theme-water-pos .asset-card,
+body.admin-theme-water-pos .operation-card,
+body.admin-theme-water-pos .account-card {
+  border-color: #e0e6ef;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(20,32,52,.035);
+}
+body.admin-theme-water-pos .entity-card-actions,
+body.admin-theme-water-pos .farmer-card-actions,
+body.admin-theme-water-pos .employee-card-actions {
+  border-top-color: #edf0f5;
+  border-radius: 0 0 15px 15px;
+  background: #fbfcfe;
+}
+body.admin-theme-water-pos .entity-avatar,
+body.admin-theme-water-pos .farmer-avatar,
+body.admin-theme-water-pos .employee-avatar {
+  background: #eaf1ff;
+  color: var(--primary);
+}
+body.admin-theme-water-pos .entity-card-metrics strong,
+body.admin-theme-water-pos .farmer-metrics strong,
+body.admin-theme-water-pos .employee-metrics strong { color: #253044; }
+body.admin-theme-water-pos .entity-main small,
+body.admin-theme-water-pos .farmer-title span,
+body.admin-theme-water-pos .employee-title span { color: #7b8798; }
+
+/* Account/profile, sign-in and document views share the same design language. */
+body.admin-theme-water-pos .account-card { overflow: hidden; }
+body.admin-theme-water-pos .account-card-head {
+  gap: 12px;
+  padding: 15px;
+  border-bottom: 1px solid #edf0f5;
+  background: #fafbfe;
+}
+body.admin-theme-water-pos .account-avatar {
+  border: 1px solid #cbd9f7;
+  border-radius: 14px;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+body.admin-theme-water-pos .account-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 15px;
+}
+body.admin-theme-water-pos .account-badges > span {
+  padding: 6px 9px;
+  border: 1px solid #e3e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #596579;
+  font-size: 12px;
+}
+body.admin-theme-water-pos .account-section {
+  padding: 15px;
+  margin-bottom: 12px;
+}
+body.admin-theme-water-pos .account-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+body.admin-theme-water-pos .account-section-head strong { color: #273246; font-size: 14px; font-weight: 850; }
+body.admin-theme-water-pos .account-section-head small { color: var(--muted); font-size: 11px; }
+body.admin-theme-water-pos .account-save { width: 100%; min-height: 48px; }
+body.admin-theme-water-pos .guest-main { padding-top: max(22px, env(safe-area-inset-top)); }
+body.admin-theme-water-pos .auth-card,
+body.admin-theme-water-pos .login-card,
+body.admin-theme-water-pos .guest-content form {
+  border: 1px solid var(--border);
+  border-radius: 19px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(24,38,61,.055);
+}
+body.admin-theme-water-pos .footer-content,
+body.admin-theme-water-pos .dashboard-signature { font-family: inherit; }
+
+/* Responsive controls, cards and navigation, comfortable on touch screens. */
+@media (min-width: 768px) {
+  body.admin-theme-water-pos .dashboard-kpis { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+  body.admin-theme-water-pos .dashboard-kpi { min-height: 118px; padding: 15px 10px; }
+  body.admin-theme-water-pos .mobile-form.card-form { padding: 22px; }
+}
+@media (min-width: 1200px) {
+  body.admin-theme-water-pos .dashboard-kpis { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  body.admin-theme-water-pos .page-wrap { padding-inline: 24px; }
+}
+@media (max-width: 991.98px) {
+  body.admin-theme-water-pos .sidebar { box-shadow: -10px 0 35px rgba(16,24,40,.12); }
+  body.admin-theme-water-pos .dashboard-ops-grid { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 600px) {
+  body.admin-theme-water-pos .page-wrap { padding-inline: 14px; }
+  body.admin-theme-water-pos .page-heading-row { align-items: flex-start; }
+  body.admin-theme-water-pos .page-heading-row .d-flex { max-width: 100%; }
+  body.admin-theme-water-pos .mobile-form.card-form { padding: 14px 12px; }
+  body.admin-theme-water-pos .section-title { align-items: flex-start; }
+  body.admin-theme-water-pos .section-title span { text-align: left; }
+  body.admin-theme-water-pos .two-col { grid-template-columns: minmax(0,1fr); }
+  body.admin-theme-water-pos .dashboard-kpis { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+  body.admin-theme-water-pos .dashboard-kpi { min-height: 100px; padding: 10px 6px; }
+  body.admin-theme-water-pos .dashboard-kpi strong { font-size: 17px; }
+  body.admin-theme-water-pos .account-settings-grid { grid-template-columns: minmax(0,1fr); }
+  body.admin-theme-water-pos .app-confirm-actions { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 380px) {
+  body.admin-theme-water-pos .page-wrap { padding-inline: 10px; }
+  body.admin-theme-water-pos .content-card,
+  body.admin-theme-water-pos .mobile-form.card-form { padding: 12px 10px; }
+  body.admin-theme-water-pos .dashboard-kpis { gap: 7px; }
+  body.admin-theme-water-pos .dashboard-kpi { min-height: 91px; border-radius: 13px; }
+  body.admin-theme-water-pos .dashboard-kpi small { font-size: 10px; }
+  body.admin-theme-water-pos .dashboard-kpi strong { font-size: 15px; }
+}
+
+/* Keep ledgers readable and printable. */
+body.admin-theme-water-pos .table-responsive { border-radius: 13px; }
+body.admin-theme-water-pos .table,
+body.admin-theme-water-pos table:not(.unstyled-table) {
+  --bs-table-bg: #fff;
+  color: #273246;
+  border-color: #e4e9f0;
+}
+body.admin-theme-water-pos .table thead th,
+body.admin-theme-water-pos table:not(.unstyled-table) thead th {
+  background: #f4f7fc;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+body.admin-theme-water-pos .table td,
+body.admin-theme-water-pos .table th,
+body.admin-theme-water-pos table:not(.unstyled-table) td,
+body.admin-theme-water-pos table:not(.unstyled-table) th {
+  padding: 10px 11px;
+  border-color: #e7ecf3;
+  vertical-align: middle;
+}
+body.admin-theme-water-pos .alert {
+  border-radius: 12px;
+  font-size: 13px;
+}
+body.admin-theme-water-pos a { text-underline-offset: 3px; }
+body.admin-theme-water-pos :focus-visible {
+  outline-color: #8baef5;
+  outline-offset: 2px;
+}
+@media print {
+  body.admin-theme-water-pos,
+  body.admin-theme-water-pos .main-area,
+  body.admin-theme-water-pos .page-wrap { background: #fff !important; }
+}

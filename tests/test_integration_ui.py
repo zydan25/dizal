@@ -113,6 +113,7 @@ def test_settings_palette_and_font_scale_persist():
         "allow_employee_sale_price_override":"1",
         "color_preset":"violet",
         "font_scale":"1.05",
+        "admin_theme":"water_pos",
         "font_family":"Tajawal",
         "radius":"14px",
     },follow_redirects=True)
@@ -122,7 +123,9 @@ def test_settings_palette_and_font_scale_persist():
         assert settings.primary_color=="#6d28d9"
         assert settings.secondary_color=="#9333ea"
         assert settings.font_scale=="1.05"
+        assert settings.admin_theme=="water_pos"
         assert settings.allow_employee_sale_price_override is True
+    assert "admin-theme-water-pos.css" in response.get_data(as_text=True)
 
 def test_template_numeric_output_removes_trailing_decimal_zeroes():
     app=make_app()
