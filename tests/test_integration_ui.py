@@ -56,7 +56,6 @@ def test_employee_sees_own_farmer_account_and_operations_only():
     with app.app_context():
         settings=ProjectSettings.get()
         settings.admin_theme="water_pos"
-        settings.employee_dashboard_theme="water"
         settings.admin_bottom_nav_enabled=False
         settings.employee_bottom_nav_enabled=True
         employee_role=Role(name="employee",description="employee",label="موظف")
@@ -90,14 +89,22 @@ def test_employee_sees_own_farmer_account_and_operations_only():
     assert "employee-controls-water-pos" in html
     assert "employee-form-theme-water-pos.css" in html
     assert "admin-theme-water-pos.css" not in html
-    assert "employee-theme-water.css" in html
-    assert 'class="water-header"' in html
-    assert 'class="water-menu-panel"' in html
-    assert 'class="bottom-nav d-lg-none"' in html
+    assert client.get(f"/sales/farmer/{own_id}").status_code==200
+
+    # Enabling the existing employee Water theme must keep its home/menu,
+    # while only form/card controls adopt the optional Water POS refinements.
+    with app.app_context():
+        settings=ProjectSettings.get()
+        settings.employee_dashboard_theme="water"
+        db.session.commit()
+    water_home=client.get(response.request.path).get_data(as_text=True)
+    assert "employee-theme-water.css" in water_home
+    assert 'class="water-header"' in water_home
+    assert 'class="water-menu-panel"' in water_home
+    assert 'class="bottom-nav d-lg-none"' in water_home
     account_html=client.get("/auth/account").get_data(as_text=True)
     assert "employee-form-theme-water-pos.css" in account_html
     assert "admin-theme-water-pos.css" not in account_html
-    assert client.get(f"/sales/farmer/{own_id}").status_code==200
     assert client.get(f"/reports/my-operations").status_code==200
     assert client.get(f"/sales/farmer/{other_id}").status_code==403
 
