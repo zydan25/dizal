@@ -12,7 +12,22 @@
 {% if project_settings.logo_path %}<div class="text-center mb-2"><img src="{{url_for('media.branding',path=project_settings.logo_path)}}" alt="شعار المشروع" style="max-height:64px;max-width:180px;object-fit:contain"></div>{% endif %}
 <div class="document-header"><strong>{{project_settings.project_name}}</strong><span>{{project_settings.manager_name or ""}}</span></div>
 <div class="document-meta"><span>رقم السند <b>{{document.number}}</b></span><span>التاريخ <b>{{document.issue_date}}</b></span></div>
-{% if document.document_type=="REV" and source %}
+{% if document.document_type=="DSP" and source and source.liters is defined %}
+<div class="dispense-document-view">
+  <div class="section-title"><h2>تفاصيل الصرف</h2><span>سند رسمي</span></div>
+  <div class="dispense-document-grid">
+    <div><small>{% if source.sale_type=="farmer" %}المزارع{% else %}العميل{% endif %}</small><strong>{% if source.sale_type=="farmer" and source.farmer %}{{source.farmer.name}}{% elif source.customer_name %}{{source.customer_name}}{% else %}عميل نقدي{% endif %}</strong></div>
+    <div><small>الموظف</small><strong>{{source.employee.display_name or source.employee.username}}</strong></div>
+    <div><small>الخزان</small><strong>{{source.tank.name}} · {{source.tank.code}}</strong></div>
+    <div><small>الكمية</small><strong>{{source.drums|clean_number}} دبة · {{source.liters|clean_number}} لتر</strong></div>
+    <div><small>سعر اللتر</small><strong>{{source.sale_price_per_liter|clean_number}} {{project_settings.currency}}</strong></div>
+    <div><small>إجمالي الصرف</small><strong>{{source.total_amount|clean_number}} {{project_settings.currency}}</strong></div>
+    <div><small>المدفوع</small><strong>{{source.paid_amount|clean_number}} {{project_settings.currency}}</strong></div>
+    <div><small>المتبقي من السند</small><strong>{{source.credit_amount|clean_number}} {{project_settings.currency}}</strong></div>
+  </div>
+  {% if source.notes %}<div class="info-card"><strong>ملاحظات العملية</strong><p>{{source.notes}}</p></div>{% endif %}
+</div>
+{% elif document.document_type=="REV" and source %}
 <div class="info-card"><strong>عكس السند</strong><p><a href="{{url_for('documents.view',document_id=source.id)}}">{{source.number}} · {{source.title}}</a></p></div>
 {% elif source %}
 <div class="entity-list">
@@ -26,6 +41,13 @@
 {% if source.name is defined and document.document_type=="AST" %}<div class="entity-row"><div class="entity-main"><strong>الأصل</strong><span>{{source.name}} · {{source.asset_code}}</span></div></div>{% endif %}
 </div>
 {% endif %}
+<style>
+.dispense-document-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.dispense-document-grid>div{min-width:0;padding:10px;border:1px solid #e0e6ef;border-radius:12px;background:#f8faff}
+.dispense-document-grid small{display:block;color:#718096;font-size:11px}
+.dispense-document-grid strong{display:block;margin-top:3px;color:#263449;font-size:13px;overflow-wrap:anywhere}
+@media(min-width:720px){.dispense-document-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
 {% if document.notes %}<div class="info-card"><strong>البيان</strong><p>{{document.notes}}</p></div>{% endif %}
 {% if document.attachments %}
 <div class="section-title"><h2>المرفقات</h2><span>{{document.attachments|length}} ملف</span></div>

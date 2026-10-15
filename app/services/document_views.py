@@ -8,7 +8,7 @@ def source_for_document(document):
         return Document.query.get(ident)
     mapping={
         "capital":CapitalContribution,"capital_allocation":CapitalAllocation,"asset":Asset,
-        "fuel_purchase":FuelPurchase,"fuel_dispense":FuelDispense,"farmer_payment":FarmerPayment,
+        "fuel_purchase":FuelPurchase,"fuel_dispense":FuelDispense,"general_sale":FuelDispense,"farmer_payment":FarmerPayment,
         "operating_expense":OperatingExpense,"employee_settlement":EmployeeSettlement,
         "farmer":Farmer
     }
